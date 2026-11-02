@@ -1,7 +1,7 @@
 """Bounded Meta orchestration over typed specialist tools, never arbitrary code."""
 import json
 
-from .actions import propose
+from .actions import propose, ProcurementBlocked
 from .analytics import dashboard, inventory_tool
 from .models import DraftArgs, EmptyArgs
 from .provider import MetaError, strict_schema
@@ -18,7 +18,7 @@ DESCRIPTIONS = {
 
 def run_agents(store, workspace, message, mode, provider):
     run = dict(id=uid(), message=message, origin="meta" if mode == "meta" else "guided-tools",
-               status="running", steps=[], summary="", action_ids=[])
+               status="running", steps=[], summary="", action_ids=[], blockers=[])
     store.put(workspace, "run", run)
 
     def execute(name, arguments):
@@ -36,7 +36,17 @@ def run_agents(store, workspace, message, mode, provider):
             result = {"stock": inventory_tool(store, workspace)}
             agent = "Inventory Agent"
         else:
-            action = propose(store, workspace, values.product_ids)
+            try:
+                action = propose(store, workspace, values.product_ids)
+            except ProcurementBlocked as exc:
+                result = {"status": "needs_review", "human_review_required": True,
+                          "draft_created": False, "blockers": exc.readiness["blockers"]}
+                run["blockers"].extend(b for b in result["blockers"] if b not in run["blockers"])
+                run["steps"].append(dict(agent="Procurement Agent", tool=name, status="needs_review", result=result))
+                store.put(workspace, "run", run)
+                store.event(workspace, "agent.needs_review", "Procurement is waiting for source data/relationship review.",
+                            {"run_id": run["id"], "blockers": result["blockers"]})
+                return result
             run["action_ids"].append(action["id"])
             result = {"action_id": action["id"], "status": action["status"], "lines": action["lines"],
                       "totals": action["totals"], "approval_required": True}
@@ -51,7 +61,8 @@ def run_agents(store, workspace, message, mode, provider):
             execute("sales_analysis", "{}")
             execute("inventory_analysis", "{}")
             result = execute("draft_purchase_orders", '{"product_ids":[]}')
-            run["summary"] = f"Guided tool check completed. Proposal {result['action_id'][:8]} is {result['status']}; no order is sent automatically."
+            if "action_id" in result:
+                run["summary"] = f"Guided tool check completed. Proposal {result['action_id'][:8]} is {result['status']}; no order is sent automatically."
         else:
             tools = [{"type": "function", "function": {"name": name, "description": DESCRIPTIONS[name],
                 "strict": True, "parameters": strict_schema(model.model_json_schema())}} for name,model in TOOL_MODELS.items()]
@@ -83,9 +94,13 @@ def run_agents(store, workspace, message, mode, provider):
                     calls += 1
             else:
                 raise MetaError("Agent turn limit reached; pending proposals still require human review.")
-        run["status"] = "completed"
+        run["status"] = "needs_review" if run["blockers"] else "completed"
+        if run["blockers"]:
+            run["summary"] = "Procurement needs your review. " + ("Existing proposals still require human approval. " if run["action_ids"] else "No purchase order was drafted. ") + " ".join(b["message"] for b in run["blockers"])
         store.put(workspace, "run", run)
-        store.event(workspace, "agent.completed", "Orchestrator run completed.", {"run_id": run["id"], "origin": run["origin"]})
+        store.event(workspace, "agent.needs_review" if run["blockers"] else "agent.completed",
+                    "Orchestrator is waiting for your review." if run["blockers"] else "Orchestrator run completed.",
+                    {"run_id": run["id"], "origin": run["origin"]})
         return run
     except Problem as exc:
         run.update(status="failed", summary=str(exc))

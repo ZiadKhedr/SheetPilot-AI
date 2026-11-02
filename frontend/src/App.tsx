@@ -69,7 +69,7 @@ function WorkspaceApp(){
   catch(e){setError((e as Error).message)}finally{setBusy('')}
  }
  async function verify(){await perform('Verifying the official Meta API…',async()=>setProvider(await api<Provider>('/provider/verify','POST')),'Meta model access and a real generation request are verified.')}
- useEffect(()=>{window.scrollTo(0,0)},[location.pathname]);
+ useEffect(()=>{const target=location.hash&&document.getElementById(location.hash.slice(1));if(target)target.scrollIntoView({block:"start"});else window.scrollTo(0,0)},[location.pathname,location.hash]);
  const page=pages.find(p=>p.path===location.pathname)||pages[0];
  const context:Context={state:state!,stats,provider,fields,busy,perform,root,workspace,navigate};
  return <div className="app-shell">

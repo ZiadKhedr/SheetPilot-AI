@@ -16,3 +16,5 @@
 .nav-link{font-size:13px}.metric-label{font-size:11px}.metric>small{font-size:10px}.panel .section-title p{font-size:11px}td{font-size:11px}th{font-size:9px}.badge{font-size:10px}.empty p{font-size:11px}.page-footer{font-size:9px}.file-card>p{font-size:11px}.agent-card>p{font-size:11px}.sample-values{font-size:10px}.timeline-entry h3{font-size:13px}
 
 .section-title p,.panel .section-title p{color:#74816d}.metric>small{color:#76856c}.empty p{color:#75856b}.subtle{color:#77866f}.badge.green{color:#3c693a}.badge.amber{color:#896724}
+
+.procurement-review{border-color:#ead9af;background:#fdfaf1}.review-notice-heading{display:flex;gap:12px;align-items:center}.review-notice-heading>div{flex:1}.review-notice-heading svg{color:#9a782f}.review-notice-heading h3{font-size:15px}.review-notice-heading p{color:#7d704e;font-size:12px;margin-top:5px}.procurement-review ul{padding-left:20px;color:#786640;font-size:12px;line-height:1.9;margin:16px 0}.procurement-review small{margin-top:12px;font-size:10px}.relationships{scroll-margin-top:100px}

@@ -1,7 +1,7 @@
 from fastapi import Depends
 from fastapi.responses import FileResponse
 
-from .actions import propose, review_action
+from .actions import propose, review_action, procurement_readiness
 from .agents import run_agents
 from .ingestion import digest
 from .models import AgentInput, DraftArgs, ReviewInput
@@ -9,6 +9,11 @@ from .store import Problem
 
 
 def register_actions(app, store, auth):
+    @app.get("/api/workspaces/{workspace}/procurement/readiness", dependencies=[Depends(auth)])
+    def readiness(workspace: str):
+        result = procurement_readiness(store, workspace)
+        return {k: v for k, v in result.items() if k != "lines"}
+
     @app.post("/api/workspaces/{workspace}/actions/draft", dependencies=[Depends(auth)])
     def draft(workspace: str, body: DraftArgs):
         return propose(store, workspace, body.product_ids)

@@ -8,3 +8,5 @@
 - [x] 6. Responsive dashboard and two-company demo — eight connected pages compile; 7 frontend unit tests pass. Browser workflows now under validation.
 - [x] 7. Validation and handoff — 95 Python tests passed (2 documented skips), 7 frontend unit tests passed, real Meta browser flows for both companies and mobile passed; Excel downloads inspected against the oracle. Compose config and installed-wheel smoke passed.
 Live Meta access must be verified with the user's key; no fixture counts as live verification.
+
+- [x] Procurement recovery fix (2026-11-02): read-only prerequisite checks, actionable Needs review runs, explicit supplier-link discovery/review, and stale relationship revision rejection. No automatic relationship confirmation or purchase-order execution.

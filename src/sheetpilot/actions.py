@@ -22,34 +22,64 @@ def fingerprint(store, workspace, con=None):
     return sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
 
-def draft_lines(store, workspace, product_ids=None):
+class ProcurementBlocked(Problem):
+    """A recoverable business prerequisite; never a provider failure."""
+    def __init__(self, readiness):
+        self.readiness = readiness
+        super().__init__("Cannot safely draft: " + " ".join(b["message"] for b in readiness["blockers"]))
+
+
+def procurement_readiness(store, workspace, product_ids=None):
+    store.workspace(workspace)
     stock = [r for r in inventory_tool(store, workspace) if r["low_stock"]]
     if product_ids:
         unknown = set(product_ids) - {r["product_id"] for r in stock}
         if unknown:
             raise Problem("Requested products are not in the validated low-stock list.")
         stock = [r for r in stock if r["product_id"] in product_ids]
-    if not stock:
-        raise Problem("No validated products currently need replenishment.")
     suppliers = [r for r in records(store, workspace) if r["entity"] == "suppliers"]
-    links = [r for r in store.list(workspace, "relationship") if r["status"] == "confirmed" and r["field"] == "product_id"]
-    lines, problems = [], []
+    tables = {t["id"]: t for t in store.list(workspace, "table")}
+    links = []
+    for relation in store.list(workspace, "relationship"):
+        left, right = tables.get(relation["left_table"]), tables.get(relation["right_table"])
+        if (relation["status"] == "confirmed" and relation["field"] == "product_id" and left and right
+                and left["status"] == right["status"] == "confirmed"
+                and relation["revisions"] == [left["revision"], right["revision"]]):
+            links.append(relation)
+    lines, blockers = [], []
     for item in stock:
+        def block(code, message):
+            blockers.append({"code": code, "product_id": item["product_id"],
+                "message": item["product_id"] + ": " + message,
+                "next_step": "review_relationships" if code == "relationship_review" else "review_data",
+                "inventory_table_id": item["source"]["table_id"]})
         candidates = []
-        for record in suppliers:
+        product_quotes = [r for r in suppliers if r["data"]["product_id"] == item["product_id"]]
+        matching_quotes = [r for r in product_quotes if not item.get("supplier_id")
+                           or r["data"]["supplier_id"] == item["supplier_id"]]
+        if not product_quotes:
+            block("missing_supplier_quote", "no validated supplier quote is available. Review the supplier mapping and data.")
+            continue
+        if not matching_quotes:
+            block("supplier_mismatch", "the inventory supplier ID does not match the supplier quote. Review both source mappings.")
+            continue
+        for record in matching_quotes:
             supplier = record["data"]
             pair = {item["source"]["table_id"], record["source"]["table_id"]}
             linked = any({r["left_table"], r["right_table"]} == pair for r in links)
             if (linked and supplier["product_id"] == item["product_id"]
                     and (not item.get("supplier_id") or supplier["supplier_id"] == item["supplier_id"])):
                 candidates.append(record)
+        if not candidates:
+            block("relationship_review", "supplier quote exists, but the inventory-to-suppliers product relationship must be reviewed and confirmed.")
+            continue
         if len(candidates) != 1:
-            problems.append(f"{item['product_id']}: needs exactly one supplier quote linked by a reviewed product relationship.")
+            block("ambiguous_supplier_quote", "multiple reviewed supplier quotes match. Resolve the ambiguous quotes before drafting.")
             continue
         record = candidates[0]
         supplier = record["data"]
         if not item.get("currency") or item["currency"] != supplier.get("currency"):
-            problems.append(f"{item['product_id']}: stock and supplier currencies must be explicit and match.")
+            block("currency_mismatch", "stock and supplier currencies must be explicit and match. Review their mappings and source values.")
             continue
         quantity = Decimal(item["suggested_quantity"])
         cost = Decimal(supplier["unit_cost"])
@@ -58,9 +88,18 @@ def draft_lines(store, workspace, product_ids=None):
             unit_cost=money(cost), line_total=money(quantity * cost), currency=item["currency"],
             stock_quantity=item["stock_quantity"], target_stock=item["target_stock"],
             sources=[item["source"], record["source"]]))
-    if problems:
-        raise Problem("Cannot safely draft: " + " ".join(problems))
-    return sorted(lines, key=lambda l: (l["supplier_id"], l["product_id"]))
+    return {"ready": bool(stock) and not blockers, "low_stock_count": len(stock),
+            "ready_count": len(lines), "blockers": blockers,
+            "lines": sorted(lines, key=lambda l: (l["supplier_id"], l["product_id"]))}
+
+
+def draft_lines(store, workspace, product_ids=None):
+    readiness = procurement_readiness(store, workspace, product_ids)
+    if not readiness["low_stock_count"]:
+        raise Problem("No validated products currently need replenishment.")
+    if readiness["blockers"]:
+        raise ProcurementBlocked(readiness)
+    return readiness["lines"]
 
 
 def propose(store, workspace, product_ids=None):

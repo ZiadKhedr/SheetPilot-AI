@@ -61,3 +61,8 @@ scripts/check_secrets.py confirms the configured Meta key is absent from tracked
 
 ## Remaining non-MVP validation
 Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS-enforced runtime/memory quotas, production identity/tenant controls, cloud synchronization and container-engine execution remain outside verified scope. See KNOWN_LIMITATIONS.md.
+
+## Procurement review recovery — 2026-11-02
+- Python: 102 passed, 2 skipped (Windows symlink privilege and opt-in live Meta), one dependency deprecation warning.
+- Frontend: 10 unit tests passed; TypeScript and production build passed.
+- Real-backend browser regression passed: absent links create no action; discovery alone does not approve; explicit confirmation unlocks a pending EGP 12,630 draft with no output workbook. This regression uses guided tools, not live Meta.

@@ -1,0 +1,51 @@
+import { expect, test } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+
+test('missing supplier review is recoverable without automatic approval',async({page,request})=>{
+ const demo=await request.post('/api/demo/company_b');expect(demo.ok()).toBeTruthy();
+ const workspace=(await demo.json()).id;
+ const base='/api/workspaces/'+workspace;
+ const oracle=JSON.parse(fs.readFileSync(path.resolve('../demo_data/manifest.json'),'utf8')).companies.company_b;
+ for(const [entity,config] of Object.entries(oracle.files) as [string,any][]){
+  const state=await (await request.get(base+'/state')).json();
+  const workbook=state.workbooks.find((w:any)=>w.name===config.filename);
+  const table=state.tables.find((t:any)=>t.workbook_id===workbook.id&&t.ref===config.ref);
+  const result=await request.put(base+'/tables/'+table.id,{data:{entity,fields:config.columns,
+   header_row:config.header_row,expected_revision:table.revision,confirm:true}});
+  expect(result.ok()).toBeTruthy();
+ }
+ await page.addInitScript(id=>localStorage.setItem('sheetpilot-workspace',id),workspace);
+ await page.goto('/agents');
+ const notice=page.getByRole('region',{name:'Procurement review required'});
+ await expect(notice.getByRole('heading',{name:'Procurement needs your review'})).toBeVisible();
+ await expect(notice).toContainText('R01');
+ await page.getByRole('button',{name:'Run guided check',exact:true}).click();
+ await expect(page.locator('.run-heading').getByText('Needs review',{exact:true})).toBeVisible();
+ let state=await (await request.get(base+'/state')).json();
+ expect(state.actions).toEqual([]);
+ expect(state.runs[0].status).toBe('needs_review');
+ expect(state.relationships).toEqual([]);
+ await page.screenshot({path:'../outputs/regression-procurement-needs-review.png',fullPage:true});
+ await notice.getByRole('button',{name:'Discover & review supplier links',exact:true}).click();
+ await expect(page).toHaveURL(/\/mapping#relationships$/);
+ await expect(page.locator('#relationships')).toBeInViewport();
+ const link=page.locator('.relationship').filter({hasText:'Inventory'}).filter({hasText:'Suppliers'}).filter({hasText:'Product id'});
+ await expect(link).toContainText('4 shared product_id values');
+ await link.getByRole('button',{name:'Confirm relationship',exact:true}).click();
+ await expect(link.getByText('confirmed',{exact:true})).toBeVisible();
+ state=await (await request.get(base+'/state')).json();
+ expect(state.relationships.filter((r:any)=>r.status==='confirmed')).toHaveLength(1);
+ expect(state.actions).toEqual([]);
+ await page.getByRole('link',{name:'Agent workspace',exact:true}).click();
+ const ready=await (await request.get(base+'/procurement/readiness')).json();
+ expect(ready.ready).toBe(true);
+ await page.getByRole('button',{name:'Run guided check',exact:true}).click();
+ await expect(page.locator('.run-heading').getByText('Completed',{exact:true})).toBeVisible();
+ state=await (await request.get(base+'/state')).json();
+ expect(state.actions).toHaveLength(1);
+ expect(state.actions[0].status).toBe('pending');
+ expect(state.actions[0].output).toBeNull();
+ expect(state.actions[0].totals).toEqual([{currency:'EGP',amount:'12630.00'}]);
+});
+
