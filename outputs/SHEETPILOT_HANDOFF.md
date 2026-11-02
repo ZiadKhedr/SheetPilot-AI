@@ -39,3 +39,5 @@ See ../docs/DEMO_SCRIPT.md for a three-minute walkthrough and ../docs/JUDGE_DESC
 This is a local hackathon MVP. It generates additional workbooks and preserves originals; no supplier email, delivered-stock update, live OneDrive/SharePoint sync or enterprise SSO is claimed. Ambiguous layouts/mappings still require review.
 
 Compose config validates; container execution remains unverified because the host Docker engine is stopped. Native startup and browser workflows are verified. The OS symlink regression is skipped due to account permissions; real hard-link protection is tested.
+
+GitHub CI passed for release commit 2ae59c6 on a clean Ubuntu runner (dependency install, backend/frontend tests and build, mobile browser check): https://github.com/ZiadKhedr/SheetPilot-AI/actions/runs/41484828970

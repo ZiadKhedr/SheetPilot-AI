@@ -33,4 +33,4 @@ Local upload/snapshot workflow, reviewed semantics and relationships, dashboard 
 - The Windows account cannot create symlinks, so that platform-specific regression is skipped. The real hard-link protection test passes with normal permissions.
 - Live Meta tests are opt-in and incur provider usage; no-key environments show a clear unavailable state.
 - Docker Compose config validates, but this host's Docker engine is stopped, so image build/container startup were not exercised.
-- Browser tests launch a fresh server using the installed Python environment and built frontend. Fresh dependency installation is documented but a separate clean machine has not been provisioned.
+- Local browser tests launch a fresh server using the installed environment and built frontend. Fresh checkout/dependency installation/build and non-live browser checks also passed on GitHub's Ubuntu runner. A local clean VM and Docker container execution were not exercised.

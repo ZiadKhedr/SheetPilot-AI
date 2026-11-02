@@ -54,7 +54,7 @@ scripts/validate_downloads.py opened each browser download with OpenPyXL:
 - Non-editable installed Python wheel: frontend serving, demo ingestion and API smoke check passed with explicit SHEETPILOT_ROOT.
 - Docker Compose configuration: passed `docker compose config --quiet`.
 - Docker image build/container execution: **not run** because Docker Desktop's engine is stopped. No successful container deployment is claimed.
-- GitHub Actions is configured for offline backend/frontend tests and mobile browser validation. Live Meta is not enabled in CI by default. No claim of a remote CI run is made here.
+- GitHub Actions passed for release commit 2ae59c6 on a fresh Ubuntu runner: clean dependency installation, backend tests, frontend tests/build, and mobile browser validation all succeeded. Evidence: https://github.com/ZiadKhedr/SheetPilot-AI/actions/runs/41484828970. Live Meta remains opt-in and was verified locally for both businesses; no key was added to CI.
 
 ## Credential hygiene
 scripts/check_secrets.py confirms the configured Meta key is absent from tracked working files and historical Git blobs. .env, .data, work/, .venv and node_modules are ignored. Screenshots and committed demo artifacts contain fictional data only.

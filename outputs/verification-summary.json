@@ -58,5 +58,12 @@
     "configured_meta_key_in_tracked_files": false,
     "configured_meta_key_in_git_history": false,
     "originals_preserved": true
+  },
+  "github_ci": {
+    "release_commit": "2ae59c6ddd2a04e91781a6a97f69525f72a520c7",
+    "conclusion": "success",
+    "url": "https://github.com/ZiadKhedr/SheetPilot-AI/actions/runs/41484828970",
+    "runner": "Ubuntu",
+    "live_meta_enabled": false
   }
 }
