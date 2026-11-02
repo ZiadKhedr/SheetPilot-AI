@@ -114,3 +114,5 @@ def register(app, store, settings, auth):
         store.workspace(workspace)
         return records(store, workspace)[:1000]
 
+    from .action_routes import register_actions
+    register_actions(app, store, auth)

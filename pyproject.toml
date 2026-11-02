@@ -20,5 +20,5 @@ excel-analyze = "excel_intelligence.cli:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "tests_app"]
 pythonpath = ["src"]
