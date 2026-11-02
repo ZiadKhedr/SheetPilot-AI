@@ -1,0 +1,444 @@
+{
+  "schema_version": "1.0",
+  "description": "Explicit synthetic fixture oracle. Do not import as application semantic inference.",
+  "duplicate_policy": "Review and exclude the extra exact duplicate (including identical order_id); preserve different order IDs.",
+  "replenishment_policy": "When stock_quantity < reorder_point, purchase target_stock - stock_quantity. Historical sales must not be subtracted from a current stock snapshot.",
+  "companies": {
+    "company_a": {
+      "company_id": "company_a",
+      "name": "Circuit Harbor Electronics",
+      "currency": "USD",
+      "fictional": true,
+      "files": {
+        "sales": {
+          "filename": "Sales.xlsx",
+          "sheet": "Transactions",
+          "header_row": 5,
+          "first_column": 1,
+          "ref": "A5:H15",
+          "data_rows": 10,
+          "hidden_sheet": "Notes",
+          "columns": {
+            "1": "order_id",
+            "2": "product_id",
+            "3": "product_name",
+            "4": "quantity",
+            "5": "unit_price",
+            "6": "revenue",
+            "7": "sale_date",
+            "8": "currency"
+          },
+          "column_labels": {
+            "1": "Order Number",
+            "2": "Item Code",
+            "3": "Product Description",
+            "4": "Units Sold",
+            "5": "Selling Price",
+            "6": "Net Sales",
+            "7": "Transaction Date",
+            "8": "Currency"
+          },
+          "administrative_table_ref": "A19:B21"
+        },
+        "inventory": {
+          "filename": "Inventory.xlsx",
+          "sheet": "Warehouse",
+          "header_row": 3,
+          "first_column": 2,
+          "ref": "B3:I7",
+          "data_rows": 4,
+          "hidden_sheet": "Notes",
+          "columns": {
+            "2": "product_id",
+            "3": "product_name",
+            "4": "stock_quantity",
+            "5": "reorder_point",
+            "6": "target_stock",
+            "7": "supplier_id",
+            "8": "unit_cost",
+            "9": "currency"
+          },
+          "column_labels": {
+            "2": "SKU",
+            "3": "Item Name",
+            "4": "Available Units",
+            "5": "Reorder At",
+            "6": "Target Units",
+            "7": "Vendor Code",
+            "8": "Purchase Cost",
+            "9": "Currency"
+          },
+          "administrative_table_ref": "B11:C13"
+        },
+        "suppliers": {
+          "filename": "Suppliers.xlsx",
+          "sheet": "Partners",
+          "header_row": 4,
+          "first_column": 3,
+          "ref": "C4:H8",
+          "data_rows": 4,
+          "hidden_sheet": "Notes",
+          "columns": {
+            "3": "supplier_id",
+            "4": "supplier_name",
+            "5": "product_id",
+            "6": "unit_cost",
+            "7": "currency",
+            "8": "supplier_email"
+          },
+          "column_labels": {
+            "3": "Supplier Code",
+            "4": "Trading Name",
+            "5": "Product Reference",
+            "6": "Supply Price",
+            "7": "Currency",
+            "8": "Contact Email"
+          },
+          "administrative_table_ref": "C12:D14"
+        }
+      },
+      "expected": {
+        "revenue": "1258.00",
+        "units_sold": 31,
+        "valid_sales_rows": 8,
+        "raw_sales_rows": 10,
+        "duplicate_sales_rows": 1,
+        "invalid_sales_rows": 1,
+        "raw_revenue": "1717.00",
+        "product_count": 4,
+        "inventory_quantity": 34,
+        "inventory_value": "780.00",
+        "low_stock_count": 3,
+        "replenishment_lines": [
+          {
+            "product_id": "A001",
+            "product_name": "USB-C Hub",
+            "stock_quantity": 8,
+            "reorder_point": 10,
+            "target_stock": 30,
+            "quantity": 22,
+            "supplier_id": "S01",
+            "supplier_name": "Circuit Harbor Supply",
+            "unit_cost": "22.00",
+            "line_total": "484.00",
+            "currency": "USD"
+          },
+          {
+            "product_id": "A002",
+            "product_name": "24-inch Monitor",
+            "stock_quantity": 2,
+            "reorder_point": 5,
+            "target_stock": 12,
+            "quantity": 10,
+            "supplier_id": "S02",
+            "supplier_name": "Bright Pixel Wholesale",
+            "unit_cost": "110.00",
+            "line_total": "1100.00",
+            "currency": "USD"
+          },
+          {
+            "product_id": "A004",
+            "product_name": "HDMI Cable",
+            "stock_quantity": 0,
+            "reorder_point": 15,
+            "target_stock": 50,
+            "quantity": 50,
+            "supplier_id": "S03",
+            "supplier_name": "Wireline Components",
+            "unit_cost": "4.50",
+            "line_total": "225.00",
+            "currency": "USD"
+          }
+        ],
+        "replenishment_quantity": 82,
+        "replenishment_total": "1809.00",
+        "product_sales": [
+          {
+            "product_id": "A001",
+            "product_name": "USB-C Hub",
+            "quantity": 6,
+            "revenue": "270.00"
+          },
+          {
+            "product_id": "A002",
+            "product_name": "24-inch Monitor",
+            "quantity": 3,
+            "revenue": "540.00"
+          },
+          {
+            "product_id": "A003",
+            "product_name": "Keyboard",
+            "quantity": 8,
+            "revenue": "280.00"
+          },
+          {
+            "product_id": "A004",
+            "product_name": "HDMI Cable",
+            "quantity": 14,
+            "revenue": "168.00"
+          }
+        ],
+        "relationships": [
+          {
+            "left_entity": "sales",
+            "right_entity": "inventory",
+            "field": "product_id",
+            "overlap": 4,
+            "left_coverage": 1.0
+          },
+          {
+            "left_entity": "inventory",
+            "right_entity": "suppliers",
+            "field": "product_id",
+            "overlap": 4,
+            "left_coverage": 1.0
+          }
+        ]
+      },
+      "quality_issues": [
+        {
+          "entity": "sales",
+          "source_row": 14,
+          "code": "exact_duplicate",
+          "policy": "Extra row has identical order_id and values. Flag for duplicate-policy review."
+        },
+        {
+          "entity": "sales",
+          "source_row": 15,
+          "code": "missing_product_id",
+          "policy": "Quarantine from joined analytics until corrected."
+        },
+        {
+          "entity": "inventory",
+          "source_row": 6,
+          "code": "numeric_text",
+          "policy": "Validate and normalize numeric string in the operational copy; preserve original."
+        },
+        {
+          "entity": "suppliers",
+          "source_row": 7,
+          "code": "missing_optional_email",
+          "policy": "Warn; does not block a local purchase order draft."
+        }
+      ]
+    },
+    "company_b": {
+      "company_id": "company_b",
+      "name": "مائدة للمطاعم والتوريد",
+      "currency": "EGP",
+      "fictional": true,
+      "files": {
+        "sales": {
+          "filename": "Orders.xlsx",
+          "sheet": "طلبات المطاعم",
+          "header_row": 7,
+          "first_column": 2,
+          "ref": "B7:I17",
+          "data_rows": 10,
+          "hidden_sheet": "ملاحظات",
+          "columns": {
+            "2": "order_id",
+            "3": "product_id",
+            "4": "product_name",
+            "5": "quantity",
+            "6": "unit_price",
+            "7": "revenue",
+            "8": "sale_date",
+            "9": "currency"
+          },
+          "column_labels": {
+            "2": "رقم الطلب",
+            "3": "مرجع المنتج",
+            "4": "اسم المنتج",
+            "5": "الوحدات المباعة",
+            "6": "سعر الوحدة",
+            "7": "قيمة الطلب",
+            "8": "يوم التسليم",
+            "9": "العملة"
+          },
+          "administrative_table_ref": "B21:C23"
+        },
+        "inventory": {
+          "filename": "Stock.xlsx",
+          "sheet": "المخزن",
+          "header_row": 4,
+          "first_column": 4,
+          "ref": "D4:K8",
+          "data_rows": 4,
+          "hidden_sheet": "ملاحظات",
+          "columns": {
+            "4": "product_id",
+            "5": "product_name",
+            "6": "stock_quantity",
+            "7": "reorder_point",
+            "8": "target_stock",
+            "9": "supplier_id",
+            "10": "unit_cost",
+            "11": "currency"
+          },
+          "column_labels": {
+            "4": "رمز المادة",
+            "5": "وصف المادة",
+            "6": "الرصيد الحالي",
+            "7": "حد إعادة الطلب",
+            "8": "الرصيد المستهدف",
+            "9": "رقم المورد",
+            "10": "تكلفة الشراء",
+            "11": "عملة التكلفة"
+          },
+          "administrative_table_ref": "D12:E14"
+        },
+        "suppliers": {
+          "filename": "Vendors.xlsx",
+          "sheet": "جهات التوريد",
+          "header_row": 6,
+          "first_column": 1,
+          "ref": "A6:F10",
+          "data_rows": 4,
+          "hidden_sheet": "ملاحظات",
+          "columns": {
+            "1": "supplier_id",
+            "2": "supplier_name",
+            "3": "product_id",
+            "4": "unit_cost",
+            "5": "currency",
+            "6": "supplier_email"
+          },
+          "column_labels": {
+            "1": "معرف المورد",
+            "2": "اسم جهة التوريد",
+            "3": "كود المادة الغذائية",
+            "4": "سعر التوريد",
+            "5": "عملة السعر",
+            "6": "البريد الإلكتروني"
+          },
+          "administrative_table_ref": "A14:B16"
+        }
+      },
+      "expected": {
+        "revenue": "11890.00",
+        "units_sold": 40,
+        "valid_sales_rows": 8,
+        "raw_sales_rows": 10,
+        "duplicate_sales_rows": 1,
+        "invalid_sales_rows": 1,
+        "raw_revenue": "14650.00",
+        "product_count": 4,
+        "inventory_quantity": 24,
+        "inventory_value": "4230.00",
+        "low_stock_count": 3,
+        "replenishment_lines": [
+          {
+            "product_id": "R01",
+            "product_name": "دقيق - كيس 25 كجم",
+            "stock_quantity": 6,
+            "reorder_point": 10,
+            "target_stock": 25,
+            "quantity": 19,
+            "supplier_id": "V10",
+            "supplier_name": "شركة الحصاد للتوريد",
+            "unit_cost": "260.00",
+            "line_total": "4940.00",
+            "currency": "EGP"
+          },
+          {
+            "product_id": "R02",
+            "product_name": "زيت - عبوة 5 لتر",
+            "stock_quantity": 3,
+            "reorder_point": 8,
+            "target_stock": 20,
+            "quantity": 17,
+            "supplier_id": "V11",
+            "supplier_name": "النيل للمواد الغذائية",
+            "unit_cost": "200.00",
+            "line_total": "3400.00",
+            "currency": "EGP"
+          },
+          {
+            "product_id": "R04",
+            "product_name": "أرز - كيس 10 كجم",
+            "stock_quantity": 1,
+            "reorder_point": 4,
+            "target_stock": 12,
+            "quantity": 11,
+            "supplier_id": "V10",
+            "supplier_name": "شركة الحصاد للتوريد",
+            "unit_cost": "390.00",
+            "line_total": "4290.00",
+            "currency": "EGP"
+          }
+        ],
+        "replenishment_quantity": 47,
+        "replenishment_total": "12630.00",
+        "product_sales": [
+          {
+            "product_id": "R01",
+            "product_name": "دقيق - كيس 25 كجم",
+            "quantity": 12,
+            "revenue": "3840.00"
+          },
+          {
+            "product_id": "R02",
+            "product_name": "زيت - عبوة 5 لتر",
+            "quantity": 13,
+            "revenue": "3250.00"
+          },
+          {
+            "product_id": "R03",
+            "product_name": "طماطم - صندوق",
+            "quantity": 8,
+            "revenue": "1440.00"
+          },
+          {
+            "product_id": "R04",
+            "product_name": "أرز - كيس 10 كجم",
+            "quantity": 7,
+            "revenue": "3360.00"
+          }
+        ],
+        "relationships": [
+          {
+            "left_entity": "sales",
+            "right_entity": "inventory",
+            "field": "product_id",
+            "overlap": 4,
+            "left_coverage": 1.0
+          },
+          {
+            "left_entity": "inventory",
+            "right_entity": "suppliers",
+            "field": "product_id",
+            "overlap": 4,
+            "left_coverage": 1.0
+          }
+        ]
+      },
+      "quality_issues": [
+        {
+          "entity": "sales",
+          "source_row": 16,
+          "code": "exact_duplicate",
+          "policy": "Extra row has identical order_id and values. Flag for duplicate-policy review."
+        },
+        {
+          "entity": "sales",
+          "source_row": 17,
+          "code": "missing_product_id",
+          "policy": "Quarantine from joined analytics until corrected."
+        },
+        {
+          "entity": "inventory",
+          "source_row": 7,
+          "code": "numeric_text",
+          "policy": "Validate and normalize numeric string in the operational copy; preserve original."
+        },
+        {
+          "entity": "suppliers",
+          "source_row": 9,
+          "code": "missing_optional_email",
+          "policy": "Warn; does not block a local purchase order draft."
+        }
+      ]
+    }
+  }
+}

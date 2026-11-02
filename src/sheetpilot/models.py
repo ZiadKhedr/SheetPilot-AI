@@ -37,6 +37,7 @@ class MappingInput(Model):
     header_row: int = Field(ge=1)
     expected_revision: int = Field(ge=0)
     confirm: bool = True
+    ignore: bool = False
 
 
 class RegionInput(Model):

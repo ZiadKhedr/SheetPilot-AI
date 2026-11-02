@@ -31,6 +31,9 @@ class Store:
         with self.connection() as con:
             con.executescript("""
             PRAGMA journal_mode=WAL;
+            CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,workspace TEXT NOT NULL,table_id TEXT NOT NULL,
+                entity TEXT NOT NULL,product_id TEXT NOT NULL,data TEXT NOT NULL,source TEXT NOT NULL);
+            CREATE INDEX IF NOT EXISTS records_scope ON records(workspace,entity,product_id);
             CREATE TABLE IF NOT EXISTS workspaces(id TEXT PRIMARY KEY, name TEXT NOT NULL, created TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS objects(
                 id TEXT PRIMARY KEY, workspace TEXT NOT NULL REFERENCES workspaces(id),

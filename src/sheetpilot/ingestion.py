@@ -38,6 +38,8 @@ def ingest(store, workspace, filename, content):
         raise Problem("Upload an .xlsx workbook.")
     if len(content) > UPLOAD_LIMIT:
         raise Problem("Workbook exceeds the 10 MiB upload limit.", 413)
+    if any(w["sha256"] == sha256(content).hexdigest() for w in store.list(workspace, "workbook")):
+        raise Problem("This exact workbook has already been uploaded to this workspace.", 409)
     identifier = uid()
     path = store.root / "originals" / f"{identifier}.xlsx"
     path.write_bytes(content)

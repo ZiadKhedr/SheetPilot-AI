@@ -70,9 +70,9 @@ def review_mapping(store, workspace, identifier, body: MappingInput):
             raise Problem("Mapping changed since you opened it. Refresh before saving.", 409)
         workbook = store.get(workspace, "workbook", table["workbook_id"], con)
         table["columns"] = columns_for(workbook["report"], table["sheet"], table["ref"], body.header_row)
-        validate_fields(table, body.fields, body.entity, body.confirm)
+        validate_fields(table, body.fields, body.entity, body.confirm and not body.ignore)
         table.update(entity=body.entity, fields=body.fields, header_row=body.header_row,
-                     status="confirmed" if body.confirm else "suggested", origin="human-reviewed",
+                     status="ignored" if body.ignore else ("confirmed" if body.confirm else "suggested"), origin="human-reviewed",
                      revision=table["revision"] + 1)
         table = store.put(workspace, "table", table, con)
         # Previously reviewed relationships must be reviewed again after any mapping change.
@@ -87,7 +87,7 @@ def review_mapping(store, workspace, identifier, body: MappingInput):
 
 def suggest_labels(store, workspace):
     for table in store.list(workspace, "table"):
-        if table["status"] == "confirmed":
+        if table["status"] in {"confirmed", "ignored"}:
             continue
         fields, entity = label_suggestions(table)
         table.update(fields=fields, entity=entity, origin="label-rules", confidence=.55 if fields else 0.0,
@@ -99,7 +99,7 @@ def suggest_labels(store, workspace):
 
 
 def meta_mapping(store, workspace, provider):
-    tables = [t for t in store.list(workspace, "table") if t["status"] != "confirmed"]
+    tables = [t for t in store.list(workspace, "table") if t["status"] not in {"confirmed", "ignored"}]
     if not tables:
         raise Problem("There are no unreviewed tables.")
     context = []
