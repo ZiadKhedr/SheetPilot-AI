@@ -1,0 +1,432 @@
+{
+  "$defs": {
+    "CellValue": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinate": {
+          "pattern": "^[A-Z]+[1-9][0-9]*$",
+          "title": "Coordinate",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "data_type": {
+          "enum": [
+            "s",
+            "n",
+            "b",
+            "f",
+            "e",
+            "d",
+            "inlineStr",
+            "str"
+          ],
+          "title": "Data Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "coordinate",
+        "data_type"
+      ],
+      "title": "CellValue",
+      "type": "object"
+    },
+    "ColumnProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "minimum": 1,
+          "title": "Index",
+          "type": "integer"
+        },
+        "coordinate": {
+          "pattern": "^[A-Z]+[1-9][0-9]*$",
+          "title": "Coordinate",
+          "type": "string"
+        },
+        "header": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Header"
+        },
+        "inferred_type": {
+          "enum": [
+            "empty",
+            "boolean",
+            "number",
+            "date",
+            "text",
+            "formula",
+            "error",
+            "mixed"
+          ],
+          "title": "Inferred Type",
+          "type": "string"
+        },
+        "non_empty_count": {
+          "minimum": 0,
+          "title": "Non Empty Count",
+          "type": "integer"
+        },
+        "missing_count": {
+          "minimum": 0,
+          "title": "Missing Count",
+          "type": "integer"
+        },
+        "distinct_count": {
+          "minimum": 0,
+          "title": "Distinct Count",
+          "type": "integer"
+        },
+        "sample_values": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Sample Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "index",
+        "coordinate",
+        "header",
+        "inferred_type",
+        "non_empty_count",
+        "missing_count",
+        "distinct_count"
+      ],
+      "title": "ColumnProfile",
+      "type": "object"
+    },
+    "HeaderCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "minimum": 1,
+          "title": "Row",
+          "type": "integer"
+        },
+        "score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Score",
+          "type": "number"
+        },
+        "type_contrast": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Type Contrast",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "row",
+        "score",
+        "type_contrast",
+        "evidence"
+      ],
+      "title": "HeaderCandidate",
+      "type": "object"
+    },
+    "TableRegion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "ref": {
+          "pattern": "^[A-Z]+[1-9][0-9]*:[A-Z]+[1-9][0-9]*$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "header_row": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Header Row"
+        },
+        "header_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Header Confidence",
+          "type": "number"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "row_count": {
+          "minimum": 1,
+          "title": "Row Count",
+          "type": "integer"
+        },
+        "column_count": {
+          "minimum": 1,
+          "title": "Column Count",
+          "type": "integer"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/ColumnProfile"
+          },
+          "title": "Columns",
+          "type": "array"
+        },
+        "ambiguous": {
+          "title": "Ambiguous",
+          "type": "boolean"
+        },
+        "header_candidates": {
+          "items": {
+            "$ref": "#/$defs/HeaderCandidate"
+          },
+          "title": "Header Candidates",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "duplicate_data_row_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Duplicate Data Row Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "ref",
+        "header_row",
+        "header_confidence",
+        "confidence",
+        "row_count",
+        "column_count",
+        "columns",
+        "ambiguous",
+        "header_candidates",
+        "evidence"
+      ],
+      "title": "TableRegion",
+      "type": "object"
+    },
+    "WorksheetReport": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "visible",
+            "hidden",
+            "veryHidden"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "dimensions": {
+          "title": "Dimensions",
+          "type": "string"
+        },
+        "populated_range": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]+[1-9][0-9]*:[A-Z]+[1-9][0-9]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Populated Range"
+        },
+        "populated_cell_count": {
+          "minimum": 0,
+          "title": "Populated Cell Count",
+          "type": "integer"
+        },
+        "blank_rows": {
+          "items": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "title": "Blank Rows",
+          "type": "array"
+        },
+        "blank_columns": {
+          "items": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "title": "Blank Columns",
+          "type": "array"
+        },
+        "merged_ranges": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Merged Ranges",
+          "type": "array"
+        },
+        "formulas": {
+          "items": {
+            "$ref": "#/$defs/CellValue"
+          },
+          "title": "Formulas",
+          "type": "array"
+        },
+        "populated_cells": {
+          "items": {
+            "$ref": "#/$defs/CellValue"
+          },
+          "title": "Populated Cells",
+          "type": "array"
+        },
+        "tables": {
+          "items": {
+            "$ref": "#/$defs/TableRegion"
+          },
+          "title": "Tables",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "state",
+        "dimensions",
+        "populated_range",
+        "populated_cell_count",
+        "blank_rows",
+        "blank_columns",
+        "merged_ranges",
+        "formulas",
+        "populated_cells",
+        "tables"
+      ],
+      "title": "WorksheetReport",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.1",
+      "default": "1.1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "file_name": {
+      "title": "File Name",
+      "type": "string"
+    },
+    "file_size_bytes": {
+      "minimum": 0,
+      "title": "File Size Bytes",
+      "type": "integer"
+    },
+    "sheet_count": {
+      "minimum": 0,
+      "title": "Sheet Count",
+      "type": "integer"
+    },
+    "worksheets": {
+      "items": {
+        "$ref": "#/$defs/WorksheetReport"
+      },
+      "title": "Worksheets",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "file_name",
+    "file_size_bytes",
+    "sheet_count",
+    "worksheets"
+  ],
+  "title": "WorkbookReport",
+  "type": "object"
+}

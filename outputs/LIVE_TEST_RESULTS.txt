@@ -1,0 +1,81 @@
+PHASE 1 — FRESH VERIFICATION ON D:
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-8.4.2, pluggy-1.7.0 -- C:\Users\GIGABYTE\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Codex\referenced-chatgpt-conversation-this-is-an-2
+configfile: pyproject.toml
+testpaths: tests
+collecting ... collected 58 items
+
+tests/test_analyzer.py::test_reports_sheets_tables_formulas_and_coordinates PASSED [  1%]
+tests/test_analyzer.py::test_does_not_modify_original PASSED             [  3%]
+tests/test_analyzer.py::test_enforces_cell_limit PASSED                  [  5%]
+tests/test_analyzer.py::test_rejects_unsupported_extension PASSED        [  6%]
+tests/test_cli.py::test_cli_round_trip_and_preserves_source PASSED       [  8%]
+tests/test_cli.py::test_same_output_rejected_before_analysis PASSED      [ 10%]
+tests/test_cli.py::test_hardlink_output_rejected PASSED                  [ 12%]
+tests/test_cli.py::test_symlink_output_rejected SKIPPED (This Window...) [ 13%]
+tests/test_cli.py::test_cli_stdout PASSED                                [ 15%]
+tests/test_cli.py::test_cli_rejects_zero_limits[--max-file-mb] PASSED    [ 17%]
+tests/test_cli.py::test_cli_rejects_zero_limits[--max-sheets] PASSED     [ 18%]
+tests/test_cli.py::test_cli_rejects_zero_limits[--max-cells-per-sheet] PASSED [ 20%]
+tests/test_cli.py::test_cli_rejects_zero_limits[--max-total-cells] PASSED [ 22%]
+tests/test_cli.py::test_cli_rejects_zero_limits[--max-processing-seconds] PASSED [ 24%]
+tests/test_cli.py::test_cli_output_errors_are_clear PASSED               [ 25%]
+tests/test_cli.py::test_cli_protects_other_workbooks PASSED              [ 27%]
+tests/test_cli.py::test_existing_report_replaced_atomically PASSED       [ 29%]
+tests/test_column_profiler.py::test_distinct_values_and_duplicates_use_same_type_policy PASSED [ 31%]
+tests/test_column_profiler.py::test_formulas_errors_and_strings_are_distinct PASSED [ 32%]
+tests/test_column_profiler.py::test_dates_stay_separate_from_iso_text PASSED [ 34%]
+tests/test_examples.py::test_example_generator_produces_valid_synthetic_artifacts PASSED [ 36%]
+tests/test_schemas.py::test_confidence_bounds[-0.01] PASSED              [ 37%]
+tests/test_schemas.py::test_confidence_bounds[1.01] PASSED               [ 39%]
+tests/test_schemas.py::test_confidence_bounds[nan] PASSED                [ 41%]
+tests/test_schemas.py::test_confidence_bounds[inf] PASSED                [ 43%]
+tests/test_schemas.py::test_profile_schema_rejects_invalid_fields[changes0] PASSED [ 44%]
+tests/test_schemas.py::test_profile_schema_rejects_invalid_fields[changes1] PASSED [ 46%]
+tests/test_schemas.py::test_profile_schema_rejects_invalid_fields[changes2] PASSED [ 48%]
+tests/test_schemas.py::test_profile_schema_rejects_invalid_fields[changes3] PASSED [ 50%]
+tests/test_schemas.py::test_profile_schema_rejects_invalid_fields[changes4] PASSED [ 51%]
+tests/test_schemas.py::test_profile_schema_rejects_invalid_fields[changes5] PASSED [ 53%]
+tests/test_schemas.py::test_report_json_roundtrip PASSED                 [ 55%]
+tests/test_structure_detector.py::test_text_only_table_keeps_data_and_reports_ambiguity PASSED [ 56%]
+tests/test_structure_detector.py::test_header_on_row_five_and_missing_values PASSED [ 58%]
+tests/test_structure_detector.py::test_numeric_table_without_header_includes_all_rows PASSED [ 60%]
+tests/test_structure_detector.py::test_side_by_side_tables_and_blank_columns PASSED [ 62%]
+tests/test_structure_detector.py::test_blank_rows_separate_tables PASSED [ 63%]
+tests/test_structure_detector.py::test_merged_title_is_not_header PASSED [ 65%]
+tests/test_structure_detector.py::test_duplicate_headers_preserved_as_source_labels PASSED [ 67%]
+tests/test_structure_detector.py::test_empty_and_very_hidden_sheets PASSED [ 68%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes0-file size] PASSED [ 70%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes1-worksheet limit] PASSED [ 72%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes2-cell limit] PASSED [ 74%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes3-total cell] PASSED [ 75%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes4-expanded archive] PASSED [ 77%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes5-expanded entry] PASSED [ 79%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes6-ZIP entry] PASSED [ 81%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes7-compression ratio] PASSED [ 82%]
+tests/test_workbook_reader.py::test_limits_reject_before_openpyxl[changes8-XML element] PASSED [ 84%]
+tests/test_workbook_reader.py::test_missing_and_corrupt_files PASSED     [ 86%]
+tests/test_workbook_reader.py::test_actual_cell_coordinates_checked_when_dimension_is_false PASSED [ 87%]
+tests/test_workbook_reader.py::test_dtd_rejected_before_openpyxl PASSED  [ 89%]
+tests/test_workbook_reader.py::test_renamed_macro_workbook_rejected PASSED [ 91%]
+tests/test_workbook_reader.py::test_deadline_is_enforced PASSED          [ 93%]
+tests/test_workbook_reader.py::test_invalid_resource_limit[0] PASSED     [ 94%]
+tests/test_workbook_reader.py::test_invalid_resource_limit[-1] PASSED    [ 96%]
+tests/test_workbook_reader.py::test_invalid_resource_limit[True] PASSED  [ 98%]
+tests/test_workbook_reader.py::test_invalid_resource_limit[1.5] PASSED   [100%]
+
+=========================== short test summary info ===========================
+SKIPPED [1] C:\Users\GIGABYTE\Documents\Codex\2026-11-01\referenced-chatgpt-conversation-this-is-an-2\tests\test_cli.py:40: This Windows account cannot create symlinks.
+======================== 57 passed, 1 skipped in 1.85s ========================
+
+EXCEL DEMONSTRATION
+Input: examples\synthetic.xlsx
+Output: outputs\live-example-report.json
+Worksheets detected: 2
+Sales table: A5:C8
+Header row: 5
+Extra duplicate rows: 1
+Hidden sheet: مخزون
+Original workbook unchanged: True

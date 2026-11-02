@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "excel-intelligence"
+version = "0.2.0"
+description = "Read-only structural analysis for unfamiliar Excel workbooks"
+requires-python = ">=3.10"
+dependencies = ["openpyxl>=3.1,<4", "pydantic>=2,<3", "defusedxml>=0.7,<1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
+[project.scripts]
+excel-analyze = "excel_intelligence.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
