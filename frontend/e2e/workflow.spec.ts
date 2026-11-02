@@ -1,0 +1,66 @@
+import { expect, test } from '@playwright/test';
+import path from 'node:path';
+
+for(const company of [
+ {key:'company_a',name:'Electronics',files:['Sales.xlsx','Inventory.xlsx','Suppliers.xlsx'],revenue:'$1,258.00',total:'$1,809.00'},
+ {key:'company_b',name:'Restaurant',files:['Orders.xlsx','Stock.xlsx','Vendors.xlsx'],revenue:'EGP',total:'12,630.00'},
+]){
+ test('real Meta upload-to-Excel workflow · '+company.name,async({page})=>{
+  test.skip(process.env.SHEETPILOT_E2E_META!=='1','Set SHEETPILOT_E2E_META=1 to authorize live Meta API calls.');
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/');
+  await page.getByRole('button',{name:'New workspace',exact:true}).click();
+  await page.getByLabel('Workspace name').fill('Browser '+company.name+' '+Date.now());
+  await page.getByRole('button',{name:'Create workspace',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Excel file manager',exact:true})).toBeVisible();
+  await page.getByTestId('file-upload').setInputFiles(company.files.map(file=>path.resolve('../demo_data',company.key,file)));
+  for(const file of company.files)await expect(page.getByRole('heading',{name:file,exact:true})).toBeVisible();
+  await page.getByRole('link',{name:'Mapping review',exact:true}).click();
+  await page.getByRole('button',{name:'Analyze with Meta',exact:true}).click();
+  await expect(page.getByText('Meta suggestions are ready for your review.',{exact:true})).toBeVisible({timeout:150000});
+  for(const entity of ['sales','inventory','suppliers']){
+   const card=page.getByTestId('mapping-'+entity);
+   await card.getByRole('button',{name:'Confirm mapping',exact:true}).click();
+   await expect(card).toHaveAttribute('data-status','confirmed');
+  }
+  await page.getByRole('button',{name:'Discover relationships',exact:true}).click();
+  const confirmations=page.getByRole('button',{name:'Confirm relationship',exact:true});
+  await expect(confirmations.first()).toBeVisible();
+  const count=await confirmations.count();
+  for(let i=0;i<count;i++){await confirmations.first().click();await expect(confirmations).toHaveCount(count-i-1)}
+  await page.screenshot({path:'../outputs/browser-'+company.key+'-mapping.png',fullPage:true});
+  await page.getByRole('link',{name:'Overview',exact:true}).click();
+  if(company.key==='company_a')await expect(page.getByTestId('metric-sales-revenue')).toHaveText(company.revenue);
+  else await expect(page.getByTestId('metric-sales-revenue')).toContainText('11,890.00');
+  await expect(page.getByTestId('metric-needs-attention')).toHaveText('3');
+  await page.screenshot({path:'../outputs/browser-'+company.key+'-dashboard.png',fullPage:true});
+  await page.getByRole('link',{name:'Agent workspace',exact:true}).click();
+  await page.getByRole('button',{name:'Ask Meta',exact:true}).click();
+  await expect(page.getByText('Agent run recorded. Review pending actions before execution.',{exact:true})).toBeVisible({timeout:150000});
+  await expect(page.locator('.tool-trace').getByText('Procurement Agent',{exact:true})).toBeVisible();
+  await page.screenshot({path:'../outputs/browser-'+company.key+'-agents.png',fullPage:true});
+  await page.getByRole('link',{name:/^Approval center/}).click();
+  await expect(page.locator('.approval-total')).toContainText(company.total);
+  await page.getByRole('button',{name:'Review details',exact:true}).click();
+  await expect(page.getByRole('dialog').getByText('Affected source versions',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Close dialog',exact:true}).click();
+  await page.getByRole('button',{name:'Approve & generate Excel',exact:true}).click();
+  await expect(page.getByText('Excel output generated. Your original workbooks are unchanged.',{exact:true})).toBeVisible();
+  const wait=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Download Excel',exact:true}).click();
+  const output=await wait;await output.saveAs(path.resolve('../outputs/browser-'+company.key+'-purchase-orders.xlsx'));
+  await page.screenshot({path:'../outputs/browser-'+company.key+'-approval.png',fullPage:true});
+  await page.getByRole('link',{name:'Activity timeline',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Approved purchase orders generated; originals preserved.',exact:true})).toBeVisible();
+  expect(errors).toEqual([]);
+ });
+}
+test('mobile navigation and layout',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/');
+ await expect(page.getByRole('heading',{name:'A clear view of your business.',exact:true})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
+ await page.getByRole('button',{name:'Toggle navigation',exact:true}).click();
+ await page.getByRole('link',{name:'Excel files',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Excel file manager',exact:true})).toBeVisible();
+ await page.screenshot({path:'../outputs/browser-mobile.png',fullPage:true});
+});
