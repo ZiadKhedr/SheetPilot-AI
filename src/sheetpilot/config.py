@@ -4,7 +4,7 @@ import os
 
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.getenv("SHEETPILOT_ROOT", str(Path(__file__).resolve().parents[2]))).resolve()
 
 
 @dataclass

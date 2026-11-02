@@ -16,3 +16,5 @@ frontend/dist/
 frontend/playwright-report/
 frontend/test-results/
 outputs/hackathon-test-results/
+
+*.tsbuildinfo

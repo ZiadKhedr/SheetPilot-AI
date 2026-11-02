@@ -1,49 +1,42 @@
-# Universal Excel-to-Agentic ERP Platform — Project Brief
+# SheetPilot AI — Project Brief
 
-## Product vision
+**Your Spreadsheets. Your AI Workforce.**
 
-Build a platform that lets a company keep using its existing Excel workbooks while adding a structured operational mirror, useful dashboards, and permission-controlled AI assistance. Excel files remain the working source of truth. The product learns each company's workbook structure during onboarding and records mappings so later imports and syncs can reuse them.
+## Current objective
 
-The long-term product can discover tables and likely business meaning across varied workbooks, profile and safely normalize data, connect related records, and synchronize approved changes back to the source. Sales, Inventory, Procurement, and Orchestrator agents can eventually recommend or execute bounded actions.
+The user expanded the original Universal Excel-to-Agentic ERP vision on 2026-11-02 into a focused Meta AI Hackathon MVP. Build a polished, real workflow for a solo developer rather than an enterprise ERP in one pass. The full authorized brief is preserved in docs/HACKATHON_REQUIREMENTS.md.
 
-## Product principles
+Companies keep their existing Excel files. SheetPilot inspects structure, asks Meta for semantic proposals, lets users confirm mappings and relationships, computes a normalized business view, and coordinates bounded specialist tools. Human approval generates an additional purchase-order workbook with a source trace and execution record.
 
-- Accept a wide range of `.xlsx` layouts, languages, and conventions; never promise perfect comprehension of arbitrary files.
-- Keep original workbooks intact during analysis. Preserve source coordinates and provenance in every derived record.
-- Separate deterministic structural analysis from semantic inference. Inferences carry confidence and ambiguity; users can review mappings.
-- Treat source workbooks as untrusted input. Never execute formulas or macros, and do not send data to an external AI service in Phase 1.
-- Make cleaning non-destructive. Preserve raw values and propose normalized values separately.
-- Require explicit approval for risky edits; enforce permissions at a backend action boundary and audit every attempted and completed action.
-- Design for safe reprocessing, idempotent sync, conflict detection, and recoverability.
+## Implemented product flow
 
-## Users and jobs
+Upload → structural report → Meta semantic proposals → mapping review → evidence-based relationship review → normalized SQLite mirror → dashboard → Orchestrator and specialist tools → pending proposal → approve/reject → real Excel download → audit timeline.
 
-- Business owner: see cross-workbook KPIs, exceptions, and pending approvals without replacing familiar spreadsheets.
-- Operations staff: continue editing workbooks while benefiting from validation, alerts, and faster reporting.
-- Administrator: connect OneDrive for Business/SharePoint workbooks, review detected structure and mappings, assign roles and action limits.
-- Agent: read authorized data, prepare proposals, and invoke only explicitly permitted tools.
+Eight UI pages: Overview, Excel File Manager, Structure Explorer, Mapping Review, Business Analytics, Agent Workspace, Approval Center and Activity Timeline.
 
-## Scope
+Two independent fictional businesses exercise English/Arabic labels, different ranges and headers, duplicate/missing data, numeric text, unrelated admin tables, formulas and hidden sheets.
 
-### Phase 1 (implementation available)
+## Non-negotiable principles
 
-Read-only Excel Structure Analyzer for `.xlsx`: inspect sheets (including hidden), populated cell coordinates, merged ranges, formulas as text, blank gaps, candidate table regions and headers, column profiles, duplicate rows, warnings, and machine-readable JSON. Provide a CLI and synthetic fixtures.
+- Preserve uploaded originals, source coordinates and file hashes.
+- Separate facts, deterministic calculations, AI proposals and human review.
+- Never claim perfect arbitrary-workbook comprehension.
+- Require explicit review of semantic mappings and relationships before operational use.
+- Keep private reasoning and API credentials off the client and out of Git.
+- Let Meta plan and interpret; let typed backend tools calculate and act.
+- Agents cannot execute arbitrary Python/SQL/filesystem operations or approve their own proposals.
+- Risky edits require approval. This MVP generates an additional workbook; it does not overwrite source Excel.
+- Validate source versions at approval, use deterministic money/quantity calculations, protect against duplicate execution, and audit outcomes.
+- No fake calls, hardcoded business insights, or mock backend in product runtime.
 
-Verification status is tracked in `docs/PHASE_1_ACCEPTANCE.md`. Synthetic checks are distinct from acceptance on representative company workbooks. Report schema 1.1 includes header candidates, evidence, and explicit ambiguity.
+## Verification and success
 
-### Later phases (not implemented)
+See docs/TEST_RESULTS.md for actual tests. Real official Meta model access, structured semantic generation and tool orchestration are exercised with the user's local key. Browser workflows cover both company schemas through actual Excel downloads; unit/contract mocks remain confined to tests.
 
-Semantic mapping; safe cleaning and validation; relationship discovery across workbooks; operational mirror; OneDrive/SharePoint integration and bidirectional sync; dashboards; permissioned Sales, Inventory, Procurement, and Orchestrator agents.
+## Long-term vision retained
 
-## Phase 1 success criteria
+The original platform can later expand to canonical entities plus custom fields, robust cross-file relationships, non-destructive cleaning, dynamic dashboards, permission-controlled operations, and version-aware bidirectional OneDrive/SharePoint sync. SQLite has a documented PostgreSQL migration path. Local file snapshots and approved output workbooks are the current, accurately stated capability.
 
-- Analyze a valid `.xlsx` without changing it and retain original coordinates.
-- Report hidden sheets, formulas, merged cells, blank rows/columns, and used ranges.
-- Find common rectangular tables with headers below row 1 and multiple separated tables.
-- Profile source columns and mark uncertain headers/regions rather than presenting heuristics as certainty.
-- Produce validated, JSON-serializable output and clear errors for unsupported/corrupt or over-limit inputs.
-- Include synthetic test workbooks and a documented CLI.
+## Boundaries
 
-## Explicit limitations
-
-The analyzer does not infer business semantics, execute formulas, read legacy `.xls`, `.xlsm`, encrypted files, or guarantee detection of irregular layouts. Header and table detection are heuristic. Formula cached values may be absent. Phase 1 never edits the source, connects to cloud storage, or calls an LLM.
+This is a local single-operator hackathon app. It does not implement enterprise RBAC/SSO, live cloud sync, external supplier communications or autonomous financial commitments. Irregular layouts and weak semantic evidence still require a human.

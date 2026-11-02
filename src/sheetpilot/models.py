@@ -8,7 +8,7 @@ Canonical = Literal["product_id", "product_name", "order_id", "quantity", "unit_
 
 
 class Model(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", strict=True)
 
 
 class FieldProposal(Model):

@@ -102,6 +102,8 @@ def meta_mapping(store, workspace, provider):
     tables = [t for t in store.list(workspace, "table") if t["status"] not in {"confirmed", "ignored"}]
     if not tables:
         raise Problem("There are no unreviewed tables.")
+    if len(tables) > 30:
+        raise Problem("Review or exclude some tables first; Meta analyzes up to 30 unreviewed tables per request.")
     context = []
     for table in tables[:30]:
         workbook = store.get(workspace, "workbook", table["workbook_id"])

@@ -9,6 +9,10 @@ for(const company of [
   test.skip(process.env.SHEETPILOT_E2E_META!=='1','Set SHEETPILOT_E2E_META=1 to authorize live Meta API calls.');
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');
+  await page.getByRole('button',{name:/Meta ready to verify|Meta connected/}).click();
+  await page.getByRole('button',{name:'Verify Meta connection',exact:true}).click();
+  await expect(page.getByText('Live generation verified',{exact:true})).toBeVisible({timeout:90000});
+  await page.getByRole('button',{name:'Close dialog',exact:true}).click();
   await page.getByRole('button',{name:'New workspace',exact:true}).click();
   await page.getByLabel('Workspace name').fill('Browser '+company.name+' '+Date.now());
   await page.getByRole('button',{name:'Create workspace',exact:true}).click();

@@ -5,11 +5,13 @@ from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 
 from .config import ROOT, Settings
 from .ingestion import UPLOAD_LIMIT, ingest
 from .store import Problem, Store
+from .middleware import BodyLimitMiddleware
 
 
 class WorkspaceInput(BaseModel):
@@ -23,8 +25,10 @@ def create_app(settings=None):
     store = Store(settings.data_dir)
     app.state.store = store
     app.state.settings = settings
+    app.add_middleware(BodyLimitMiddleware)
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                        allow_methods=["GET", "POST", "PUT"], allow_headers=["Authorization", "Content-Type"])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
 
     @app.exception_handler(Problem)
     async def problem_handler(request, exc):
@@ -42,7 +46,7 @@ def create_app(settings=None):
             raise HTTPException(401, "A valid workspace access token is required.")
         # Local single-operator mode: reject browser mutations from unexpected origins.
         origin = request.headers.get("origin", "")
-        if origin and origin not in {"http://localhost:5173", "http://127.0.0.1:5173",
+        if origin and origin != str(request.base_url).rstrip("/") and origin not in {"http://localhost:5173", "http://127.0.0.1:5173",
                                      "http://localhost:8000", "http://127.0.0.1:8000"}:
             raise HTTPException(403, "This origin is not allowed.")
         return "local-operator"

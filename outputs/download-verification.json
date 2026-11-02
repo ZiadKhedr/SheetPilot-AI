@@ -1,0 +1,20 @@
+[
+  {
+    "company": "company_a",
+    "file": "browser-company_a-purchase-orders.xlsx",
+    "lines": 3,
+    "quantity": "82",
+    "total": "1809",
+    "currency": "USD",
+    "valid": true
+  },
+  {
+    "company": "company_b",
+    "file": "browser-company_b-purchase-orders.xlsx",
+    "lines": 3,
+    "quantity": "47",
+    "total": "12630",
+    "currency": "EGP",
+    "valid": true
+  }
+]

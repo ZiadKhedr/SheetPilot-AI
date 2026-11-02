@@ -1,89 +1,133 @@
-# Excel Intelligence — Phase 1
+# SheetPilot AI
+### Your Spreadsheets. Your AI Workforce.
 
-Read-only structural analysis for unfamiliar `.xlsx` files. The project vision, architecture, roadmap, and Codex instructions live in `PROJECT_BRIEF.md`, `ARCHITECTURE.md`, `ROADMAP.md`, and `AGENTS.md`.
+A working local hackathon application that connects unfamiliar Excel workbooks to a reviewed operational mirror, business dashboards, Meta-powered specialist tools, human approvals, and downloadable purchase-order workbooks.
 
-## Installation
+**No migration away from Excel. No invented KPIs. No automatic source edits.**
 
-Python 3.10 or later:
+## Start this prepared workspace (Windows)
 
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
-```
-
-Runtime dependencies: OpenPyXL, Pydantic 2, and defusedxml. Pytest is a development dependency. Workbook data is never sent to a network service.
-
-## Usage
+The local environment and frontend have already been installed and built:
 
 ```powershell
-excel-analyze .\workbook.xlsx --output .\report.json
-# Equivalent after installing the package:
-python -m excel_intelligence.cli .\workbook.xlsx -o .\report.json
-# Omit --output to print JSON to stdout.
+cd D:\Codex\referenced-chatgpt-conversation-this-is-an-2
+.\scripts\start.ps1
 ```
 
-Output paths must end in `.json`. Paths resolving to the input workbook, including hard links and symlinks, are rejected. Existing JSON reports are replaced atomically; output directories must already exist. Input errors and write failures produce a readable stderr message and exit code 2. Success returns 0.
-
-Python API:
-
-```python
-from excel_intelligence import AnalysisLimits, analyze_workbook
-
-report = analyze_workbook("workbook.xlsx", AnalysisLimits(max_sheets=20))
-print(report.model_dump_json(indent=2))
-```
-
-## Report contract
-
-Schema version **1.1** adds explicit ambiguity, header candidates, and detection evidence. Version 1.0 consumers must update for these fields. Unknown fields and invalid types are rejected; confidence is constrained to 0–1 and counts cannot be negative. Export JSON Schema with `WorkbookReport.model_json_schema()` from `excel_intelligence.schemas`.
-
-Reports contain all worksheet states, actual populated ranges, source coordinates, formulas as text, merged ranges, blank gaps, and candidate table profiles. `dimensions` includes Excel's styled/declared extent; `populated_range` considers nonempty values. Blank row/column indices are reported only inside the populated range.
-
-Headers are selected from up to five leading rows, excluding the last row. Equal scores prefer the earliest row. Comparisons with following rows inform the score. A text-only table can have a provisional first-row header; its candidates, low confidence, warnings, and `ambiguous=true` must be reviewed. Scores are heuristic rankings, not calibrated probabilities. Ambiguous boundaries remain visible in the region reference and raw cell detail.
-
-Profiles count missing values as `None` only. Whitespace, empty strings retained by the reader, and original header labels are not normalized. Formula cells are present even if their cached result is blank. Formula and error columns have explicit types.
-
-Distinct values and duplicate rows use the same comparison policy: numeric 1 and 1.0 are equivalent; text "1", boolean True, dates, formula expressions, and errors remain separate. Text comparisons preserve case and whitespace. Duplicate count is the number of extra repeated data rows after the first occurrence.
-
-## Resource limits
-
-All limits must be positive integers. ZIP size/ratio checks and streaming XML inspection run **before** OpenPyXL loads a workbook; DTD/entity content is rejected.
-
-| CLI option | Default |
-|---|---:|
-| `--max-file-mb` | 25 MiB compressed |
-| `--max-expanded-mb` | 100 MiB expanded ZIP total |
-| `--max-entry-mb` | 50 MiB expanded per ZIP entry |
-| `--max-zip-entries` | 1,000 |
-| `--max-compression-ratio` | 1,000 |
-| `--max-sheets` | 100 |
-| `--max-cells-per-sheet` | 1,000,000 |
-| `--max-total-cells` | 2,000,000 |
-| `--max-xml-elements` | 2,000,000 |
-| `--max-processing-seconds` | 60 |
-
-Worksheet cell limits bound the rectangle from A1 to the furthest declared/actual cell or merged range, including formatting extent. Very sparse or heavily formatted sheets can therefore be rejected. The API also configures the populated-cell detail cap (100,000 **per sheet**) and samples per column (5). Truncation produces a warning.
-
-The deadline is cooperative: it is checked during XML preflight, scans, and between processing stages. It cannot interrupt an individual OpenPyXL call and is not an OS memory quota. A future hosted service should also use isolated workers with hard memory and time limits.
-
-## Tests and synthetic example
+Open **http://127.0.0.1:8000**. Stop with Ctrl+C. If your Windows script policy blocks .ps1, run the equivalent directly without changing security settings:
 
 ```powershell
-python -m pytest -q
-python examples\generate_example.py --output-dir examples
-excel-analyze examples\synthetic.xlsx -o examples\example-report.json
+.\.venv\Scripts\python.exe -m uvicorn sheetpilot.api:app --host 127.0.0.1 --port 8000
 ```
 
-The generator creates only synthetic data. Committed example JSON and JSON Schema can be regenerated with that script. See `docs/PHASE_1_ACCEPTANCE.md` for verified cases and remaining acceptance work.
+Your real Meta key belongs in ignored `.env` as `MODEL_API_KEY`. Never commit it or paste it into the UI. In Connections, verify the provider; a successful model-catalog request and an actual structured generation are required for “Meta connected.”
 
-If the operating system's temporary directory is restricted, use a new directory inside `work/` with pytest's `--basetemp` option.
+## Clean setup
 
-## Known limitations
+Requirements: Python 3.10+ (tested on 3.12), Node 22.19+ (tested on 24), and pnpm 11.
 
-- Only unencrypted `.xlsx`; renamed macro-bearing ZIP packages are also rejected.
-- Blank rows and columns separate regions; an intentional blank column inside a logical table may split it.
-- Single-column, adjacent tables without gaps, multilevel headers, irregular forms, charts, and embedded objects are not comprehensively understood.
-- No formula calculation, business semantics, cross-file relationships, cleaning edits, cloud sync, dashboards, or agents.
-- Source coordinates provide lineage for this snapshot; row insertion/reordering needs stable identities and version-aware mapping in a later phase.
-- Synthetic tests do not establish accuracy on arbitrary company workbooks. Review representative workbook copies before moving to Phase 2.
+Windows:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[app,dev]"
+Copy-Item .env.example .env
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend build
+.\scripts\start.ps1
+```
+
+macOS/Linux:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -e '.[app,dev]'
+cp .env.example .env
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend build
+sh scripts/start.sh
+```
+
+Edit .env locally to set the Meta key. Keep this MVP on localhost. Optional `SHEETPILOT_ACCESS_TOKEN` enables owner authentication and `SHEETPILOT_READ_TOKEN` grants GET-only access. Enter those workspace tokens (not the Meta key) in Connections when configured. This is a local single-operator MVP, not a production identity/tenant system.
+
+For frontend development, run the backend on 8000 and `pnpm --dir frontend dev` on 5173. Vite proxies /api to FastAPI.
+
+## The complete workflow
+
+1. Create a workspace, upload the Sales, Inventory and Suppliers workbooks, or load one of the two fictional demo companies.
+2. Explore worksheet ranges, proposed headers, hidden sheets, merged cells and formula expressions. Add a rectangular source region manually if needed.
+3. Choose **Analyze with Meta**. Only bounded table summaries and small samples are sent. The key stays on the server.
+4. Review each proposed entity/column meaning and confirm the business tables. Exclude unrelated tables. Unmapped extra columns remain custom fields.
+5. Discover relationships. Inspect actual identifier overlaps and explicitly confirm links.
+6. Open Overview or Business Analytics. Every metric is computed from reviewed records, with currency kept explicit.
+7. Ask Meta to analyze sales/inventory and draft purchase orders. The Orchestrator calls typed Sales, Inventory and Procurement tools.
+8. Inspect line items, validation checks, and source versions in Approval Center. Approve or reject.
+9. Approval creates an additional real Excel workbook. Download it and inspect Purchase Orders, Source Trace and Execution. Rejection generates nothing.
+10. Activity Timeline records actual processing, reviews, tools, approvals, failures and executions.
+
+**Guided check** and **Label suggestions · no AI** are explicitly deterministic alternatives, never represented as live AI.
+
+## Demo datasets
+
+| Business | Schemas | Expected reviewed revenue | Stock | Low-stock | Expected purchase draft |
+|---|---|---:|---:|---:|---:|
+| Electronics | English labels, offset rows/columns | USD 1,258.00 | 34 | 3 | 82 units / USD 1,809.00 |
+| Restaurant supply | Different Arabic labels/layouts | EGP 11,890.00 | 24 | 3 | 47 units / EGP 12,630.00 |
+
+Both contain exact duplicate sales, a missing product identifier, numeric text, admin tables, hidden sheets and formulas. Totals are independent fixture expectations, not values imported by production analytics. See [demo guide](docs/DEMO_DATA.md); regenerate with `python scripts/generate_demo_data.py`.
+
+## Tests
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+pnpm --dir frontend test
+pnpm --dir frontend build
+```
+
+Live tests use the actual Meta account and may consume API credits:
+
+```powershell
+$env:SHEETPILOT_LIVE_META_TEST="1"
+.\.venv\Scripts\python.exe -m pytest tests_app/test_live_meta.py -v
+$env:SHEETPILOT_E2E_META="1"
+$env:PLAYWRIGHT_CHANNEL="msedge"
+pnpm --dir frontend e2e
+```
+
+For Playwright's bundled Chromium instead of installed Edge, omit PLAYWRIGHT_CHANNEL and install its browser once: `pnpm --dir frontend exec playwright install chromium`.
+
+The browser suite starts a fresh backend on 8010 using .data/e2e, uploads both datasets through the UI, performs real Meta mapping and agent calls, confirms mappings/relationships, approves, downloads Excel, checks the timeline, and tests mobile navigation. Live tests are opt-in, never silently mocked.
+
+In this managed Windows environment, filesystem link tests and browser launches require normal execution permissions. A new `--basetemp=work/your-test-run` directory avoids a restricted system temp location. A real symlink test is skipped if the OS account cannot create symlinks.
+
+Actual results and verification limits are in [TEST_RESULTS.md](docs/TEST_RESULTS.md).
+
+## Docker Compose
+
+```sh
+docker compose up --build
+```
+
+Open http://127.0.0.1:8000. Compose reads .env for the server-side key and uses a named volume for SQLite, immutable uploads and outputs. The Dockerfile builds React separately and runs Python as a non-root user. .env, .data, test artifacts and local dependencies are excluded from the image build context.
+
+Compose configuration is validated. Container build/start was not executed on this host because the Docker engine is stopped; local production startup and browser workflows were exercised.
+
+## Code map
+
+- `src/excel_intelligence/`: preserved Phase 1 analyzer and CLI
+- `src/sheetpilot/`: API, storage, ingestion, semantics, analytics, agents, approvals
+- `frontend/`: React/TypeScript/Tailwind, Radix dialogs, Recharts, unit and browser tests
+- `demo_data/`: six fictional workbooks and independent test oracle
+- `tests/`, `tests_app/`: analyzer and app regression/integration tests
+- `.data/`: ignored runtime data, source snapshots and generated workbooks
+- `docs/`: architecture details, test evidence, limitations, demo script and judge description
+
+The original CLI is still available: `excel-analyze workbook.xlsx -o report.json`. Its detailed contract is preserved in [PHASE1_CLI.md](docs/PHASE1_CLI.md).
+
+## Limits
+
+Unfamiliar structures are proposals, not guaranteed comprehension. Irregular forms may need manual region selection. Formula values are never calculated; mapped formula/error values require review and are excluded from operational calculations. Ambiguous numeric text with commas is flagged rather than guessed. Exact duplicate source rows are excluded from the derived mirror and surfaced as quality issues.
+
+Money uses Decimal; currencies are never silently combined or converted. Stock is an on-hand snapshot: historical sales are not subtracted again. Target stock defaults to twice the reorder threshold only when no target field is mapped. Purchase orders do not increase on-hand inventory.
+
+See [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md). No OneDrive/SharePoint sync, supplier emailing, multi-user SSO, or perfect arbitrary-file comprehension is claimed.

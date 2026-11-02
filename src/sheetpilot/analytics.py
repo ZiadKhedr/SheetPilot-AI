@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import json
+from openpyxl.utils import get_column_letter
 
 from .mapping import identifier, source_rows
 from .store import Problem, uid
@@ -15,11 +16,16 @@ def decimal_value(value, field):
     if isinstance(value, bool) or value is None:
         raise ValueError(f"{field} is missing or not numeric")
     try:
-        number = Decimal(str(value).strip().replace(",", ""))
+        text = str(value).strip()
+        if "," in text:
+            raise ValueError(f"{field} contains ambiguous numeric separators")
+        number = Decimal(text)
     except InvalidOperation:
         raise ValueError(f"{field} is not numeric")
     if not number.is_finite() or number < 0:
         raise ValueError(f"{field} must be a finite nonnegative number")
+    if number > Decimal("1000000000"):
+        raise ValueError(f"{field} exceeds the MVP numeric limit of one billion")
     return number
 
 
@@ -35,7 +41,9 @@ def materialize(store, workspace):
         seen = set()
         for raw in source_rows(store, workspace, table):
             source = {"workbook_id": table["workbook_id"], "table_id": table["id"],
-                      "sheet": table["sheet"], "row": raw["row"], "ref": table["ref"]}
+                      "sheet": table["sheet"], "row": raw["row"], "ref": table["ref"],
+                      "cells": {field: get_column_letter(int(col)) + str(raw["row"])
+                                for col, field in table["fields"].items() if field != "ignore"}}
             signature = json.dumps([(c, v["data_type"], v["value"]) for c, v in raw["values"].items()],
                                    ensure_ascii=False, sort_keys=True)
             if signature in seen:
@@ -88,7 +96,7 @@ def materialize(store, workspace):
                 else:
                     continue
                 row["custom_fields"] = {
-                    next((str(c["label"]) or str(c["index"]) for c in table["columns"] if str(c["index"]) == col), col): cell["value"]
+                    col + ":" + next((str(c["label"]) for c in table["columns"] if str(c["index"]) == col), ""): cell["value"]
                     for col, cell in raw["values"].items() if col not in table["fields"]}
                 records.append(dict(id=uid(), entity=entity, product_id=row["product_id"], data=row, source=source))
             except ValueError as exc:
