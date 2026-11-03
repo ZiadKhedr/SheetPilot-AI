@@ -62,3 +62,14 @@ test('legacy stale links offer an enabled refresh action and explain the actual 
  fireEvent.click(refresh);
  await waitFor(()=>expect(api).toHaveBeenCalledWith('/workspaces/test/relationships/discover','POST'));
 });
+
+test('explicit header currency hint fills a draft only until the mapping is confirmed',async()=>{
+ vi.mocked(api).mockResolvedValue({columns:table.columns,row_count:3,header_candidates:[],arithmetic_evidence:[],label_hints:{currency:'GBP'}});
+ const save=vi.fn().mockResolvedValue(undefined);
+ render(<MappingEditor table={{...table,constants:{}}} workbook={workbook} fields={fields} root="/workspaces/test" busy={false} save={save} reanalyze={()=>{}}/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Use GBP for this table'}));
+ expect(screen.getByRole('textbox',{name:'Table currency for Products'})).toHaveValue('GBP');
+ expect(save).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Confirm mapping'}));
+ expect(save).toHaveBeenCalledWith(expect.objectContaining({constants:{currency:'GBP'},confirm:true}));
+});

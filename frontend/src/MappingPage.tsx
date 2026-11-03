@@ -7,7 +7,7 @@ import { relationshipReview, relationshipSummary } from './relationshipReview';
 
 const entities:Entity[]=['unknown','sales','orders','inventory','products','suppliers','supplier_directory','customers','purchases','payments'];
 const required:Record<string,string[]>={sales:['product_id','quantity'],orders:['order_id'],inventory:['product_id','stock_quantity'],products:['product_id'],suppliers:['product_id','supplier_id','supplier_name','unit_cost'],supplier_directory:['supplier_id','supplier_name'],customers:['customer_id'],purchases:['purchase_order_id','product_id','quantity'],payments:['payment_id','payment_amount']};
-interface Preview{columns:Column[];row_count:number;header_candidates:{row:number;labels:string[]}[];arithmetic_evidence:string[]}
+interface Preview{columns:Column[];row_count:number;header_candidates:{row:number;labels:string[]}[];arithmetic_evidence:string[];label_hints?:{currency:string|null}}
 
 export function MappingPage(context:Context){
  const {state,provider,root,busy,perform,fields,catalog}=context;
@@ -43,7 +43,7 @@ export function MappingPage(context:Context){
 }
 
 export function MappingEditor({table,workbook,fields,catalog,root,busy,save,reanalyze}:{table:TableInfo;workbook:WorkbookInfo;fields:string[];catalog?:SemanticCatalog;root:string;busy:boolean;save:(body:unknown)=>Promise<void>;reanalyze:()=>void}){
- const [open,setOpen]=useState(table.status!=='confirmed'&&table.status!=='ignored');
+ const [open,setOpen]=useState(table.status!=='confirmed'&&table.status!=='ignored'||window.location.hash==='#table-'+table.id);
  const [entity,setEntity]=useState<Entity>(table.entity),[mapping,setMapping]=useState(table.fields),[header,setHeader]=useState(table.header_row);
  const [currency,setCurrency]=useState(table.constants?.currency||''),[search,setSearch]=useState('');
  const [preview,setPreview]=useState<Preview|null>(null),[previewError,setPreviewError]=useState(''),[loading,setLoading]=useState(false);
@@ -63,7 +63,7 @@ export function MappingEditor({table,workbook,fields,catalog,root,busy,save,rean
  const body=(confirm:boolean,ignore=false)=>({entity:ignore?'unknown':entity,fields:ignore?{}:Object.fromEntries(Object.entries(mapping).filter(([,v])=>v)),header_row:header,expected_revision:table.revision,confirm,ignore,constants:ignore||!currency?{}:{currency}});
  const groups:Record<string,string[]>={};
  for(const field of fields){const info=catalog?.field_catalog[field];if(search&&!`${field} ${info?.description||''}`.toLowerCase().includes(search.toLowerCase()))continue;(groups[info?.group||'Business meanings']||=[]).push(field)}
- return <article className={'panel mapping-card '+(table.status==='confirmed'?'reviewed':'')} data-testid={'mapping-'+table.entity} data-status={table.status}>
+ return <article id={'table-'+table.id} className={'panel mapping-card '+(table.status==='confirmed'?'reviewed':'')} data-testid={'mapping-'+table.entity} data-status={table.status}>
   <button className="mapping-card-heading" onClick={()=>setOpen(!open)}><span className="file-symbol"><FileSpreadsheet size={21}/></span><span><strong>{workbook.name} <span className="subtle">/ {table.sheet}</span></strong><small>{table.ref} · header row {table.header_row} · {table.columns.length} columns</small></span><Badge tone={table.status==='confirmed'?'green':table.status==='ignored'?'':'amber'}>{table.status}</Badge><Badge tone="outline">{label(table.entity)}</Badge><ChevronDown size={17} className={open?'rotated':''}/></button>
   {open&&<div className="mapping-body">
    <div className="mapping-meta"><label>Business entity<select aria-label={'Entity for '+workbook.name+' '+table.ref} value={entity} onChange={e=>setEntity(e.target.value as Entity)}>{entities.map(v=><option key={v} value={v}>{label(v)}</option>)}</select></label>
@@ -72,6 +72,7 @@ export function MappingEditor({table,workbook,fields,catalog,root,busy,save,rean
    </div>
    {catalog?.entity_catalog[entity]&&<p className="subtle">{catalog.entity_catalog[entity].description}</p>}
    <div className="mapping-controls"><label>Find a meaning<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Customer, discount, warehouse…"/></label><label>Table currency (optional)<input aria-label={'Table currency for '+table.sheet} value={currency} maxLength={3} placeholder="e.g. GBP" onChange={e=>setCurrency(e.target.value.toUpperCase().trim())}/><small>Applies to every row after confirmation. Leave blank if a currency column is mapped.</small></label></div>
+   {!currency&&!used.includes('currency')&&preview?.label_hints?.currency&&<div className="source-checks"><p>The monetary headers explicitly name {preview.label_hints.currency}. Review this setting before including these rows in monetary analytics.</p><Button variant="secondary" disabled={busy} onClick={()=>setCurrency(preview.label_hints!.currency!)}>Use {preview.label_hints.currency} for this table</Button><small>This fills the draft only. Click Confirm mapping to apply it.</small></div>}
    {loading&&<p role="status">Loading source profile…</p>}{previewError&&<p role="alert" className="mapping-warning">{previewError}</p>}
    {header!==table.header_row&&<p className="mapping-warning">Header changed: source labels and samples are reloaded. Remap the columns before confirming.</p>}
    <div className="table-wrap"><table><thead><tr><th>Original column / profile</th><th>Sample values</th><th>Business meaning / evidence</th></tr></thead><tbody>{columns.map(c=>{

@@ -82,3 +82,9 @@ Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS
 - Real-backend retail browser regression: passed, including confirmation buttons becoming enabled after the final mapping confirmation without another discovery click.
 - Legacy stale-link UI regression verifies the enabled refresh action, accurate status message, and continued approval blocking until evidence is current.
 - Evidence refresh creates/revises proposals only. Relationship approval remains an explicit human action.
+
+## Analytics context and review explanations
+- Full Python suite: 126 passed, 2 documented skips; one dependency deprecation warning.
+- Frontend: 22 unit tests passed; TypeScript and production build passed.
+- Real-backend retail browser regression passed: reviewed inventory names reach the chart; missing currency leaves revenue unavailable; the review link opens the Sales mapping; the GBP shortcut fills a draft without saving; explicit confirmation produces the expected GBP revenue.
+- Product-name enrichment does not infer sales currency, costs, stock quantities or thresholds from inventory. Missing reorder rules remain unassessed.

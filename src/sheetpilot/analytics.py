@@ -6,7 +6,7 @@ import json
 from openpyxl.utils import get_column_letter
 
 from .mapping import identifier, source_rows
-from .semantics import ENTITY_CATALOG, NUMERIC_FIELDS
+from .semantics import ENTITY_CATALOG, NUMERIC_FIELDS, currency_hint
 from .store import Problem, uid
 
 
@@ -152,7 +152,8 @@ def enrich_reviewed_records(store, workspace, rows, issues):
         for source, target in ((left,right),(right,left)):
             if source["entity"] == "orders" and target["entity"] == "sales" and link["field"] == "order_id":
                 fields = ("sale_date", "customer_id", "currency")
-            elif source["entity"] == "products" and target["entity"] in {"sales","inventory"} and link["field"] == "product_id":
+            elif ((source["entity"] == "products" and target["entity"] in {"sales","inventory"})
+                  or (source["entity"] == "inventory" and target["entity"] == "sales")) and link["field"] == "product_id":
                 fields = ("product_name", "category", "brand", "unit_of_measure")
             else: continue
             joins[(target["id"], link["field"], fields)].append((source["id"], link["id"]))
@@ -212,6 +213,10 @@ def dashboard(store, workspace):
     revenue_by_currency = defaultdict(Decimal)
     trend, top = {}, {}
     unknown_currency = 0
+    currency_gaps = defaultdict(int)
+    for record in all_records:
+        if record["entity"] == "sales" and not record["data"].get("currency"):
+            currency_gaps[record["source"]["table_id"]] += 1
     for row in sales:
         currency = row["currency"]
         if currency:
@@ -242,6 +247,9 @@ def dashboard(store, workspace):
         "warnings": ([f"{unknown_currency} sales records lack currency; excluded from monetary KPIs."] if unknown_currency else []) +
                     ([f"{sum(not r['replenishment_configured'] for r in stock)} inventory rows have no reviewed reorder threshold; replenishment is unavailable for them."]
                      if any(not r["replenishment_configured"] for r in stock) else []),
+        "currency_review": [{"table_id": t["id"], "sheet": t["sheet"], "affected_rows": currency_gaps[t["id"]],
+                             "header_hint": currency_hint(t["columns"])}
+                            for t in store.list(workspace,"table") if t["id"] in currency_gaps],
         "available_entities": sorted(entities),
         "confirmed_tables": sum(t["status"] == "confirmed" for t in store.list(workspace, "table")),
         "pending_actions": sum(a["status"] == "pending" for a in store.list(workspace, "action")),

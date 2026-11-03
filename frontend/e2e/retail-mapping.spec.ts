@@ -43,4 +43,30 @@ test('four sheets map at their business grain and discover reviewed order/custom
  expect(stats.sales_trend).toHaveLength(2);expect(stats.revenue).toEqual([{currency:'GBP',amount:'54.00'}]);
  const state=await (await request.get(base+'/state')).json();expect(state.actions).toEqual([]);
  await page.screenshot({path:'../work/retail-mapping-browser.png',fullPage:true});
+ // Reproduce analytics with reviewed joins but no currency, as in a previously confirmed mapping.
+ for(const table of state.tables.filter((t:any)=>['sales','orders'].includes(t.entity))){
+  const result=await request.put(base+'/tables/'+table.id,{data:{entity:table.entity,fields:table.fields,
+   header_row:table.header_row,expected_revision:table.revision,constants:{},confirm:true}});
+  expect(result.ok()).toBeTruthy();
+ }
+ const links=await (await request.post(base+'/relationships/discover')).json();
+ for(const link of links)expect((await request.put(base+'/relationships/'+link.id,{data:{decision:'approve'}})).ok()).toBeTruthy();
+ await page.goto('/analytics');
+ await expect(page.getByTestId('metric-sales-revenue')).toHaveText('—');
+ await expect(page.getByTestId('metric-needs-attention')).toHaveText('Not assessed');
+ await expect(page.getByRole('region',{name:'Reorder rules explanation'})).toContainText('minimum stock quantity');
+ stats=await (await request.get(base+'/dashboard')).json();
+ expect(stats.top_products.map((p:any)=>p.name).sort()).toEqual(['Cable','Widget']);
+ await expect(page.getByRole('application').getByText('Widget',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Review Sales currency',exact:true}).click();
+ const sales=page.getByTestId('mapping-sales');
+ await expect(sales.getByRole('textbox',{name:'Table currency for Sales'})).toHaveValue('');
+ await sales.getByRole('button',{name:'Use GBP for this table',exact:true}).click();
+ await expect(sales.getByRole('textbox',{name:'Table currency for Sales'})).toHaveValue('GBP');
+ const unchanged=await (await request.get(base+'/state')).json();
+ expect(unchanged.tables.find((t:any)=>t.entity==='sales').constants).toEqual({});
+ await sales.getByRole('button',{name:'Confirm mapping',exact:true}).click();
+ await expect(sales).toHaveAttribute('data-status','confirmed');
+ await page.getByRole('link',{name:'Business analytics',exact:true}).click();
+ await expect(page.getByTestId('metric-sales-revenue')).toHaveText('£54.00');
 });

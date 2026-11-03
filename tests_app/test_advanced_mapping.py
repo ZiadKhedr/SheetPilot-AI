@@ -72,7 +72,7 @@ def test_retail_meanings_and_same_workbook_relationships(tmp_path):
         assert client.put(base+"/relationships/"+r["id"],json={"decision":"approve"}).status_code==200
     result=client.get(base+"/dashboard").json()
     assert result["sales_trend"]==[{"date":"2026-01-01","currency":"GBP","revenue":"27.00"},{"date":"2026-01-02","currency":"GBP","revenue":"27.00"}]
-    assert {p["name"] for p in result["top_products"]}=={"SKU-01","SKU-02"} # Inventory is not a catalog join.
+    assert {p["name"] for p in result["top_products"]}=={"Widget","Cable"}
     sale=next(r for r in records(store,workspace) if r["entity"]=="sales")
     assert sale["data"]["customer_id"]=="C01"
     assert sale["source"]["joins"][0]["fields"]==["sale_date","customer_id"]
@@ -363,3 +363,31 @@ def test_api_mapping_confirmation_refreshes_existing_links_without_accepting_the
     assert after["actions"]==[]
     # Explicit relationship approval is still necessary; dates have not been inherited yet.
     assert client.get(base+"/dashboard").json()["sales_trend"]==[]
+
+
+def test_inventory_names_enrich_sales_but_currency_and_stock_rules_are_not_invented(tmp_path):
+    store,workspace,_,_=retail_store(tmp_path);suggest_labels(store,workspace)
+    for t in store.list(workspace,"table"):
+        review_mapping(store,workspace,t["id"],MappingInput(entity=t["entity"],fields=t["fields"],header_row=1,
+            expected_revision=t["revision"],constants={}))
+    materialize(store,workspace)
+    assert {p["name"] for p in dashboard(store,workspace)["top_products"]}=={"SKU-01","SKU-02"}
+    for link in discover_relationships(store,workspace):
+        link["status"]="confirmed";store.put(workspace,"relationship",link)
+    materialize(store,workspace)
+    result=dashboard(store,workspace)
+    assert {p["name"] for p in result["top_products"]}=={"Widget","Cable"}
+    assert result["revenue"]==[]
+    assert len(result["currency_review"])==1
+    assert result["currency_review"][0]["header_hint"]=="GBP"
+    assert result["currency_review"][0]["affected_rows"]==3
+    assert all(r["reorder_point"] is None for r in result["stock"])
+    assert all(not r["replenishment_configured"] for r in result["stock"])
+    sale=next(r for r in records(store,workspace) if r["entity"]=="sales")
+    assert any("product_name" in j["fields"] for j in sale["source"]["joins"])
+    table=next(t for t in store.list(workspace,"table") if t["entity"]=="sales")
+    review_mapping(store,workspace,table["id"],MappingInput(entity=table["entity"],fields=table["fields"],header_row=1,
+        expected_revision=table["revision"],constants={"currency":"GBP"}))
+    materialize(store,workspace)
+    assert dashboard(store,workspace)["revenue"]==[{"currency":"GBP","amount":"54.00"}]
+    assert dashboard(store,workspace)["currency_review"]==[]

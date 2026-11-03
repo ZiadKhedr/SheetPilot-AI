@@ -49,6 +49,8 @@ Case/Unicode/whitespace-normalized-only matches are labeled **preview only** and
 
 Only reviewed, current, exact joins enrich missing context: sales lines may inherit date/customer/currency from a unique order header; sales/inventory may inherit descriptive attributes from a unique product-catalog row. Lineage records the source row and relationship. Ambiguous matches neither multiply records nor inherit context. Header totals and payments never count as sales-line revenue. Rejection or stale revisions remove inherited context on rematerialization.
 
+Sales can also inherit product names and descriptive attributes from a uniquely matching reviewed inventory row. Inventory costs, currencies, thresholds, and stock quantities are not inherited into sales. Missing currency diagnostics expose the affected sales table and explicit header hint; the analytics page links to that mapping. The currency shortcut fills a draft only and requires mapping confirmation. Threshold-free inventory is shown as unassessed, with an explanation of the missing minimum-stock rule.
+
 ## API additions
 
 - `GET /api/workspaces/{workspace}/tables/{table}/preview?header_row=N`: read-only profiles and aligned evidence.
