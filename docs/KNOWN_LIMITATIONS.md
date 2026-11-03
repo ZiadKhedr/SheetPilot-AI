@@ -40,3 +40,6 @@ Local upload/snapshot workflow, reviewed semantics and relationships, dashboard 
 - Relationship candidates are limited to recognized/mapped business IDs. Formatting-normalized-only matches are previews; fuzzy joins, arbitrary foreign-key editing and leading-zero reconciliation require further work.
 - Automatic context enrichment is limited to unique reviewed exact order-header and product-catalog joins. General multi-hop joins and revenue reconciliation between headers and lines are not implemented.
 - Meta can analyze a selected reviewed table again, which deliberately requires fresh confirmation. All model confidence remains an estimate.
+
+## Demand planning limits
+Trailing-average consumption is a scenario, not a guaranteed forecast. Historical cutoffs and stock-snapshot alignment are explicit. Sparse history, missing dates or mismatched units cannot drive replenishment. Incoming orders, returns, seasonality, promotional changes, pack sizes and supplier MOQ are not modeled. Policy review and supplier/action approvals remain required; no source facts are overwritten.

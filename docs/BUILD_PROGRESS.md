@@ -14,3 +14,5 @@ Live Meta access must be verified with the user's key; no fixture counts as live
 - [x] Advanced semantics (2026-11-03): 53 business meanings, nine supported entities, row-aligned Meta context, explicit currency settings, safe per-table reanalysis, same-workbook identifier links, diagnostics/cardinality, and reviewed order-to-sales context. See docs/SEMANTIC_MAPPING.md.
 - [x] Stale relationship recovery: confirming source mappings refreshes existing proposals; current revision checks drive the UI, with an explicit refresh action for legacy stale links. No relationship auto-approval.
 - [x] Analytics explanations: reviewed inventory-to-sales product names, explicit missing-currency review links/header hints, and unassessed stock when reorder rules are absent. No currency or threshold auto-approval.
+
+- [x] Sales-based stock planning: per-product trailing sales velocity, days remaining, estimated depletion dates, editable replenishment scenarios, explicit policy review, preservation of source thresholds, typed agent results and approval/audit integration. See docs/DEMAND_PLANNING.md.

@@ -75,3 +75,6 @@ See docs/TEST_RESULTS.md and docs/KNOWN_LIMITATIONS.md. Native startup and real 
 
 ## Advanced semantic review (2026-11-03)
 The shared catalog, row-aligned profiler, atomic bounded Meta batches, and within/across-workbook relationship engine are documented in [docs/SEMANTIC_MAPPING.md](docs/SEMANTIC_MAPPING.md). Order headers, customers, product catalogs, supplier directories, purchase lines and payments now retain their own grain. Reviewed exact joins can enrich missing sales context without adding header totals to revenue. Currency constants carry explicit reviewed-setting lineage; inventory without thresholds remains visible but cannot drive replenishment.
+
+## Demand planning
+[docs/DEMAND_PLANNING.md](docs/DEMAND_PLANNING.md) describes the read-only velocity/depletion calculator and separate versioned, human-reviewed policy. Only current exact sales/inventory joins and usable dates support replenishment; source thresholds take precedence. Policy revisions enter action fingerprints and Excel/action audits retain the calculation basis.

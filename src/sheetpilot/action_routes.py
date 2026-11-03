@@ -4,11 +4,24 @@ from fastapi.responses import FileResponse
 from .actions import propose, review_action, procurement_readiness
 from .agents import run_agents
 from .ingestion import digest
-from .models import AgentInput, DraftArgs, ReviewInput
+from .models import AgentInput, DemandParameters, DemandPolicyInput, DraftArgs, ReviewInput
+from .demand import demand_analysis, save_policy
 from .store import Problem
 
 
 def register_actions(app, store, auth):
+    @app.get("/api/workspaces/{workspace}/demand", dependencies=[Depends(auth)])
+    def demand(workspace:str):
+        return demand_analysis(store,workspace)
+
+    @app.post("/api/workspaces/{workspace}/demand/preview", dependencies=[Depends(auth)])
+    def preview_demand(workspace:str,body:DemandParameters):
+        return demand_analysis(store,workspace,body)
+
+    @app.put("/api/workspaces/{workspace}/demand/policy")
+    def review_policy(workspace:str,body:DemandPolicyInput,actor=Depends(auth)):
+        return save_policy(store,workspace,body,actor)
+
     @app.get("/api/workspaces/{workspace}/procurement/readiness", dependencies=[Depends(auth)])
     def readiness(workspace: str):
         result = procurement_readiness(store, workspace)

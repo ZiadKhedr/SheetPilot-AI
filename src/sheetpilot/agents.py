@@ -3,6 +3,7 @@ import json
 
 from .actions import propose, ProcurementBlocked
 from .analytics import dashboard, inventory_tool
+from .demand import demand_analysis
 from .models import DraftArgs, EmptyArgs
 from .provider import MetaError, strict_schema
 from .store import Problem, uid
@@ -11,7 +12,7 @@ from .store import Problem, uid
 TOOL_MODELS = {"sales_analysis": EmptyArgs, "inventory_analysis": EmptyArgs, "draft_purchase_orders": DraftArgs}
 DESCRIPTIONS = {
     "sales_analysis": "Sales Agent: compute revenue, sales trends and top products from reviewed records.",
-    "inventory_analysis": "Inventory Agent: inspect current stock, reorder thresholds and safe replenishment quantities.",
+    "inventory_analysis": "Inventory Agent: inspect stock, per-product sales velocity, days remaining and scenario replenishment. Distinguish previews, limited history and approved policies; historical dates are not live forecasts.",
     "draft_purchase_orders": "Procurement Agent: create a PENDING human-review proposal for validated low-stock products. An empty product_ids list selects all low-stock products. Cannot approve, send orders, or modify originals.",
 }
 
@@ -33,7 +34,12 @@ def run_agents(store, workspace, message, mode, provider):
             result = {k: result[k] for k in ["revenue", "units_sold", "sales_records", "sales_trend", "top_products", "warnings"]}
             agent = "Sales Agent"
         elif name == "inventory_analysis":
-            result = {"stock": inventory_tool(store, workspace)}
+            demand=demand_analysis(store,workspace)
+            # Keep detailed source evidence in the API/action audit, not repeated in the model context.
+            products=demand.pop("products")
+            demand.update(products=[{k:v for k,v in p.items() if k!="evidence"} for p in products[:100]],
+                          total_products=len(products),products_truncated=len(products)>100)
+            result = {"stock": inventory_tool(store, workspace),"demand":demand}
             agent = "Inventory Agent"
         else:
             try:

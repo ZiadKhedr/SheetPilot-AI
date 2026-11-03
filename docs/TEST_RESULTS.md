@@ -88,3 +88,10 @@ Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS
 - Frontend: 22 unit tests passed; TypeScript and production build passed.
 - Real-backend retail browser regression passed: reviewed inventory names reach the chart; missing currency leaves revenue unavailable; the review link opens the Sales mapping; the GBP shortcut fills a draft without saving; explicit confirmation produces the expected GBP revenue.
 - Product-name enrichment does not infer sales currency, costs, stock quantities or thresholds from inventory. Missing reorder rules remain unassessed.
+
+## Demand-based replenishment
+- Full Python suite: 141 passed, 2 documented skips, one dependency deprecation warning.
+- Frontend: 25 unit tests; TypeScript and production build passed.
+- Real-backend Playwright: 4 passed, 2 live-Meta browser cases skipped. New scenario verifies 40 units over 10 calendar days = 4/day, 8 on hand = 2 days remaining, and a 20-unit recommendation for the selected assumptions. Preview creates no policy/action; explicit policy review enables a pending GBP 60 proposal with no output until approval.
+- Backend coverage includes insufficient/undated/zero demand, mismatched units, historical/future dates, fractional stock rounding, source-threshold precedence, duplicate source views, policy concurrency/auth, actual Excel planning lineage, immutable originals, and invalidation of pending actions after policy changes.
+- No new Meta calls were needed to validate demand arithmetic. This feature uses deterministic reviewed source data and exposes its results through the existing agent tool.

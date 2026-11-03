@@ -18,6 +18,7 @@ def fingerprint(store, workspace, con=None):
         "workbooks": sorted((w["id"], w["sha256"]) for w in store.list(workspace, "workbook", con)),
         "tables": sorted((t["id"], t["revision"], t["status"]) for t in store.list(workspace, "table", con)),
         "relationships": sorted((r["id"], r["status"], r["revisions"]) for r in store.list(workspace, "relationship", con)),
+        "demand_policy": [(p["id"],p["revision"],p["enabled"]) for p in store.list(workspace,"demand_policy",con)],
     }
     return sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
@@ -50,7 +51,7 @@ def procurement_readiness(store, workspace, product_ids=None):
             links.append(relation)
     lines = []
     blockers = [{"code": "reorder_threshold_missing", "product_id": r["product_id"],
-        "message": r["product_id"] + ": no reviewed reorder threshold is available. Stock is visible, but replenishment cannot be decided.",
+        "message": r["product_id"] + ": review a sales-demand policy with sufficient dated history, or map a source reorder point.",
         "next_step": "review_data", "inventory_table_id": r["source"]["table_id"]}
         for r in inventory if not r["replenishment_configured"] and not product_ids]
     for item in stock:
@@ -94,6 +95,9 @@ def procurement_readiness(store, workspace, product_ids=None):
             unit_cost=money(cost), line_total=money(quantity * cost), currency=item["currency"],
             stock_quantity=item["stock_quantity"], target_stock=item["target_stock"],
             sources=[item["source"], record["source"]]))
+        if item.get("planning"):
+            lines[-1]["planning"]=item["planning"]
+            lines[-1]["sources"].extend(item["planning"]["evidence"]["sales_examples"])
     return {"ready": bool(stock) and not blockers, "low_stock_count": len(stock),
             "ready_count": len(lines), "blockers": blockers,
             "lines": sorted(lines, key=lambda l: (l["supplier_id"], l["product_id"]))}
@@ -130,7 +134,8 @@ def propose(store, workspace, product_ids=None):
                              for w in store.list(workspace, "workbook", con)],
             snapshot=snapshot, product_ids=product_ids or [], idempotency_key=key,
             validation=["Reviewed mappings", "Confirmed product relationships", "Unambiguous supplier quote",
-                        "Matching explicit currency", "Deterministic quantities and Decimal money"],
+                        "Matching explicit currency", "Deterministic quantities and Decimal money"] +
+                       (["Human-reviewed sales-demand policy and stock snapshot assumptions"] if any(l.get("planning") for l in lines) else []),
             output=None, reviewed_at=None, modifications=[]), con)
         store.event(workspace, "action.proposed", action["title"], {"action_id": action["id"], "totals": action["totals"]}, con)
         return action
@@ -168,6 +173,9 @@ def write_purchase_order(store, action):
                 ("Operation", "Additional purchase-order workbook; uploaded originals preserved"),
                 ("Idempotency key", action["idempotency_key"])]:
         meta.append(row)
+    for line in action["lines"]:
+        if line.get("planning"):
+            meta.append([safe_cell("Demand basis: "+line["product_id"]),json.dumps(line["planning"],ensure_ascii=False,sort_keys=True)])
     for ws in wb:
         ws.freeze_panes = "A2"
         ws.auto_filter.ref = ws.dimensions
@@ -208,7 +216,7 @@ def review_action(store, workspace, identifier, decision, actor):
                 if not path.is_file() or digest(path) != source["sha256"]:
                     changed = True
             if changed:
-                error = "Source files, mappings, or relationships changed. Regenerate and review the proposal."
+                error = "Source files, mappings, relationships, or planning policy changed. Regenerate and review the proposal."
             else:
                 current_lines = draft_lines(store, workspace, action["product_ids"])
                 if current_lines != action["lines"]:

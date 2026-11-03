@@ -97,7 +97,7 @@ def materialize(store, workspace):
                         row["target_stock"] = str(target)
                     else:
                         row["reorder_point"] = row["target_stock"] = None
-                        issues.append(source | {"severity": "warning", "code": "reorder_missing", "message": "Stock retained for analytics; no reviewed reorder threshold, so replenishment is disabled."})
+                        issues.append(source | {"severity": "warning", "code": "reorder_missing", "message": "No source reorder threshold. Stock remains available; a confirmed sales-demand policy can supply an eligible calculated threshold."})
                     row["supplier_id"] = identifier(row.get("supplier_id"))
                 elif entity == "suppliers":
                     row["supplier_id"] = identifier(row.get("supplier_id"))
@@ -191,17 +191,33 @@ def records(store, workspace):
 
 
 def inventory_tool(store, workspace):
+    from .demand import demand_analysis, policy_for
+    all_records=records(store,workspace)
+    policy=policy_for(store,workspace)
+    plans={r["inventory_table_id"]+":"+r["product_id"]:r for r in demand_analysis(store,workspace,all_records=all_records)["products"]} if policy and policy["enabled"] else {}
     result = []
-    for record in records(store, workspace):
+    for record in all_records:
         if record["entity"] != "inventory":
             continue
-        row = record["data"]
+        row = dict(record["data"])
+        threshold_source="source" if row.get("reorder_point") is not None else None
+        plan=plans.get(record["source"]["table_id"]+":"+record["product_id"])
+        planning=None
+        if threshold_source is None and plan and plan["eligible"]:
+            row["reorder_point"],row["target_stock"]=plan["reorder_point"],plan["target_stock"]
+            threshold_source="sales_policy"
+            planning={"origin":"reviewed sales-demand policy","policy_revision":policy["revision"],"parameters":policy["parameters"],
+                      "stock_snapshot_confirmed":policy["stock_snapshot_confirmed"],
+                      "sales_units":plan["sales_units"],"observed_days":plan["observed_days"],"daily_sales":plan["daily_sales"],
+                      "window_start":plan["window_start"],"window_end":plan["window_end"],"evidence":plan["evidence"]}
         stock = Decimal(row["stock_quantity"])
         configured = row.get("reorder_point") is not None and row.get("target_stock") is not None
         threshold, target = (Decimal(row[k]) for k in ["reorder_point", "target_stock"]) if configured else (None,None)
         low = configured and stock < threshold
-        result.append(row | {"low_stock": low, "suggested_quantity": str(max(Decimal(0), target-stock)) if low else "0",
+        suggestion = plan["suggested_quantity"] if threshold_source=="sales_policy" else str(max(Decimal(0), target-stock)) if low else "0"
+        result.append(row | {"low_stock": low, "suggested_quantity": suggestion,
                              "replenishment_configured": configured,
+                             "threshold_source":threshold_source,"planning":planning,
                              "source": record["source"]})
     return result
 
@@ -245,7 +261,7 @@ def dashboard(store, workspace):
         "sales_trend": [{"date": d, "currency": c, "revenue": money(v)} for (d,c),v in sorted(trend.items())],
         "top_products": top_list[:10], "quality_issues": issues,
         "warnings": ([f"{unknown_currency} sales records lack currency; excluded from monetary KPIs."] if unknown_currency else []) +
-                    ([f"{sum(not r['replenishment_configured'] for r in stock)} inventory rows have no reviewed reorder threshold; replenishment is unavailable for them."]
+                    ([f"{sum(not r['replenishment_configured'] for r in stock)} inventory rows need a reviewed source threshold or an eligible sales-demand policy before replenishment."]
                      if any(not r["replenishment_configured"] for r in stock) else []),
         "currency_review": [{"table_id": t["id"], "sheet": t["sheet"], "affected_rows": currency_gaps[t["id"]],
                              "header_hint": currency_hint(t["columns"])}

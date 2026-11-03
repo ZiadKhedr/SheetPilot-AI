@@ -73,3 +73,17 @@ class DraftArgs(Model):
 
 class Ping(Model):
     ok: bool
+
+
+class DemandParameters(Model):
+    window_days: int = Field(default=30, ge=7, le=365)
+    lead_time_days: int = Field(default=7, ge=1, le=365)
+    safety_days: int = Field(default=3, ge=0, le=365)
+    review_period_days: int = Field(default=14, ge=1, le=365)
+    as_of: str | None = None
+
+
+class DemandPolicyInput(DemandParameters):
+    expected_revision: int = Field(ge=0)
+    enabled: bool = True
+    stock_snapshot_confirmed: bool = False
