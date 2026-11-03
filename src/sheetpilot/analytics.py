@@ -6,6 +6,7 @@ import json
 from openpyxl.utils import get_column_letter
 
 from .mapping import identifier, source_rows
+from .semantics import ENTITY_CATALOG, NUMERIC_FIELDS
 from .store import Problem, uid
 
 
@@ -61,13 +62,19 @@ def materialize(store, workspace):
             try:
                 if formula_fields:
                     raise ValueError("Formula/error values need review: " + ", ".join(formula_fields))
+                entity = table["entity"]
+                for field in ENTITY_CATALOG.get(entity, {}).get("required", []):
+                    if row.get(field) is None or identifier(row[field]) == "":
+                        raise ValueError(field + " is missing")
+                for field in list(row):
+                    if field.endswith("_id") or field == "barcode": row[field] = identifier(row[field])
                 row["product_id"] = identifier(row.get("product_id"))
-                if not row["product_id"]:
-                    raise ValueError("product_id is missing")
+                if table.get("constants", {}).get("currency"):
+                    row["currency"] = table["constants"]["currency"]
+                    source["constants"] = {"currency": {"value": row["currency"], "origin": "human-reviewed table setting"}}
                 row["currency"] = identifier(row.get("currency")).upper() or None
                 if row["currency"] is not None and (len(row["currency"]) != 3 or not row["currency"].isalpha()):
                     raise ValueError("currency must be a three-letter code")
-                entity = table["entity"]
                 if entity == "sales":
                     quantity = decimal_value(row.get("quantity"), "quantity")
                     row["quantity"] = str(quantity)
@@ -81,26 +88,35 @@ def materialize(store, workspace):
                             issues.append(source | {"severity": "warning", "code": "date", "message": "Invalid date; sale retained but omitted from trend."})
                             row["sale_date"] = None
                 elif entity == "inventory":
-                    for field in ["stock_quantity", "reorder_point"]:
+                    for field in ["stock_quantity"]:
                         row[field] = str(decimal_value(row.get(field), field))
-                    target = decimal_value(row.get("target_stock", Decimal(row["reorder_point"]) * 2), "target_stock")
-                    if target < Decimal(row["reorder_point"]):
-                        raise ValueError("target_stock is below reorder_point")
-                    row["target_stock"] = str(target)
+                    if row.get("reorder_point") is not None:
+                        row["reorder_point"] = str(decimal_value(row["reorder_point"], "reorder_point"))
+                        target = decimal_value(row.get("target_stock", Decimal(row["reorder_point"]) * 2), "target_stock")
+                        if target < Decimal(row["reorder_point"]): raise ValueError("target_stock is below reorder_point")
+                        row["target_stock"] = str(target)
+                    else:
+                        row["reorder_point"] = row["target_stock"] = None
+                        issues.append(source | {"severity": "warning", "code": "reorder_missing", "message": "Stock retained for analytics; no reviewed reorder threshold, so replenishment is disabled."})
                     row["supplier_id"] = identifier(row.get("supplier_id"))
                 elif entity == "suppliers":
                     row["supplier_id"] = identifier(row.get("supplier_id"))
                     if not row["supplier_id"] or not identifier(row.get("supplier_name")):
                         raise ValueError("Supplier identifier or name is missing")
                     row["unit_cost"] = money(decimal_value(row.get("unit_cost"), "unit_cost"))
-                else:
+                elif entity not in ENTITY_CATALOG or entity == "unknown":
                     continue
+                # Retain richer meanings without treating order/payment totals as line revenue.
+                for field in NUMERIC_FIELDS & row.keys():
+                    if row[field] is not None:
+                        row[field] = str(decimal_value(row[field], field))
                 row["custom_fields"] = {
                     col + ":" + next((str(c["label"]) for c in table["columns"] if str(c["index"]) == col), ""): cell["value"]
                     for col, cell in raw["values"].items() if col not in table["fields"]}
                 records.append(dict(id=uid(), entity=entity, product_id=row["product_id"], data=row, source=source))
             except ValueError as exc:
                 issues.append(source | {"severity": "error", "code": "invalid", "message": str(exc) + "; excluded from derived totals."})
+    enrich_reviewed_records(store, workspace, records, issues)
     # Conflicting inventory identities must never result in duplicate replenishment.
     groups = defaultdict(list)
     for record in records:
@@ -123,6 +139,49 @@ def materialize(store, workspace):
     return records, issues
 
 
+def enrich_reviewed_records(store, workspace, rows, issues):
+    """Only a unique master across all reviewed exact links may enrich missing context."""
+    tables = {t["id"]: t for t in store.list(workspace, "table")}
+    by_table, joins = defaultdict(list), defaultdict(list)
+    for row in rows: by_table[row["source"]["table_id"]].append(row)
+    for link in store.list(workspace, "relationship"):
+        left, right = tables.get(link["left_table"]), tables.get(link["right_table"])
+        if (not left or not right or link["status"] != "confirmed" or link.get("match_mode", "exact") != "exact"
+            or any(t["status"] != "confirmed" for t in (left,right))
+            or link["revisions"] != [left["revision"],right["revision"]]): continue
+        for source, target in ((left,right),(right,left)):
+            if source["entity"] == "orders" and target["entity"] == "sales" and link["field"] == "order_id":
+                fields = ("sale_date", "customer_id", "currency")
+            elif source["entity"] == "products" and target["entity"] in {"sales","inventory"} and link["field"] == "product_id":
+                fields = ("product_name", "category", "brand", "unit_of_measure")
+            else: continue
+            joins[(target["id"], link["field"], fields)].append((source["id"], link["id"]))
+    for (target_id, key_field, fields), sources in joins.items():
+        lookup = defaultdict(list)
+        for source_id, relationship_id in sources:
+            for item in by_table[source_id]:
+                key = identifier(item["data"].get(key_field))
+                if key: lookup[key].append((item, relationship_id))
+        for item in by_table[target_id]:
+            matches = lookup.get(identifier(item["data"].get(key_field)), [])
+            if len(matches) > 1:
+                issues.append(item["source"] | {"severity": "warning", "code": "join_ambiguous", "message": "Reviewed joins have multiple matching master rows; context was not inherited."})
+                continue
+            if not matches: continue
+            master, relationship_id = matches[0]
+            inherited = []
+            for field in fields:
+                if item["data"].get(field) in (None, "") and master["data"].get(field) not in (None, ""):
+                    value = master["data"][field]
+                    if field == "sale_date":
+                        try: value = date.fromisoformat(str(value)[:10]).isoformat()
+                        except ValueError: continue
+                    item["data"][field] = value
+                    inherited.append(field)
+            if inherited:
+                item["source"].setdefault("joins",[]).append({"relationship_id":relationship_id, "source":master["source"], "fields":inherited})
+
+
 def records(store, workspace):
     with store.connection() as con:
         return [{"id": r["id"], "entity": r["entity"], "product_id": r["product_id"],
@@ -136,9 +195,12 @@ def inventory_tool(store, workspace):
         if record["entity"] != "inventory":
             continue
         row = record["data"]
-        stock, threshold, target = (Decimal(row[k]) for k in ["stock_quantity", "reorder_point", "target_stock"])
-        low = stock < threshold
+        stock = Decimal(row["stock_quantity"])
+        configured = row.get("reorder_point") is not None and row.get("target_stock") is not None
+        threshold, target = (Decimal(row[k]) for k in ["reorder_point", "target_stock"]) if configured else (None,None)
+        low = configured and stock < threshold
         result.append(row | {"low_stock": low, "suggested_quantity": str(max(Decimal(0), target-stock)) if low else "0",
+                             "replenishment_configured": configured,
                              "source": record["source"]})
     return result
 
@@ -177,7 +239,9 @@ def dashboard(store, workspace):
         "stock": stock, "low_stock": [r for r in stock if r["low_stock"]],
         "sales_trend": [{"date": d, "currency": c, "revenue": money(v)} for (d,c),v in sorted(trend.items())],
         "top_products": top_list[:10], "quality_issues": issues,
-        "warnings": ([f"{unknown_currency} sales records lack currency; excluded from monetary KPIs."] if unknown_currency else []),
+        "warnings": ([f"{unknown_currency} sales records lack currency; excluded from monetary KPIs."] if unknown_currency else []) +
+                    ([f"{sum(not r['replenishment_configured'] for r in stock)} inventory rows have no reviewed reorder threshold; replenishment is unavailable for them."]
+                     if any(not r["replenishment_configured"] for r in stock) else []),
         "available_entities": sorted(entities),
         "confirmed_tables": sum(t["status"] == "confirmed" for t in store.list(workspace, "table")),
         "pending_actions": sum(a["status"] == "pending" for a in store.list(workspace, "action")),

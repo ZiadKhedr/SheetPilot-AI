@@ -8,7 +8,7 @@ from .analytics import dashboard, materialize, records
 from .config import ROOT
 from .ingestion import columns_for, ingest
 from .mapping import discover_relationships, meta_mapping, review_mapping, suggest_labels
-from .models import MappingInput, RegionInput, ReviewInput
+from .models import AnalyzeInput, MappingInput, RegionInput, ReviewInput
 from .provider import MetaProvider
 from .store import Problem, now, uid
 
@@ -51,22 +51,36 @@ def register(app, store, settings, auth):
 
     @app.get("/api/catalog", dependencies=[Depends(auth)])
     def catalog():
-        from .mapping import FIELDS
-        return {"fields": FIELDS, "entities": ["sales", "inventory", "suppliers", "unknown"]}
+        from .semantics import FIELDS, ENTITIES, FIELD_CATALOG, ENTITY_CATALOG
+        return {"fields": FIELDS, "entities": ENTITIES, "field_catalog": FIELD_CATALOG, "entity_catalog": ENTITY_CATALOG}
 
     @app.post("/api/workspaces/{workspace}/suggest-labels", dependencies=[Depends(auth)])
     def labels(workspace: str):
         store.workspace(workspace)
-        return suggest_labels(store, workspace)
+        result = suggest_labels(store, workspace)
+        discover_relationships(store, workspace)
+        return result
 
     @app.post("/api/workspaces/{workspace}/analyze-meta", dependencies=[Depends(auth)])
-    def analyze_meta(workspace: str):
+    def analyze_meta(workspace: str, body: AnalyzeInput | None = None):
         store.workspace(workspace)
         try:
-            return meta_mapping(store, workspace, app.state.provider_factory())
+            body = body or AnalyzeInput()
+            result = meta_mapping(store, workspace, app.state.provider_factory(), body.table_ids, body.include_confirmed)
+            materialize(store, workspace)
+            discover_relationships(store, workspace)
+            return result
         except Problem as exc:
             store.event(workspace, "meta.failed", str(exc))
             raise
+
+    @app.get("/api/workspaces/{workspace}/tables/{identifier}/preview", dependencies=[Depends(auth)])
+    def preview(workspace: str, identifier: str, header_row: int | None = None):
+        from .profiling import table_profile, arithmetic_evidence
+        table = store.get(workspace, "table", identifier)
+        result = table_profile(store, workspace, table, header_row)
+        result["arithmetic_evidence"] = arithmetic_evidence(result)
+        return result
 
     @app.put("/api/workspaces/{workspace}/tables/{identifier}", dependencies=[Depends(auth)])
     def review(workspace: str, identifier: str, body: MappingInput):
@@ -92,16 +106,24 @@ def register(app, store, settings, auth):
 
     @app.put("/api/workspaces/{workspace}/relationships/{identifier}", dependencies=[Depends(auth)])
     def relationship(workspace: str, identifier: str, body: ReviewInput):
-        relation = store.get(workspace, "relationship", identifier)
-        tables = [store.get(workspace, "table", relation[key]) for key in ["left_table", "right_table"]]
-        if relation["revisions"] != [t["revision"] for t in tables] or any(t["status"] != "confirmed" for t in tables):
-            raise Problem("Source mappings changed; discover relationships again.", 409)
-        if body.decision == "approve" and relation["overlap_count"] < 1:
-            raise Problem("Cannot confirm a relationship without matching source values.")
-        relation["status"] = "confirmed" if body.decision == "approve" else "rejected"
-        result = store.put(workspace, "relationship", relation)
-        store.event(workspace, "relationship.reviewed", f"Relationship {relation['status']}.",
-                    dict(relationship_id=identifier, field=relation["field"], evidence=relation["evidence"]))
+        with store.connection(immediate=True) as con:
+            relation = store.get(workspace, "relationship", identifier, con)
+            tables = [store.get(workspace, "table", relation[key], con) for key in ["left_table", "right_table"]]
+            if body.decision == "approve":
+                if relation["revisions"] != [t["revision"] for t in tables] or any(t["status"] != "confirmed" for t in tables):
+                    raise Problem("Confirm both source mappings, then discover relationships again.", 409)
+                if relation.get("match_mode", "exact") != "exact":
+                    raise Problem("Normalized matches are preview only. Resolve source identifier formatting before confirming an operational join.")
+                if relation["overlap_count"] < 1:
+                    raise Problem("Cannot confirm a relationship without matching source values.")
+                for table, key in zip(tables, ("left_column", "right_column")):
+                    if key in relation and table["fields"].get(relation[key]) != relation["field"]:
+                        raise Problem("Identifier meanings changed; review both source mappings first.", 409)
+            relation["status"] = "confirmed" if body.decision == "approve" else "rejected"
+            result = store.put(workspace, "relationship", relation, con)
+            store.event(workspace, "relationship.reviewed", f"Relationship {relation['status']}.",
+                        dict(relationship_id=identifier, field=relation["field"], evidence=relation["evidence"]), con)
+        materialize(store, workspace)
         return result
 
     @app.get("/api/workspaces/{workspace}/dashboard", dependencies=[Depends(auth)])

@@ -68,7 +68,8 @@ def create_app(settings=None):
         return {"workspace": store.workspace(workspace), "workbooks": store.list(workspace, "workbook"),
                 "tables": store.list(workspace, "table"), "relationships": store.list(workspace, "relationship"),
                 "actions": store.list(workspace, "action"), "runs": store.list(workspace, "run"),
-                "events": store.events(workspace)}
+                "events": store.events(workspace),
+                "relationship_report": next(iter(store.list(workspace, "relationship_report")), None)}
 
     @app.post("/api/workspaces/{workspace}/uploads", dependencies=[Depends(auth)])
     async def upload(workspace: str, file: UploadFile = File(...)):
@@ -88,7 +89,7 @@ def create_app(settings=None):
     register(app, store, settings, auth)
 
     dist = ROOT / "frontend" / "dist"
-    if dist.exists():
+    if (dist / "assets").is_dir() and (dist / "index.html").is_file():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
         @app.get("/{path:path}")
         def frontend(path: str):

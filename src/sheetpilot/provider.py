@@ -14,8 +14,9 @@ from .models import Ping
 
 
 class MetaError(Problem):
-    def __init__(self, message, status=502):
+    def __init__(self, message, status=502, output_error=False):
         super().__init__(message, status)
+        self.output_error = output_error
 
 
 class MetaProvider:
@@ -88,7 +89,7 @@ class MetaProvider:
         try:
             return schema.model_validate_json(message["content"])
         except (KeyError, TypeError, ValueError, ValidationError):
-            raise MetaError("Meta output failed schema validation; nothing was accepted.")
+            raise MetaError("Meta output failed schema validation; nothing was accepted.", output_error=True)
 
     def verify(self):
         catalog = self.request("GET", "/models")

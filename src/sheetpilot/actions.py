@@ -31,7 +31,8 @@ class ProcurementBlocked(Problem):
 
 def procurement_readiness(store, workspace, product_ids=None):
     store.workspace(workspace)
-    stock = [r for r in inventory_tool(store, workspace) if r["low_stock"]]
+    inventory = inventory_tool(store, workspace)
+    stock = [r for r in inventory if r["low_stock"]]
     if product_ids:
         unknown = set(product_ids) - {r["product_id"] for r in stock}
         if unknown:
@@ -43,10 +44,15 @@ def procurement_readiness(store, workspace, product_ids=None):
     for relation in store.list(workspace, "relationship"):
         left, right = tables.get(relation["left_table"]), tables.get(relation["right_table"])
         if (relation["status"] == "confirmed" and relation["field"] == "product_id" and left and right
+                and relation.get("match_mode", "exact") == "exact"
                 and left["status"] == right["status"] == "confirmed"
                 and relation["revisions"] == [left["revision"], right["revision"]]):
             links.append(relation)
-    lines, blockers = [], []
+    lines = []
+    blockers = [{"code": "reorder_threshold_missing", "product_id": r["product_id"],
+        "message": r["product_id"] + ": no reviewed reorder threshold is available. Stock is visible, but replenishment cannot be decided.",
+        "next_step": "review_data", "inventory_table_id": r["source"]["table_id"]}
+        for r in inventory if not r["replenishment_configured"] and not product_ids]
     for item in stock:
         def block(code, message):
             blockers.append({"code": code, "product_id": item["product_id"],
@@ -95,10 +101,10 @@ def procurement_readiness(store, workspace, product_ids=None):
 
 def draft_lines(store, workspace, product_ids=None):
     readiness = procurement_readiness(store, workspace, product_ids)
-    if not readiness["low_stock_count"]:
-        raise Problem("No validated products currently need replenishment.")
     if readiness["blockers"]:
         raise ProcurementBlocked(readiness)
+    if not readiness["low_stock_count"]:
+        raise Problem("No validated products currently need replenishment.")
     return readiness["lines"]
 
 

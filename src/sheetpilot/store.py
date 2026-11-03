@@ -104,7 +104,7 @@ class Store:
             with self.connection() as connection:
                 return self.list(workspace, kind, connection)
         return [json.loads(r[0]) for r in con.execute(
-            "SELECT payload FROM objects WHERE workspace=? AND kind=? ORDER BY created,id", (workspace, kind))]
+            "SELECT payload FROM objects WHERE workspace=? AND kind=? ORDER BY created,rowid", (workspace, kind))]
 
     def event(self, workspace, kind, message, details=None, con=None):
         if con is None:

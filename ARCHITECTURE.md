@@ -72,3 +72,6 @@ Retain UUIDs, workspace scoping, service boundaries and canonical records. Repla
 ## Tests and deployment evidence
 
 See docs/TEST_RESULTS.md and docs/KNOWN_LIMITATIONS.md. Native startup and real browser workflows are tested. Docker Compose configuration is validated; engine-dependent image build/run remains unverified on this host.
+
+## Advanced semantic review (2026-11-03)
+The shared catalog, row-aligned profiler, atomic bounded Meta batches, and within/across-workbook relationship engine are documented in [docs/SEMANTIC_MAPPING.md](docs/SEMANTIC_MAPPING.md). Order headers, customers, product catalogs, supplier directories, purchase lines and payments now retain their own grain. Reviewed exact joins can enrich missing sales context without adding header totals to revenue. Currency constants carry explicit reviewed-setting lineage; inventory without thresholds remains visible but cannot drive replenishment.

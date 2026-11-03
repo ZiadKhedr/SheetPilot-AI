@@ -10,3 +10,5 @@
 Live Meta access must be verified with the user's key; no fixture counts as live verification.
 
 - [x] Procurement recovery fix (2026-11-02): read-only prerequisite checks, actionable Needs review runs, explicit supplier-link discovery/review, and stale relationship revision rejection. No automatic relationship confirmation or purchase-order execution.
+
+- [x] Advanced semantics (2026-11-03): 53 business meanings, nine supported entities, row-aligned Meta context, explicit currency settings, safe per-table reanalysis, same-workbook identifier links, diagnostics/cardinality, and reviewed order-to-sales context. See docs/SEMANTIC_MAPPING.md.

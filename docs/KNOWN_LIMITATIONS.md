@@ -34,3 +34,9 @@ Local upload/snapshot workflow, reviewed semantics and relationships, dashboard 
 - Live Meta tests are opt-in and incur provider usage; no-key environments show a clear unavailable state.
 - Docker Compose config validates, but this host's Docker engine is stopped, so image build/container startup were not exercised.
 - Local browser tests launch a fresh server using the installed environment and built frontend. Fresh checkout/dependency installation/build and non-live browser checks also passed on GitHub's Ubuntu runner. A local clean VM and Docker container execution were not exercised.
+
+## Advanced mapping boundaries
+- The expanded vocabulary retains order headers, customers, product catalogs, supplier directories, purchases and payments. This does not add automated accounting, tax, payment, lead-time or MOQ rules.
+- Relationship candidates are limited to recognized/mapped business IDs. Formatting-normalized-only matches are previews; fuzzy joins, arbitrary foreign-key editing and leading-zero reconciliation require further work.
+- Automatic context enrichment is limited to unique reviewed exact order-header and product-catalog joins. General multi-hop joins and revenue reconciliation between headers and lines are not implemented.
+- Meta can analyze a selected reviewed table again, which deliberately requires fresh confirmation. All model confidence remains an estimate.
