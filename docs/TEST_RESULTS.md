@@ -100,3 +100,12 @@ Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS
 - Frontend component/unit tests: 31 passed; TypeScript and production build passed.
 - Regressions verify unchanged-result feedback, an explicit calculating state, visible request errors, no implicit policy writes, blocked confirmation without eligible history, and snapshot acknowledgement reset when assumptions change.
 - This change was verified against source and synthetic mocked component fixtures. Live browser reproduction was blocked by the browser origin-permission gate; no live-page verification is claimed for this fix.
+
+## Meta completion recovery — 2026-11-03
+
+- Full offline Python suite: **153 passed, 2 documented skips**, one existing FastAPI/Starlette dependency warning. Focused provider/mapping suite: **42 passed**.
+- New regressions reproduce length-truncated structured replies and tool calls, check the single larger-budget retry, reject malformed messages, distinguish other stop reasons, stop on authentication failure, and verify atomic persistence when a later batch recovers or exhausts its retry. Nine failing regression cases were reproduced before the fix.
+- Live official Meta mapping on the public fictional electronics files: **passed in 86.3 seconds**, using an isolated temporary store. All three business tables matched the fixture's exact field mappings; three administrative tables remained `unknown`. Three completion calls finished normally, including one semantic validation repair; the live run did not need a length retry. Length recovery is covered with controlled transport responses in the regression suite.
+- No mappings were confirmed, no operational records or purchase outputs were created, and uploaded fixture originals were verified byte-for-byte. The application's active workspace was not used by this live check.
+- Sanitized usage/finish-reason evidence: [validation/meta-completion-recovery-live.json](validation/meta-completion-recovery-live.json). No provider content, private reasoning or credentials are stored in this evidence.
+- This is service-level live verification. Browser origin permission remains a separate restriction; no live-page verification is claimed.

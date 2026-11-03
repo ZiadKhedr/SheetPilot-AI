@@ -1,0 +1,54 @@
+{
+  "checked_at_utc": "2026-11-03T21:42:38.034378+00:00",
+  "model": "muse-spark-1.3",
+  "data": "Public fictional company_a electronics fixture; isolated temporary store, not the application's active workspace.",
+  "result": "passed",
+  "duration_seconds": 86.3,
+  "tables_proposed": 6,
+  "entities": {
+    "sales": 1,
+    "unknown": 3,
+    "inventory": 1,
+    "suppliers": 1
+  },
+  "business_field_mappings_match_fixture_oracle": true,
+  "confirmed_mappings": 0,
+  "normalized_records": 0,
+  "output_workbooks": 0,
+  "originals_unchanged": true,
+  "provider_calls": [
+    {
+      "max_completion_tokens": 8192,
+      "reasoning_effort": "medium",
+      "finish_reason": "stop",
+      "duration_seconds": 39.97,
+      "usage": {
+        "completion_tokens": 4385,
+        "prompt_tokens": 6516,
+        "total_tokens": 10901
+      }
+    },
+    {
+      "max_completion_tokens": 8192,
+      "reasoning_effort": "medium",
+      "finish_reason": "stop",
+      "duration_seconds": 22.64,
+      "usage": {
+        "completion_tokens": 2186,
+        "prompt_tokens": 4221,
+        "total_tokens": 6407
+      }
+    },
+    {
+      "max_completion_tokens": 8192,
+      "reasoning_effort": "medium",
+      "finish_reason": "stop",
+      "duration_seconds": 23.44,
+      "usage": {
+        "completion_tokens": 2281,
+        "prompt_tokens": 4256,
+        "total_tokens": 6537
+      }
+    }
+  ]
+}

@@ -273,6 +273,39 @@ def test_meta_batches_are_atomic_when_last_batch_is_invalid(tmp_path):
     assert all(t["revision"]==0 for t in store.list(workspace,"table"))
 
 
+@pytest.mark.parametrize("recover", [True, False])
+def test_truncated_later_batch_recovers_or_leaves_all_mappings_unchanged(tmp_path, recover):
+    import httpx
+    from sheetpilot.provider import MetaProvider
+    store,workspace,workbook,original=retail_store(tmp_path)
+    first=store.list(workspace,"table")[0]
+    store.put(workspace,"table",dict(first,id="extra",sheet="Sales",ref="A1:F4",columns=first["columns"][:6]))
+    before=store.list(workspace,"table")
+    requests=[]
+    def handle(request):
+        payload=json.loads(request.content)
+        requests.append(payload)
+        ids={t["table_id"] for t in json.loads(payload["messages"][1]["content"])["requested_tables"]}
+        if len(ids)==1 and (not recover or len(requests)==2):
+            return httpx.Response(200,json={"choices":[{"finish_reason":"length","message":{"content":"partial"}}]})
+        plan=SemanticPlan.model_validate({"tables":[proposal_for(t) for t in before if t["id"] in ids],"summary":"Reviewed source evidence"})
+        return httpx.Response(200,json={"choices":[{"finish_reason":"stop","message":{"content":plan.model_dump_json()}}]})
+    provider=MetaProvider("test-key",transport=httpx.MockTransport(handle))
+    if recover:
+        result=meta_mapping(store,workspace,provider)
+        assert set(result["tables"])=={t["id"] for t in before}
+        assert all(t["status"]=="suggested" and t["revision"]==1 for t in store.list(workspace,"table"))
+        assert sum(e["kind"]=="mapping.meta" for e in store.events(workspace))==1
+    else:
+        with pytest.raises(MetaError,match="response limit"):
+            meta_mapping(store,workspace,provider)
+        assert store.list(workspace,"table")==before
+        assert not any(e["kind"]=="mapping.meta" for e in store.events(workspace))
+    assert [p["max_completion_tokens"] for p in requests]==[8192,8192,16384]
+    assert records(store,workspace)==[]
+    assert (store.root/"originals"/(workbook["id"]+".xlsx")).read_bytes()==original
+
+
 def test_currency_requires_explicit_monetary_header_or_human_setting():
     from sheetpilot.semantics import currency_hint
     assert currency_hint([{"label":"country_gbp"}]) is None

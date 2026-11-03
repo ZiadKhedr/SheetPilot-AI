@@ -1,5 +1,6 @@
 """Official Meta Model API client. Never falls back to simulated AI."""
 import json
+import logging
 import os
 import random
 import time
@@ -11,6 +12,11 @@ from pydantic import ValidationError
 from .config import ROOT
 from .store import Problem
 from .models import Ping
+
+
+logger = logging.getLogger(__name__)
+# Reasoning and visible output share this budget. Grow it only after a length stop.
+COMPLETION_TOKEN_LIMITS = (8192, 16384)
 
 
 class MetaError(Problem):
@@ -69,20 +75,36 @@ class MetaProvider:
         raise MetaError("Meta is temporarily unavailable.")
 
     def completion(self, messages, schema=None, tools=None):
-        payload = {"model": self.model, "messages": messages, "max_completion_tokens": 6000}
+        payload = {"model": self.model, "messages": messages, "reasoning_effort": "medium"}
         if schema:
             payload["response_format"] = {"type": "json_schema", "json_schema": {
                 "name": schema.__name__, "schema": strict_schema(schema.model_json_schema()), "strict": True}}
         if tools:
             payload.update(tools=tools, tool_choice="auto", parallel_tool_calls=False)
-        data = self.request("POST", "/chat/completions", payload)
-        try:
-            choice = data["choices"][0]
-            if choice.get("finish_reason") not in {"stop", "tool_calls"}:
-                raise MetaError("Meta response was incomplete; no changes were applied.")
-            return choice["message"]
-        except (KeyError, IndexError, TypeError):
-            raise MetaError("Meta returned an unexpected response format.")
+        for attempt, limit in enumerate(COMPLETION_TOKEN_LIMITS):
+            data = self.request("POST", "/chat/completions", payload | {"max_completion_tokens": limit})
+            try:
+                choice = data["choices"][0]
+                if not isinstance(choice, dict):
+                    raise TypeError
+                reason = choice.get("finish_reason")
+                if reason == "length":
+                    if attempt == 0:
+                        # Never log or replay a partial answer, tool call, or private reasoning.
+                        logger.warning("Meta reached its %s-token response limit; retrying once with %s tokens.",
+                                       limit, COMPLETION_TOKEN_LIMITS[1])
+                        continue
+                    raise MetaError("Meta reached its response limit after one retry. Try a smaller selection or analyze one table at a time.")
+                if reason == "content_filter":
+                    raise MetaError("Meta could not return this response because of a content restriction.")
+                if reason not in {"stop", "tool_calls"}:
+                    raise MetaError("Meta stopped before completing this response. Please retry this step.")
+                message = choice["message"]
+                if not isinstance(message, dict):
+                    raise TypeError
+                return message
+            except (KeyError, IndexError, TypeError):
+                raise MetaError("Meta returned an unexpected response format.") from None
 
     def structured(self, messages, schema):
         message = self.completion(messages, schema=schema)

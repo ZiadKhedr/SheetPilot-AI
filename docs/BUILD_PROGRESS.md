@@ -17,3 +17,4 @@ Live Meta access must be verified with the user's key; no fixture counts as live
 
 - [x] Sales-based stock planning: per-product trailing sales velocity, days remaining, estimated depletion dates, editable replenishment scenarios, explicit policy review, preservation of source thresholds, typed agent results and approval/audit integration. See docs/DEMAND_PLANNING.md.
 - [x] Preview feedback recovery: explicit calculating/completion/unchanged-result states, direct results/policy navigation, clear missing-history recovery, and an accurate stock-planning CTA in Agent Workspace. Preview remains separate from approval.
+- [x] Meta completion recovery: explicit reasoning/output allowance, one bounded larger-budget retry for length-truncated replies, distinct stop-reason errors, concise mapping evidence, and atomic rejection after exhausted retries. Full Python suite: 153 passed, 2 documented skips.

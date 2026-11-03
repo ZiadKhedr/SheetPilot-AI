@@ -90,7 +90,8 @@ Currency must be an explicit column or exactly the provided currency hint from h
 header_row must be the current row or one of the supplied candidates. Use row-aligned evidence and column profiles, not labels alone.
 For uncertain columns provide alternatives and low confidence; explain the specific uncertainty in warnings. Confidence is a model
 estimate, not measured accuracy. Relationships are only candidate context; human review and source overlap decide actual joins.
-Return a structured proposal only. Nothing may self-confirm. Keep evidence brief and source-specific.
+Return a structured proposal only. Nothing may self-confirm. Keep evidence brief and source-specific: one sentence per field,
+aiming for at most 160 characters. Keep warnings specific and the summary to two sentences. Do not repeat source rows or the catalog.
 """
 
 
@@ -185,7 +186,8 @@ def meta_mapping(store, workspace, provider, table_ids=None, include_confirmed=F
                 break
             except MetaError as exc:
                 # One bounded repair, never an automatic fallback to rules or fabricated results.
-                if attempt or not (isinstance(exc, ProposalError) or exc.output_error): raise
+                if attempt or not (isinstance(exc, ProposalError) or exc.output_error):
+                    raise MetaError(str(exc) + " No mapping changes were applied.", status=exc.status) from None
                 messages.append({"role": "user", "content": "The previous proposal was rejected: " + str(exc) +
                                  " Re-read the source summaries and return a complete valid proposal."})
         updates.extend(checked)
