@@ -44,3 +44,57 @@ test('confirming a policy requires an explicit snapshot acknowledgement and curr
  }));
  expect(perform).toHaveBeenCalledOnce();
 });
+
+test('preview reports completion even when identical inputs leave all results unchanged',async()=>{
+ setup();await screen.findByText('Fast widget');
+ vi.mocked(api).mockResolvedValue({...report,preview:true});
+ fireEvent.click(screen.getByRole('button',{name:'Preview calculations'}));
+ const feedback=await screen.findByRole('status');
+ expect(feedback).toHaveTextContent('Preview complete: 1 of 1 products');
+ expect(feedback).toHaveTextContent('Results are unchanged');
+ expect(screen.getByText(/does not activate the policy or create a purchase order/)).toBeVisible();
+ expect(screen.getByRole('button',{name:'View product results'})).toBeEnabled();
+ expect(screen.getByRole('button',{name:'Review policy confirmation'})).toBeEnabled();
+ expect(vi.mocked(api).mock.calls.some(c=>c[0].endsWith('/policy'))).toBe(false);
+});
+
+test('preview has an explicit in-progress state',async()=>{
+ setup();await screen.findByText('Fast widget');
+ let finish!:(value:typeof report)=>void;
+ vi.mocked(api).mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}));
+ fireEvent.click(screen.getByRole('button',{name:'Preview calculations'}));
+ expect(screen.getByRole('button',{name:'Calculating…'})).toBeDisabled();
+ finish({...report,preview:true});
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('Preview complete'));
+});
+
+test('failed preview exposes its error instead of showing success',async()=>{
+ setup();await screen.findByText('Fast widget');
+ vi.mocked(api).mockRejectedValueOnce(new Error('Preview request timed out.'));
+ fireEvent.click(screen.getByRole('button',{name:'Preview calculations'}));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Preview request timed out.');
+ expect(screen.queryByText(/Preview complete:/)).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Preview calculations'})).toBeEnabled();
+ fireEvent.click(screen.getByRole('checkbox'));
+ expect(screen.getByRole('button',{name:'Confirm sales-based planning policy'})).toBeDisabled();
+});
+
+test('missing links have a clear next step and cannot be solved by blindly enabling the policy',async()=>{
+ vi.mocked(api).mockResolvedValue({...report,products:[{...report.products[0],eligible:false,status:'relationship_review'}]});
+ const navigate=vi.fn();
+ render(<DemandPlanner root="/workspaces/test" state={state} busy="" perform={vi.fn()} navigate={navigate}/>);
+ await screen.findByText('Fast widget');
+ expect(screen.getByText(/Review sales dates and product relationships first/)).toBeVisible();
+ fireEvent.click(screen.getByRole('checkbox'));
+ expect(screen.getByRole('button',{name:'Confirm sales-based planning policy'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'Review sales data and links'}));
+ expect(navigate).toHaveBeenCalledWith('/mapping#relationships');
+});
+
+test('changing the scenario clears an earlier snapshot acknowledgement',async()=>{
+ setup();await screen.findByText('Fast widget');
+ fireEvent.click(screen.getByRole('checkbox'));expect(screen.getByRole('checkbox')).toBeChecked();
+ fireEvent.change(screen.getByLabelText('Stock snapshot / scenario date'),{target:{value:'2026-01-09'}});
+ expect(screen.getByRole('checkbox')).not.toBeChecked();
+ expect(screen.getByRole('button',{name:'Confirm sales-based planning policy'})).toBeDisabled();
+});

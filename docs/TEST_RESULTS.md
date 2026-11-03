@@ -95,3 +95,8 @@ Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS
 - Real-backend Playwright: 4 passed, 2 live-Meta browser cases skipped. New scenario verifies 40 units over 10 calendar days = 4/day, 8 on hand = 2 days remaining, and a 20-unit recommendation for the selected assumptions. Preview creates no policy/action; explicit policy review enables a pending GBP 60 proposal with no output until approval.
 - Backend coverage includes insufficient/undated/zero demand, mismatched units, historical/future dates, fractional stock rounding, source-threshold precedence, duplicate source views, policy concurrency/auth, actual Excel planning lineage, immutable originals, and invalidation of pending actions after policy changes.
 - No new Meta calls were needed to validate demand arithmetic. This feature uses deterministic reviewed source data and exposes its results through the existing agent tool.
+
+## Preview feedback recovery
+- Frontend component/unit tests: 31 passed; TypeScript and production build passed.
+- Regressions verify unchanged-result feedback, an explicit calculating state, visible request errors, no implicit policy writes, blocked confirmation without eligible history, and snapshot acknowledgement reset when assumptions change.
+- This change was verified against source and synthetic mocked component fixtures. Live browser reproduction was blocked by the browser origin-permission gate; no live-page verification is claimed for this fix.

@@ -9,7 +9,7 @@ export function ProcurementReviewNotice({readiness,busy,onReview}:{readiness:Pro
  return <section className="procurement-review panel" aria-label="Procurement review required">
   <div className="review-notice-heading"><GitBranch size={22}/><div><h3>Procurement needs your review</h3><p>Purchase-order drafts stay blocked until these source checks are resolved.</p></div><Badge tone="amber">Needs review</Badge></div>
   <ul>{readiness.blockers.map(b=><li key={b.product_id+':'+b.code}>{b.message}</li>)}</ul>
-  <Button variant="secondary" disabled={busy} onClick={onReview}>{relationships?'Discover & review supplier links':inventory?'Review inventory data':'Review supplier data'}</Button>
-  <small>{inventory?'Reorder levels can come from reviewed source data or a confirmed sales-demand policy.':'Relationships are proposed using actual matching values. Only you can confirm them.'}</small>
+  <Button variant="secondary" disabled={busy} onClick={onReview}>{relationships?'Discover & review supplier links':inventory?'Review stock-planning policy':'Review supplier data'}</Button>
+  <small>{inventory?'This opens the stock planner. Preview shows estimates; confirming its policy is a separate step. Missing sales links or dates must be reviewed first.':'Relationships are proposed using actual matching values. Only you can confirm them.'}</small>
  </section>
 }

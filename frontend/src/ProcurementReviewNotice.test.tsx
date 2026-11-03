@@ -20,3 +20,9 @@ test('ready workspace has no blocker notice',()=>{
  const {container}=render(<ProcurementReviewNotice readiness={{ready:true,low_stock_count:3,ready_count:3,blockers:[]}} busy={false} onReview={()=>{}}/>);
  expect(container).toBeEmptyDOMElement();
 });
+
+test('missing reorder policy clearly opens planning, not a generic data editor',()=>{
+ render(<ProcurementReviewNotice readiness={{...readiness,blockers:[{...readiness.blockers[0],code:'reorder_threshold_missing',next_step:'review_data'}]}} busy={false} onReview={()=>{}}/>);
+ expect(screen.getByRole('button',{name:'Review stock-planning policy'})).toBeEnabled();
+ expect(screen.getByText(/Preview shows estimates; confirming its policy is a separate step/)).toBeVisible();
+});
