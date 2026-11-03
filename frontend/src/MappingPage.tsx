@@ -3,6 +3,7 @@ import { Check, ChevronDown, FileSpreadsheet, GitBranch, Link2, ShieldCheck, Spa
 import { api, label } from './api';
 import { Badge, Button, Empty, SectionTitle } from './components';
 import type { Column, Context, Entity, SemanticCatalog, TableInfo, WorkbookInfo } from './types';
+import { relationshipReview, relationshipSummary } from './relationshipReview';
 
 const entities:Entity[]=['unknown','sales','orders','inventory','products','suppliers','supplier_directory','customers','purchases','payments'];
 const required:Record<string,string[]>={sales:['product_id','quantity'],orders:['order_id'],inventory:['product_id','stock_quantity'],products:['product_id'],suppliers:['product_id','supplier_id','supplier_name','unit_cost'],supplier_directory:['supplier_id','supplier_name'],customers:['customer_id'],purchases:['purchase_order_id','product_id','quantity'],payments:['payment_id','payment_amount']};
@@ -23,18 +24,18 @@ export function MappingPage(context:Context){
    save={body=>perform('Saving reviewed mapping…',()=>api(root+'/tables/'+t.id,'PUT',body),'Mapping saved. Calculations use confirmed tables only.')}
    reanalyze={()=>void perform('Meta is rechecking this table against the workspace…',()=>api(root+'/analyze-meta','POST',{table_ids:[t.id],include_confirmed:t.status==='confirmed'}),'New proposal ready. Confirm this mapping again before operational use.')}/>)}</div>
   <div className="panel relationships" id="relationships"><SectionTitle title="Relationships between tables" description="Connect sheets in the same workbook or different files. Discovery never confirms a link." action={<Button variant="secondary" disabled={!!busy} onClick={()=>void perform('Comparing business identifiers…',()=>api(root+'/relationships/discover','POST'),'Relationship evidence refreshed. Confirm source mappings before accepting links.')}><Link2 size={16}/>Discover relationships</Button>}/>
-   {state.relationship_report&&<div className="relationship-report"><p>{state.relationship_report.message}</p><small>{state.relationship_report.compared_identifier_pairs} identifier pairs checked</small>{!!state.relationship_report.notes.length&&<details><summary>Discovery diagnostics</summary><ul>{state.relationship_report.notes.map((n,i)=><li key={i}>{n}</li>)}</ul></details>}</div>}
+   {(state.relationship_report||!!state.relationships.length)&&<div className="relationship-report"><p>{relationshipSummary(state.relationships,state.tables)}</p>{state.relationship_report&&<><small>{state.relationship_report.compared_identifier_pairs} identifier pairs checked</small>{!!state.relationship_report.notes.length&&<details><summary>Discovery diagnostics</summary><ul>{state.relationship_report.notes.map((n,i)=><li key={i}>{n}</li>)}</ul></details>}</>}</div>}
    {!state.relationships.length?<Empty icon={<Link2/>} title="Find shared business identifiers">Map product, order, customer, supplier or other IDs, then discover links. Unconfirmed mappings can show previews; both tables must be confirmed to accept a link.</Empty>:state.relationships.map(r=>{
     const left=state.tables.find(t=>t.id===r.left_table),right=state.tables.find(t=>t.id===r.right_table);
-    const ready=left?.status==='confirmed'&&right?.status==='confirmed'&&r.status!=='stale'&&!(r.blockers?.length);
+    const {ready,needsRefresh,reasons}=relationshipReview(r,left,right);
     const source=(t:TableInfo|undefined)=>{const w=state.workbooks.find(w=>w.id===t?.workbook_id);return `${w?.name||'Workbook'} / ${t?.sheet||'Table'} · ${t?.ref||''}`};
     return <div className="relationship" key={r.id}>
      <div className="relationship-join"><Badge>{label(left?.entity||'table')}</Badge><Link2 size={16}/><Badge>{label(right?.entity||'table')}</Badge><strong>{label(r.field)}</strong><Badge tone={r.status==='confirmed'?'green':r.strength==='weak'?'amber':''}>{r.status==='proposed'?r.strength+' evidence':r.status}</Badge>{r.cardinality&&<Badge tone="outline">{r.cardinality}</Badge>}</div>
      <div className="relationship-sources"><span>{source(left)}<small>Column {r.left_column}: {left?.columns.find(c=>String(c.index)===r.left_column)?.label}</small></span><span>{source(right)}<small>Column {r.right_column}: {right?.columns.find(c=>String(c.index)===r.right_column)?.label}</small></span></div>
      <p>{r.evidence}</p><small>Matching values: {r.matching_examples.join(', ')||'none'}</small>
-     {r.blockers?.map((b,i)=><p className="mapping-warning" key={i}>{b}</p>)}
+     {reasons.map((b,i)=><p className="mapping-warning" key={i}>{b}</p>)}
      {r.cardinality==='many-to-many'&&<p className="mapping-warning">Neither side is unique. A direct join could multiply rows; master-data enrichment requires a unique match.</p>}
-     <div className="relationship-actions">{r.status!=='confirmed'&&r.status!=='rejected'&&<><Button variant="secondary" disabled={!!busy||!ready} onClick={()=>void perform('Confirming relationship…',()=>api(root+'/relationships/'+r.id,'PUT',{decision:'approve'}),'Relationship confirmed. Eligible derived context refreshed.')}>Confirm relationship</Button><Button variant="ghost" disabled={!!busy} onClick={()=>void perform('Rejecting relationship…',()=>api(root+'/relationships/'+r.id,'PUT',{decision:'reject'}))}>Reject</Button></>}</div>
+     <div className="relationship-actions">{needsRefresh&&<Button variant="secondary" disabled={!!busy} onClick={()=>void perform('Refreshing relationship evidence…',()=>api(root+'/relationships/discover','POST'),'Relationship evidence refreshed. Review the current proposals before confirming.')}>Refresh relationship evidence</Button>}{r.status!=='confirmed'&&r.status!=='rejected'&&<><Button variant="secondary" disabled={!!busy||!ready} onClick={()=>void perform('Confirming relationship…',()=>api(root+'/relationships/'+r.id,'PUT',{decision:'approve'}),'Relationship confirmed. Eligible derived context refreshed.')}>Confirm relationship</Button><Button variant="ghost" disabled={!!busy} onClick={()=>void perform('Rejecting relationship…',()=>api(root+'/relationships/'+r.id,'PUT',{decision:'reject'}))}>Reject</Button></>}</div>
     </div>
    })}
   </div>

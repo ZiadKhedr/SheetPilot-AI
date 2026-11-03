@@ -24,6 +24,12 @@ test('four sheets map at their business grain and discover reviewed order/custom
   await card.getByRole('button',{name:'Confirm mapping',exact:true}).click();
   await expect(card).toHaveAttribute('data-status','confirmed');
  }
+ // Confirming the last mapping refreshes existing previews without a manual rediscovery step.
+ const relationshipButtons=page.locator('#relationships').getByRole('button',{name:'Confirm relationship',exact:true});
+ await expect(relationshipButtons).toHaveCount(3);
+ for(const button of await relationshipButtons.all())await expect(button).toBeEnabled();
+ await expect(page.locator('.relationship-report')).toContainText('Source mappings are confirmed. Review each proposed relationship');
+ await expect(page.locator('.relationship').getByText('stale',{exact:true})).toHaveCount(0);
  let stats=await (await request.get(base+'/dashboard')).json();
  expect(stats.revenue).toEqual([{currency:'GBP',amount:'54.00'}]);
  expect(stats.inventory_units).toBe('24');expect(stats.low_stock_count).toBe(0);expect(stats.sales_trend).toEqual([]);

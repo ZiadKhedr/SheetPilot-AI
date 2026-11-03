@@ -43,7 +43,7 @@ Discovery compares business identifiers inside one workbook and between files: p
 
 Proposals expose both source columns, overlap, coverage in both directions, duplicate-key counts, unmatched IDs, examples and cardinality. Many-to-many matches stay weak evidence. Diagnostics explain missing identifiers or nonmatching values instead of returning an unexplained empty list. Up to 100 active tables are supported per discovery request.
 
-Both source mappings must be confirmed with the proposed identifier meanings and current revisions before accepting an exact link. Discovery never approves anything. Accept/reject decisions persist only at the same mapping revisions. Mapping changes invalidate related decisions.
+Both source mappings must be confirmed with the proposed identifier meanings and current revisions before accepting an exact link. Discovery never approves anything. Accept/reject decisions persist only at the same mapping revisions. Mapping changes invalidate related decisions. Confirming a mapping automatically refreshes existing relationship previews at the new revisions, without accepting them. Legacy stale links expose an explicit refresh action; the UI computes blockers from current mappings rather than cached discovery messages.
 
 Case/Unicode/whitespace-normalized-only matches are labeled **preview only** and cannot be confirmed as operational joins. Leading zeroes and punctuation are not stripped. No fuzzy name match silently substitutes for a business identifier.
 

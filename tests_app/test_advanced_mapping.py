@@ -341,3 +341,25 @@ def test_multiple_reviewed_master_tables_remain_ambiguous(tmp_path):
     result=dashboard(store,workspace)
     assert result["sales_trend"]==[{"date":"2026-01-02","currency":"GBP","revenue":"27.00"}]
     assert sum(q["code"]=="join_ambiguous" for q in result["quality_issues"])==2
+
+
+def test_api_mapping_confirmation_refreshes_existing_links_without_accepting_them(tmp_path):
+    store,workspace,_,_=retail_store(tmp_path)
+    client=TestClient(create_app(Settings(store.root)));base=f"/api/workspaces/{workspace}"
+    assert client.post(base+"/suggest-labels").status_code==200
+    before=client.get(base+"/state").json()
+    assert len(before["relationships"])==3
+    ids={r["id"] for r in before["relationships"]}
+    for table in before["tables"]:
+        result=client.put(base+"/tables/"+table["id"],json={"entity":table["entity"],"fields":table["fields"],
+            "header_row":table["header_row"],"expected_revision":table["revision"],"constants":table.get("constants",{}),"confirm":True})
+        assert result.status_code==200,result.text
+    after=client.get(base+"/state").json()
+    assert {r["id"] for r in after["relationships"]}==ids
+    tables={t["id"]:t for t in after["tables"]}
+    for link in after["relationships"]:
+        assert link["status"]=="proposed" and link["blockers"]==[]
+        assert link["revisions"]==[tables[link[k]]["revision"] for k in ("left_table","right_table")]
+    assert after["actions"]==[]
+    # Explicit relationship approval is still necessary; dates have not been inherited yet.
+    assert client.get(base+"/dashboard").json()["sales_trend"]==[]

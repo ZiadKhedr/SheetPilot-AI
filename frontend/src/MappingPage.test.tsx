@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MappingEditor } from './MappingPage';
-import type { TableInfo, WorkbookInfo } from './types';
+import { MappingEditor, MappingPage } from './MappingPage';
+import type { Context, TableInfo, WorkbookInfo } from './types';
 import { api } from './api';
 
 vi.mock('./api',async()=>({...await vi.importActual('./api'),api:vi.fn()}));
@@ -42,4 +42,23 @@ test('header change reloads source columns and clears old assignments',async()=>
  expect(screen.getByRole('combobox',{name:'Meaning of New SKU A1:C4'})).toHaveValue('');
  expect(screen.getByRole('button',{name:'Confirm mapping'})).toBeDisabled();
  expect(api).toHaveBeenLastCalledWith('/workspaces/test/tables/t/preview?header_row=2');
+});
+
+test('legacy stale links offer an enabled refresh action and explain the actual blocker',async()=>{
+ vi.mocked(api).mockResolvedValue([]);
+ const left={...table,id:'left',status:'confirmed',revision:3};
+ const right={...table,id:'right',status:'confirmed',revision:4,sheet:'Sales',entity:'sales' as const};
+ const context={state:{tables:[left,right],workbooks:[workbook],relationships:[{
+  id:'r',left_table:'left',right_table:'right',field:'product_id',left_column:'1',right_column:'1',
+  status:'stale',revisions:[1,2],coverage:1,overlap_count:2,strength:'strong',matching_examples:['P01'],evidence:'Shared IDs',
+  blockers:['Confirm both source mappings with these identifier columns first.'],
+ }],relationship_report:{message:'Old cached message',notes:[],compared_identifier_pairs:1}},
+ provider:{configured:false},root:'/workspaces/test',fields,busy:'',perform:async(_message:string,task:()=>Promise<unknown>)=>{await task()}} as unknown as Context;
+ render(<MappingPage {...context}/>);
+ expect(screen.getByText('Source mappings are confirmed. Refresh relationship evidence before confirming these links.')).toBeVisible();
+ expect(screen.queryByText('Confirm both source mappings with these identifier columns first.')).not.toBeInTheDocument();
+ const refresh=screen.getByRole('button',{name:'Refresh relationship evidence'});
+ expect(refresh).toBeEnabled();expect(screen.getByRole('button',{name:'Confirm relationship'})).toBeDisabled();
+ fireEvent.click(refresh);
+ await waitFor(()=>expect(api).toHaveBeenCalledWith('/workspaces/test/relationships/discover','POST'));
 });

@@ -12,3 +12,4 @@ Live Meta access must be verified with the user's key; no fixture counts as live
 - [x] Procurement recovery fix (2026-11-02): read-only prerequisite checks, actionable Needs review runs, explicit supplier-link discovery/review, and stale relationship revision rejection. No automatic relationship confirmation or purchase-order execution.
 
 - [x] Advanced semantics (2026-11-03): 53 business meanings, nine supported entities, row-aligned Meta context, explicit currency settings, safe per-table reanalysis, same-workbook identifier links, diagnostics/cardinality, and reviewed order-to-sales context. See docs/SEMANTIC_MAPPING.md.
+- [x] Stale relationship recovery: confirming source mappings refreshes existing proposals; current revision checks drive the UI, with an explicit refresh action for legacy stale links. No relationship auto-approval.

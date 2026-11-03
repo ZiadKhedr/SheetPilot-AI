@@ -86,6 +86,9 @@ def register(app, store, settings, auth):
     def review(workspace: str, identifier: str, body: MappingInput):
         value = review_mapping(store, workspace, identifier, body)
         materialize(store, workspace)
+        # Keep existing previews current after each mapping review. This never accepts a link.
+        if store.list(workspace, "relationship"):
+            discover_relationships(store, workspace)
         return value
 
     @app.post("/api/workspaces/{workspace}/workbooks/{identifier}/regions", dependencies=[Depends(auth)])

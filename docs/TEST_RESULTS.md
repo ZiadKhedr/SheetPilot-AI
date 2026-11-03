@@ -75,3 +75,10 @@ Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS
 - Separate opt-in live Meta regression: **1 passed in 221.41 seconds**. Existing electronics mapping, deterministic analytics, actual Meta tool orchestration, pending purchase proposal, explicit test approval and Excel output all passed.
 - Negative/edge regressions include omitted/foreign AI tables, unsupported currency, atomic batches, concurrent review, invalid headers, duplicate meanings, no-overlap diagnostics, normalized-only IDs, leading zeroes, ambiguous masters, stale joins, order-total double-counting, threshold-free inventory and broader entity retention.
 - Originals remain byte-for-byte preserved; no source data was auto-confirmed. Live checks used synthetic/fictional data only. Current uploaded business data was inspected locally; it was not sent to Meta for this validation.
+
+## Stale relationship recovery
+- Focused backend/API/procurement suite: 35 passed.
+- Frontend unit tests: 19 passed; TypeScript and production build passed.
+- Real-backend retail browser regression: passed, including confirmation buttons becoming enabled after the final mapping confirmation without another discovery click.
+- Legacy stale-link UI regression verifies the enabled refresh action, accurate status message, and continued approval blocking until evidence is current.
+- Evidence refresh creates/revises proposals only. Relationship approval remains an explicit human action.
