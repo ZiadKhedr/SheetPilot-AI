@@ -84,6 +84,19 @@ def test_deadline_is_enforced(monkeypatch):
         deadline.check()
 
 
+def test_repeated_merge_expansion_is_bounded_before_loading(sample_workbook, tmp_path, monkeypatch):
+    path = tmp_path / "overlapping-merges.xlsx"
+    def edit(name, data):
+        if name != "xl/worksheets/sheet1.xml":
+            return data
+        ranges = b'<mergeCells><mergeCell ref="A1:J90"/><mergeCell ref="A2:J90"/></mergeCells>'
+        return data.replace(b'</worksheet>', ranges+b'</worksheet>')
+    rewrite_zip(sample_workbook, path, edit)
+    monkeypatch.setattr(workbook_reader, "load_workbook", lambda *a, **k: pytest.fail("Expanded overlapping merges"))
+    with pytest.raises(WorkbookInputError, match="merged cell expansion limit"):
+        analyze_workbook(path, replace(AnalysisLimits(), max_cells_per_sheet=1000))
+
+
 @pytest.mark.parametrize("value", [0, -1, True, 1.5])
 def test_invalid_resource_limit(value):
     with pytest.raises(ValueError, match="positive integer"):

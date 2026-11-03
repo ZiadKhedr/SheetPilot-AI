@@ -115,7 +115,10 @@ class MetaProvider:
 
     def verify(self):
         catalog = self.request("GET", "/models")
-        if self.model not in {m.get("id") for m in catalog.get("data", [])}:
+        entries = catalog.get("data") if isinstance(catalog, dict) else None
+        if not isinstance(entries, list) or any(not isinstance(m, dict) or not isinstance(m.get("id"), str) for m in entries):
+            raise MetaError("Meta returned an invalid model catalog.")
+        if not any(m["id"] == self.model for m in entries):
             raise MetaError("The configured model is not listed for this Meta account.", 503)
         ping = self.structured([{"role": "developer", "content": "Return the object ok=true using the required JSON schema."},
                                 {"role": "user", "content": "Verify this API connection."}], Ping)

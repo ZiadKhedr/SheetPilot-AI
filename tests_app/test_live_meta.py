@@ -39,3 +39,17 @@ def test_real_meta_mapping_agents_and_excel_output(tmp_path):
     action=store.get(workspace,"action",run["action_ids"][0])
     assert action["totals"]==[{"currency":"USD","amount":"1809.00"}]
     assert review_action(store,workspace,action["id"],"approve","live-test-human")["status"]=="executed"
+
+
+def test_real_meta_answers_a_scoped_sales_question_without_a_purchase_action(tmp_path):
+    from tests_app.helpers import load_company
+    store = Store(tmp_path/"sales-question")
+    workspace, _ = load_company(store)
+    run = run_agents(store, workspace,
+        "What is the reviewed sales revenue for product ID A001 alone, across all dates? Show the source rows.",
+        "meta", MetaProvider())
+    assert run["status"] == "completed" and not store.list(workspace,"action")
+    matching = [s["result"] for s in run["steps"] if s["tool"]=="sales_analysis" and s["result"]["scope"]=={"product_id":"A001"}]
+    assert matching and matching[0]["revenue"] == [{"currency":"USD","amount":"270.00"}]
+    assert all(r["product_id"]=="A001" and r["source"]["cells"]["revenue"] for r in matching[0]["rows"])
+    assert "USD 270.00" in run["summary"]

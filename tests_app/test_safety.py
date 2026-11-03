@@ -56,3 +56,13 @@ def test_duplicate_upload_is_rejected(tmp_path):
 def test_nonlocal_host_header_is_rejected(tmp_path):
     client=TestClient(create_app(Settings(tmp_path/"data")))
     assert client.get("/api/health",headers={"Host":"untrusted.example"}).status_code==400
+
+
+def test_reader_only_configuration_cannot_fall_back_to_local_owner(tmp_path):
+    client = TestClient(create_app(Settings(tmp_path/"data", read_token="read")))
+    assert client.get("/api/workspaces").status_code == 401
+    assert client.get("/api/workspaces", headers={"Authorization":"read"}).status_code == 401
+    assert client.get("/api/workspaces", headers={"Authorization":"Bearer read"}).status_code == 200
+    assert client.post("/api/workspaces", headers={"Authorization":"Bearer read"}, json={"name":"forbidden"}).status_code == 403
+    with pytest.raises(ValueError, match="different"):
+        create_app(Settings(tmp_path/"equal", "same", "same"))

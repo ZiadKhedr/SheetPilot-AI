@@ -1,6 +1,7 @@
 """Reviewed semantic proposals with bounded Meta context and optimistic concurrency."""
 import json
 import re
+from openpyxl.utils import range_boundaries
 
 from .ingestion import columns_for
 from .models import MappingInput, SemanticPlan
@@ -41,7 +42,17 @@ def invalidate_relationships(store, workspace, identifier, con):
             store.put(workspace, "relationship", relation, con)
 
 
+def overlapping_data(first, second):
+    if first["workbook_id"] != second["workbook_id"] or first["sheet"] != second["sheet"]:
+        return False
+    left, _, right, bottom = range_boundaries(first["ref"])
+    x1, _, x2, y2 = range_boundaries(second["ref"])
+    return (max(left, x1) <= min(right, x2)
+            and max(first["header_row"], second["header_row"]) < min(bottom, y2))
+
+
 def review_mapping(store, workspace, identifier, body: MappingInput):
+    from .analytics import materialize
     with store.connection(immediate=True) as con:
         table = store.get(workspace, "table", identifier, con)
         if table["revision"] != body.expected_revision:
@@ -49,6 +60,12 @@ def review_mapping(store, workspace, identifier, body: MappingInput):
         workbook = store.get(workspace, "workbook", table["workbook_id"], con)
         table["columns"] = columns_for(workbook["report"], table["sheet"], table["ref"], body.header_row)
         issues = validate_fields(table, body.fields, body.entity, body.confirm and not body.ignore, body.constants)
+        if body.confirm and not body.ignore:
+            for other in store.list(workspace, "table", con):
+                if (other["id"] != identifier and other["status"] == "confirmed"
+                        and overlapping_data(table | {"header_row": body.header_row}, other)):
+                    raise Problem(f"This region shares data cells with confirmed {other['sheet']} {other['ref']}. "
+                                  "Exclude the old mapping or select disjoint data ranges before confirming.", 409)
         table.update(entity=body.entity, fields=body.fields, header_row=body.header_row, constants=body.constants,
                      status="ignored" if body.ignore else ("confirmed" if body.confirm else "suggested"), origin="human-reviewed",
                      validation=issues, revision=table["revision"] + 1)
@@ -56,11 +73,17 @@ def review_mapping(store, workspace, identifier, body: MappingInput):
         invalidate_relationships(store, workspace, identifier, con)
         store.event(workspace, "mapping.reviewed", f"Reviewed {table['sheet']} as {table['entity']}.",
                     dict(table_id=identifier, revision=table["revision"], status=table["status"]), con)
+        materialize(store, workspace, con)
         return table
 
 
 def suggest_labels(store, workspace):
-    for table in store.list(workspace, "table"):
+    with store.connection(immediate=True) as con:
+        return _suggest_labels(store, workspace, con)
+
+
+def _suggest_labels(store, workspace, con):
+    for table in store.list(workspace, "table", con):
         if table["status"] in {"confirmed", "ignored"}: continue
         fields, entity, details = infer_labels(table["columns"])
         currency = currency_hint(table["columns"])
@@ -71,9 +94,9 @@ def suggest_labels(store, workspace):
                      evidence=["Normalized multilingual header matches; proposals require review."] +
                               ([f"Currency {currency} appears explicitly in headers; confirm before use."] if constants else []),
                      revision=table["revision"] + 1)
-        store.put(workspace, "table", table)
-    store.event(workspace, "mapping.suggested", "Generated multilingual label suggestions (not AI).")
-    return store.list(workspace, "table")
+        store.put(workspace, "table", table, con)
+    store.event(workspace, "mapping.suggested", "Generated multilingual label suggestions (not AI).", con=con)
+    return store.list(workspace, "table", con)
 
 
 MAPPING_INSTRUCTIONS = """Interpret business Excel tables using the supplied semantic catalog and observed evidence.
@@ -201,11 +224,14 @@ def meta_mapping(store, workspace, provider, table_ids=None, include_confirmed=F
             invalidate_relationships(store, workspace, table["id"], con)
         store.event(workspace, "mapping.meta", "Meta proposed semantic mappings; human review is required.",
                     dict(model=provider.model, tables=len(updates), batches=len(batches), summary=" ".join(summaries)), con)
+        if any(t["status"] == "confirmed" for t in tables):
+            from .analytics import materialize
+            materialize(store, workspace, con)
     return {"tables": [t["id"] for t in updates], "summary": " ".join(summaries)}
 
 
-def source_rows(store, workspace, table):
-    workbook = store.get(workspace, "workbook", table["workbook_id"])
+def source_rows(store, workspace, table, con=None):
+    workbook = store.get(workspace, "workbook", table["workbook_id"], con)
     sheet = next(s for s in workbook["report"]["worksheets"] if s["title"] == table["sheet"])
     from openpyxl.utils import get_column_letter, range_boundaries
     c1, _, c2, r2 = range_boundaries(table["ref"])

@@ -1,14 +1,16 @@
 from hashlib import sha256
 import json
+from os import replace
 
-from fastapi import Depends
+from fastapi import Depends, Query
+from datetime import date
 from fastapi.responses import FileResponse
 
-from .analytics import dashboard, materialize, records
+from .analytics import dashboard, materialize, records, sales_evidence
 from .config import ROOT
 from .ingestion import columns_for, ingest
 from .mapping import discover_relationships, meta_mapping, review_mapping, suggest_labels
-from .models import AnalyzeInput, MappingInput, RegionInput, ReviewInput
+from .models import AnalyzeInput, MappingInput, RegionInput, ReviewInput, SalesArgs
 from .provider import MetaProvider
 from .store import Problem, now, uid
 
@@ -20,10 +22,13 @@ def register(app, store, settings, auth):
     def provider_status():
         provider = app.state.provider_factory()
         status = provider.status() | {"verified": False, "generation_verified": False}
-        if verified_path.exists():
-            saved = json.loads(verified_path.read_text())
-            if saved.get("fingerprint") == sha256(provider.key.encode()).hexdigest() and saved.get("model") == provider.model:
-                status.update(verified=True, generation_verified=True, verified_at=saved["verified_at"])
+        try:
+            saved = json.loads(verified_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            saved = None
+        if (isinstance(saved, dict) and saved.get("fingerprint") == sha256(provider.key.encode()).hexdigest()
+                and saved.get("model") == provider.model and saved.get("verified_at")):
+            status.update(verified=True, generation_verified=True, verified_at=saved["verified_at"])
         return status
 
     @app.get("/api/provider", dependencies=[Depends(auth)])
@@ -33,9 +38,18 @@ def register(app, store, settings, auth):
     @app.post("/api/provider/verify", dependencies=[Depends(auth)])
     def verify():
         provider = app.state.provider_factory()
-        result = provider.verify()
+        try:
+            result = provider.verify()
+        except Problem:
+            verified_path.unlink(missing_ok=True)
+            raise
         saved = dict(model=provider.model, verified_at=now(), fingerprint=sha256(provider.key.encode()).hexdigest())
-        verified_path.write_text(json.dumps(saved), encoding="utf-8")
+        temporary = verified_path.with_suffix("." + uid() + ".tmp")
+        try:
+            temporary.write_text(json.dumps(saved), encoding="utf-8")
+            replace(temporary, verified_path)
+        finally:
+            temporary.unlink(missing_ok=True)
         return result | {"verified_at": saved["verified_at"]}
 
     @app.post("/api/demo/{company}", dependencies=[Depends(auth)])
@@ -67,7 +81,6 @@ def register(app, store, settings, auth):
         try:
             body = body or AnalyzeInput()
             result = meta_mapping(store, workspace, app.state.provider_factory(), body.table_ids, body.include_confirmed)
-            materialize(store, workspace)
             discover_relationships(store, workspace)
             return result
         except Problem as exc:
@@ -85,7 +98,6 @@ def register(app, store, settings, auth):
     @app.put("/api/workspaces/{workspace}/tables/{identifier}", dependencies=[Depends(auth)])
     def review(workspace: str, identifier: str, body: MappingInput):
         value = review_mapping(store, workspace, identifier, body)
-        materialize(store, workspace)
         # Keep existing previews current after each mapping review. This never accepts a link.
         if store.list(workspace, "relationship"):
             discover_relationships(store, workspace)
@@ -126,7 +138,7 @@ def register(app, store, settings, auth):
             result = store.put(workspace, "relationship", relation, con)
             store.event(workspace, "relationship.reviewed", f"Relationship {relation['status']}.",
                         dict(relationship_id=identifier, field=relation["field"], evidence=relation["evidence"]), con)
-        materialize(store, workspace)
+            materialize(store, workspace, con)
         return result
 
     @app.get("/api/workspaces/{workspace}/dashboard", dependencies=[Depends(auth)])
@@ -138,6 +150,16 @@ def register(app, store, settings, auth):
     def normalized(workspace: str):
         store.workspace(workspace)
         return records(store, workspace)[:1000]
+
+    @app.get("/api/workspaces/{workspace}/sales/evidence", dependencies=[Depends(auth)])
+    def sales_rows(workspace: str, product_id: str | None = Query(None, min_length=1, max_length=180),
+                   currency: str | None = Query(None, pattern="^[A-Z]{3}$"),
+                   date_from: date | None = None, date_to: date | None = None,
+                   offset: int = Query(0, ge=0, le=2_147_483_647), limit: int = Query(20, ge=1, le=100)):
+        if date_from and date_to and date_from > date_to:
+            raise Problem("The start date must precede or equal the end date.")
+        scope = SalesArgs(product_id=product_id, currency=currency, date_from=date_from, date_to=date_to)
+        return sales_evidence(store, workspace, scope, offset, limit)
 
     from .action_routes import register_actions
     register_actions(app, store, auth)

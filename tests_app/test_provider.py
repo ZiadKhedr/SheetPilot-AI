@@ -37,6 +37,37 @@ def test_missing_key_makes_no_network_call():
         p.verify()
 
 
+@pytest.mark.parametrize("catalog", [None, [], {"data":None}, {"data":[{"id":[]}]}, {"data":["wrong"]}])
+def test_malformed_model_catalog_is_a_sanitized_provider_error(catalog):
+    p = MetaProvider("test", transport=httpx.MockTransport(lambda _: httpx.Response(200, content=json.dumps(catalog))))
+    with pytest.raises(MetaError, match="invalid model catalog"):
+        p.verify()
+
+
+def test_failed_reverification_clears_old_connection_badge(tmp_path):
+    from fastapi.testclient import TestClient
+    from sheetpilot.api import create_app
+    from sheetpilot.config import Settings
+    app = create_app(Settings(tmp_path))
+    client = TestClient(app)
+    class Provider(MetaProvider):
+        available = True
+        def __init__(self):
+            super().__init__(key="test-only")
+        def verify(self):
+            if not self.available:
+                raise MetaError("Meta rejected the API key.")
+            return self.status() | {"verified":True,"generation_verified":True}
+    app.state.provider_factory = Provider
+    assert client.post("/api/provider/verify").status_code == 200
+    assert client.get("/api/provider").json()["verified"]
+    Provider.available = False
+    assert client.post("/api/provider/verify").status_code == 502
+    assert not client.get("/api/provider").json()["verified"]
+    (tmp_path/"provider-verification.json").write_text("{")
+    assert not client.get("/api/provider").json()["verified"]
+
+
 def test_provider_errors_hide_secrets():
     p = MetaProvider("secret", transport=httpx.MockTransport(lambda r: httpx.Response(401,text="secret raw body")))
     with pytest.raises(MetaError) as exc:

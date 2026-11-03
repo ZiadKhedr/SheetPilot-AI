@@ -42,6 +42,7 @@ def preflight(path: Path, limits: AnalysisLimits, deadline: Deadline):
                 continue
             with archive.open(entry) as stream:
                 stack, is_sheet, max_row, max_col, cell_count = [], False, 1, 1, 0
+                merged_area = 0
                 for event, element in iterparse(stream, events=("start", "end"), forbid_dtd=True):
                     tag = element.tag.rsplit("}", 1)[-1]
                     if event == "start":
@@ -61,6 +62,11 @@ def preflight(path: Path, limits: AnalysisLimits, deadline: Deadline):
                             if tag in {"dimension", "mergeCell"}:
                                 r, c = _area(element.attrib["ref"])
                                 max_row, max_col = max(max_row, r), max(max_col, c)
+                                if tag == "mergeCell":
+                                    c1, r1, _, _ = range_boundaries(element.attrib["ref"])
+                                    merged_area += (r - r1 + 1) * (c - c1 + 1)
+                                    if merged_area > limits.max_cells_per_sheet:
+                                        raise WorkbookInputError("Workbook exceeds the merged cell expansion limit.")
                             elif tag == "row":
                                 r = int(element.attrib.get("r", max_row))
                                 if not 1 <= r <= 1_048_576:

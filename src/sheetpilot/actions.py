@@ -8,7 +8,7 @@ import os
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from .analytics import inventory_tool, money, records
+from .analytics import inventory_tool, money, quoted_cost, records
 from .ingestion import digest
 from .store import Problem, now, uid
 
@@ -92,7 +92,7 @@ def procurement_readiness(store, workspace, product_ids=None):
         cost = Decimal(supplier["unit_cost"])
         lines.append(dict(product_id=item["product_id"], product_name=item.get("product_name") or item["product_id"],
             supplier_id=supplier["supplier_id"], supplier_name=supplier["supplier_name"], quantity=str(quantity),
-            unit_cost=money(cost), line_total=money(quantity * cost), currency=item["currency"],
+            unit_cost=quoted_cost(cost), line_total=money(quantity * cost), currency=item["currency"],
             stock_quantity=item["stock_quantity"], target_stock=item["target_stock"],
             sources=[item["source"], record["source"]]))
         if item.get("planning"):
@@ -112,6 +112,20 @@ def draft_lines(store, workspace, product_ids=None):
     return readiness["lines"]
 
 
+def order_overlap(actions, lines, snapshot, *, skip=None):
+    def stock_rows(items):
+        return {(line["sources"][0]["workbook_id"], line["sources"][0]["sheet"],
+                 line["sources"][0]["row"], line["product_id"]) for line in items}
+    requested = stock_rows(lines)
+    for other in actions:
+        if other["id"] == skip:
+            continue
+        if other["status"] == "executed" or (other["status"] == "pending" and other["snapshot"] == snapshot):
+            if requested & stock_rows(other["lines"]):
+                return (f"Purchase-order proposal {other['id'][:8]} ({other['status']}) already covers "
+                        "one or more of these inventory rows. Review that proposal before ordering again.")
+
+
 def propose(store, workspace, product_ids=None):
     store.workspace(workspace)
     lines = draft_lines(store, workspace, product_ids)
@@ -123,9 +137,13 @@ def propose(store, workspace, product_ids=None):
     with store.connection(immediate=True) as con:
         if snapshot != fingerprint(store, workspace, con):
             raise Problem("Data changed while preparing the draft. Please retry.", 409)
-        existing = next((a for a in store.list(workspace, "action", con) if a["idempotency_key"] == key), None)
+        actions = store.list(workspace, "action", con)
+        existing = next((a for a in actions if a["idempotency_key"] == key), None)
         if existing:
             return existing
+        overlap = order_overlap(actions, lines, snapshot)
+        if overlap:
+            raise Problem(overlap, 409)
         action = store.put(workspace, "action", dict(
             id=uid(), type="purchase_order", title=f"Replenish {len(lines)} low-stock products", status="pending",
             justification="Validated on-hand quantity is below the reviewed reorder threshold. Restore to target stock; purchase orders do not alter on-hand inventory.",
@@ -218,15 +236,24 @@ def review_action(store, workspace, identifier, decision, actor):
             if changed:
                 error = "Source files, mappings, relationships, or planning policy changed. Regenerate and review the proposal."
             else:
-                current_lines = draft_lines(store, workspace, action["product_ids"])
-                if current_lines != action["lines"]:
-                    error = "The proposal differs from the current validated calculations."
+                # Older installations could create overlapping pending proposals.
+                # The first approved one wins; subsequent executions must conflict.
+                executed = [a for a in store.list(workspace, "action", con) if a["status"] == "executed"]
+                error = order_overlap(executed, action["lines"], action["snapshot"], skip=identifier)
+                if not error:
+                    try:
+                        if draft_lines(store, workspace, action["product_ids"]) != action["lines"]:
+                            error = "The proposal differs from the current validated calculations."
+                    except Problem as exc:
+                        error = f"The proposal no longer passes validation. {exc}"
             if error:
                 action.update(status="conflicted", validation=action["validation"] + [error])
                 store.put(workspace, "action", action, con)
                 store.event(workspace, "action.conflicted", error, {"action_id": identifier}, con)
             else:
                 action.update(reviewed_at=now(), approved_by=actor)
+                store.event(workspace, "action.approved", "Operator approved the validated purchase-order proposal.",
+                            {"action_id": identifier, "actor": actor, "snapshot": action["snapshot"]}, con)
                 path = write_purchase_order(store, action)
                 action.update(status="executed", output={"name": f"Purchase-Orders-{identifier[:8]}.xlsx", "sha256": digest(path)},
                     modifications=[{"operation": "create_workbook", "sheet": "Purchase Orders",

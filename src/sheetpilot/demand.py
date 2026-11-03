@@ -33,7 +33,7 @@ def _quantity(value):
 
 
 def demand_analysis(store, workspace, parameters=None, all_records=None):
-    from .analytics import records
+    from .analytics import legacy_overlaps, records
     store.workspace(workspace)
     policy = policy_for(store, workspace)
     params = parameters or DemandParameters.model_validate(policy["parameters"] if policy else {})
@@ -54,6 +54,7 @@ def demand_analysis(store, workspace, parameters=None, all_records=None):
         d=_date(sale["data"].get("sale_date"))
         if d and date(1900,1,1)<=d<=today: dates_by_table[sale_table].append(d)
     tables = {t["id"]: t for t in store.list(workspace,"table")}
+    excluded = legacy_overlaps(store, workspace)
     links = defaultdict(list)
     for relation in store.list(workspace,"relationship"):
         left,right = tables.get(relation["left_table"]),tables.get(relation["right_table"])
@@ -101,6 +102,8 @@ def demand_analysis(store, workspace, parameters=None, all_records=None):
             "evidence":{"sales_tables":sorted(sale_tables),"relationship_ids":[r for _,r in related],
                         "inventory_source":stock["source"],"sales_examples":[r["source"] for r,_ in recent[:3]]}}
         result.append(row)
+        if any(excluded.get(t) == "duplicate" for t in sale_tables):
+            warnings.append("Equivalent duplicate source-cell views are counted once.")
         if overlaps: warnings.append(f"{overlaps} duplicate source-cell views excluded from sales velocity.")
         if conflict:
             row["status"]="conflicting_source_views";warnings.append("Overlapping sales mappings disagree on the same source cells. Resolve them before planning.");continue

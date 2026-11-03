@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import json
 from openpyxl.utils import get_column_letter
 
-from .mapping import identifier, source_rows
+from .mapping import identifier, overlapping_data, source_rows
 from .semantics import ENTITY_CATALOG, NUMERIC_FIELDS, currency_hint
 from .store import Problem, uid
 
@@ -34,13 +34,23 @@ def money(value):
     return str(Decimal(value).quantize(CENT, rounding=ROUND_HALF_UP))
 
 
-def materialize(store, workspace):
+def quoted_cost(value):
+    cost = decimal_value(value, "unit_cost")
+    if cost != cost.quantize(Decimal("0.000001")):
+        raise ValueError("unit_cost has more than six decimal places")
+    return money(cost) if cost == cost.quantize(CENT) else format(cost.quantize(Decimal("0.000001")), "f").rstrip("0")
+
+
+def materialize(store, workspace, con=None):
+    if con is None:
+        with store.connection(immediate=True) as transaction:
+            return materialize(store, workspace, transaction)
     records, issues = [], []
-    for table in store.list(workspace, "table"):
+    for table in store.list(workspace, "table", con):
         if table["status"] != "confirmed":
             continue
         seen = set()
-        for raw in source_rows(store, workspace, table):
+        for raw in source_rows(store, workspace, table, con):
             source = {"workbook_id": table["workbook_id"], "table_id": table["id"],
                       "sheet": table["sheet"], "row": raw["row"], "ref": table["ref"],
                       "cells": {field: get_column_letter(int(col)) + str(raw["row"])
@@ -73,8 +83,8 @@ def materialize(store, workspace):
                     row["currency"] = table["constants"]["currency"]
                     source["constants"] = {"currency": {"value": row["currency"], "origin": "human-reviewed table setting"}}
                 row["currency"] = identifier(row.get("currency")).upper() or None
-                if row["currency"] is not None and (len(row["currency"]) != 3 or not row["currency"].isalpha()):
-                    raise ValueError("currency must be a three-letter code")
+                if row["currency"] is not None and (len(row["currency"]) != 3 or not row["currency"].isascii() or not row["currency"].isalpha()):
+                    raise ValueError("currency must be a three-letter ASCII code")
                 if entity == "sales":
                     quantity = decimal_value(row.get("quantity"), "quantity")
                     row["quantity"] = str(quantity)
@@ -103,7 +113,7 @@ def materialize(store, workspace):
                     row["supplier_id"] = identifier(row.get("supplier_id"))
                     if not row["supplier_id"] or not identifier(row.get("supplier_name")):
                         raise ValueError("Supplier identifier or name is missing")
-                    row["unit_cost"] = money(decimal_value(row.get("unit_cost"), "unit_cost"))
+                    row["unit_cost"] = quoted_cost(row.get("unit_cost"))
                 elif entity not in ENTITY_CATALOG or entity == "unknown":
                     continue
                 # Retain richer meanings without treating order/payment totals as line revenue.
@@ -116,35 +126,36 @@ def materialize(store, workspace):
                 records.append(dict(id=uid(), entity=entity, product_id=row["product_id"], data=row, source=source))
             except ValueError as exc:
                 issues.append(source | {"severity": "error", "code": "invalid", "message": str(exc) + "; excluded from derived totals."})
-    enrich_reviewed_records(store, workspace, records, issues)
+    enrich_reviewed_records(store, workspace, records, issues, con)
     # Conflicting inventory identities must never result in duplicate replenishment.
     groups = defaultdict(list)
     for record in records:
         if record["entity"] == "inventory":
             groups[record["product_id"]].append(record)
     conflicting = {key for key, rows in groups.items() if len(rows) > 1}
-    for record in records[:]:
+    valid_records = []
+    for record in records:
         if record["entity"] == "inventory" and record["product_id"] in conflicting:
             issues.append(record["source"] | {"severity": "error", "code": "conflict",
                 "message": "Multiple inventory records share this product ID; excluded until resolved."})
-            records.remove(record)
-    with store.connection(immediate=True) as con:
-        con.execute("DELETE FROM records WHERE workspace=?", (workspace,))
-        con.executemany("INSERT INTO records VALUES(?,?,?,?,?,?,?)",
-            [(r["id"], workspace, r["source"]["table_id"], r["entity"], r["product_id"],
-              json.dumps(r["data"], ensure_ascii=False), json.dumps(r["source"], ensure_ascii=False)) for r in records])
-        old = store.list(workspace, "quality", con)
-        value = {"id": old[0]["id"] if old else uid(), "issues": issues}
-        store.put(workspace, "quality", value, con)
-    return records, issues
+        else:
+            valid_records.append(record)
+    con.execute("DELETE FROM records WHERE workspace=?", (workspace,))
+    con.executemany("INSERT INTO records VALUES(?,?,?,?,?,?,?)",
+        ((r["id"], workspace, r["source"]["table_id"], r["entity"], r["product_id"],
+          json.dumps(r["data"], ensure_ascii=False), json.dumps(r["source"], ensure_ascii=False)) for r in valid_records))
+    old = store.list(workspace, "quality", con)
+    value = {"id": old[0]["id"] if old else uid(), "issues": issues}
+    store.put(workspace, "quality", value, con)
+    return valid_records, issues
 
 
-def enrich_reviewed_records(store, workspace, rows, issues):
+def enrich_reviewed_records(store, workspace, rows, issues, con=None):
     """Only a unique master across all reviewed exact links may enrich missing context."""
-    tables = {t["id"]: t for t in store.list(workspace, "table")}
+    tables = {t["id"]: t for t in store.list(workspace, "table", con)}
     by_table, joins = defaultdict(list), defaultdict(list)
     for row in rows: by_table[row["source"]["table_id"]].append(row)
-    for link in store.list(workspace, "relationship"):
+    for link in store.list(workspace, "relationship", con):
         left, right = tables.get(link["left_table"]), tables.get(link["right_table"])
         if (not left or not right or link["status"] != "confirmed" or link.get("match_mode", "exact") != "exact"
             or any(t["status"] != "confirmed" for t in (left,right))
@@ -183,11 +194,32 @@ def enrich_reviewed_records(store, workspace, rows, issues):
                 item["source"].setdefault("joins",[]).append({"relationship_id":relationship_id, "source":master["source"], "fields":inherited})
 
 
+def legacy_overlaps(store, workspace, con=None):
+    """Read older workspaces safely without rewriting their operator decisions."""
+    groups, excluded = defaultdict(list), {}
+    for table in store.list(workspace, "table", con):
+        if table["status"] != "confirmed":
+            continue
+        siblings = groups[(table["workbook_id"], table["sheet"])]
+        for other in siblings:
+            if not overlapping_data(table, other):
+                continue
+            if all(table.get(k) == other.get(k) for k in ("ref", "header_row", "entity", "fields", "constants")):
+                excluded.setdefault(table["id"], "duplicate")
+            else:
+                excluded[table["id"]] = excluded[other["id"]] = "conflict"
+        siblings.append(table)
+    return excluded
+
+
 def records(store, workspace):
     with store.connection() as con:
+        con.execute("BEGIN")
+        excluded = legacy_overlaps(store, workspace, con)
         return [{"id": r["id"], "entity": r["entity"], "product_id": r["product_id"],
                  "data": json.loads(r["data"]), "source": json.loads(r["source"])}
-                for r in con.execute("SELECT * FROM records WHERE workspace=? ORDER BY rowid", (workspace,))]
+                for r in con.execute("SELECT * FROM records WHERE workspace=? ORDER BY rowid", (workspace,))
+                if r["table_id"] not in excluded]
 
 
 def inventory_tool(store, workspace):
@@ -222,17 +254,10 @@ def inventory_tool(store, workspace):
     return result
 
 
-def dashboard(store, workspace):
-    all_records = records(store, workspace)
-    sales = [r["data"] for r in all_records if r["entity"] == "sales"]
-    stock = inventory_tool(store, workspace)
+def sales_metrics(sales):
     revenue_by_currency = defaultdict(Decimal)
     trend, top = {}, {}
     unknown_currency = 0
-    currency_gaps = defaultdict(int)
-    for record in all_records:
-        if record["entity"] == "sales" and not record["data"].get("currency"):
-            currency_gaps[record["source"]["table_id"]] += 1
     for row in sales:
         currency = row["currency"]
         if currency:
@@ -249,18 +274,69 @@ def dashboard(store, workspace):
             trend[trend_key] = trend.get(trend_key, Decimal(0)) + Decimal(row["revenue"])
     top_list = [v | {"units": str(v["units"]), "revenue": money(v["revenue"])} for v in top.values()]
     top_list.sort(key=lambda r: Decimal(r["units"]), reverse=True)
+    return {
+        "revenue": [{"currency": c, "amount": money(v)} for c, v in sorted(revenue_by_currency.items())],
+        "units_sold": str(sum((Decimal(r["quantity"]) for r in sales), Decimal(0))) if sales else None,
+        "sales_records": len(sales),
+        "sales_trend": [{"date": d, "currency": c, "revenue": money(v)} for (d,c),v in sorted(trend.items())],
+        "top_products": top_list[:10],
+        "warnings": [f"{unknown_currency} sales records lack currency; excluded from monetary KPIs."] if unknown_currency else [],
+    }
+
+
+def sales_evidence(store, workspace, scope, offset=0, limit=20, summarize=False):
+    store.workspace(workspace)
+    clauses = ["workspace=?", "entity='sales'"]
+    params = [workspace]
+    for condition, value in (("product_id=?", scope.product_id), ("json_extract(data,'$.currency')=?", scope.currency),
+                             ("json_extract(data,'$.sale_date')>=?", scope.date_from),
+                             ("json_extract(data,'$.sale_date')<=?", scope.date_to)):
+        if value is not None:
+            clauses.append(condition)
+            params.append(str(value))
+    with store.connection() as con:
+        con.execute("BEGIN")
+        excluded = legacy_overlaps(store, workspace, con)
+        if excluded:
+            clauses.append("table_id NOT IN (SELECT value FROM json_each(?))")
+            params.append(json.dumps(list(excluded)))
+        where = " AND ".join(clauses)
+        total = con.execute("SELECT COUNT(*) FROM records WHERE " + where, params).fetchone()[0]
+        result = {"total": total, "offset": offset, "scope": scope.model_dump(mode="json", exclude_none=True)}
+        if summarize:
+            sales = [json.loads(row[0]) for row in con.execute("SELECT data FROM records WHERE " + where, params)]
+            result.update(sales_metrics(sales))
+        result["rows"] = []
+        for row in con.execute("SELECT data,source FROM records WHERE " + where + " ORDER BY rowid LIMIT ? OFFSET ?",
+                               [*params, limit, offset]):
+            data = json.loads(row["data"])
+            result["rows"].append({field: data.get(field) for field in
+                ("product_id", "product_name", "quantity", "sale_date", "revenue", "currency")} |
+                {"source": json.loads(row["source"])})
+    return result
+
+
+def dashboard(store, workspace):
+    all_records = records(store, workspace)
+    sales = [r for r in all_records if r["entity"] == "sales"]
+    metrics = sales_metrics([r["data"] for r in sales])
+    stock = inventory_tool(store, workspace)
+    if legacy_overlaps(store, workspace):
+        metrics["warnings"].append("Overlapping confirmed regions were found in this older workspace. Equivalent views count once. Conflicting regions are excluded. Review these ranges in Mapping review.")
+    currency_gaps = defaultdict(int)
+    for record in sales:
+        if not record["data"].get("currency"):
+            currency_gaps[record["source"]["table_id"]] += 1
     quality = store.list(workspace, "quality")
     issues = quality[0]["issues"] if quality else []
     entities = {r["entity"] for r in all_records}
     return {
-        "revenue": [{"currency": c, "amount": money(v)} for c, v in sorted(revenue_by_currency.items())],
-        "units_sold": str(sum((Decimal(r["quantity"]) for r in sales), Decimal(0))) if sales else None,
-        "sales_records": len(sales), "inventory_units": str(sum((Decimal(r["stock_quantity"]) for r in stock), Decimal(0))) if stock else None,
+        **metrics,
+        "inventory_units": str(sum((Decimal(r["stock_quantity"]) for r in stock), Decimal(0))) if stock else None,
         "inventory_products": len(stock), "low_stock_count": sum(r["low_stock"] for r in stock),
         "stock": stock, "low_stock": [r for r in stock if r["low_stock"]],
-        "sales_trend": [{"date": d, "currency": c, "revenue": money(v)} for (d,c),v in sorted(trend.items())],
-        "top_products": top_list[:10], "quality_issues": issues,
-        "warnings": ([f"{unknown_currency} sales records lack currency; excluded from monetary KPIs."] if unknown_currency else []) +
+        "quality_issues": issues,
+        "warnings": metrics["warnings"] +
                     ([f"{sum(not r['replenishment_configured'] for r in stock)} inventory rows need a reviewed source threshold or an eligible sales-demand policy before replenishment."]
                      if any(not r["replenishment_configured"] for r in stock) else []),
         "currency_review": [{"table_id": t["id"], "sheet": t["sheet"], "affected_rows": currency_gaps[t["id"]],

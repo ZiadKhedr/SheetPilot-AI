@@ -21,6 +21,8 @@ class WorkspaceInput(BaseModel):
 
 def create_app(settings=None):
     settings = settings or Settings.from_env()
+    if settings.access_token and settings.read_token == settings.access_token:
+        raise ValueError("Configure different owner and read-only workspace tokens.")
     app = FastAPI(title="SheetPilot AI", version="0.1.0")
     store = Store(settings.data_dir)
     app.state.store = store
@@ -35,11 +37,14 @@ def create_app(settings=None):
         return JSONResponse(status_code=exc.status, content={"detail": str(exc)})
 
     def auth(request: Request):
-        token = request.headers.get("authorization", "").removeprefix("Bearer ")
-        if settings.access_token:
-            if secrets.compare_digest(token, settings.access_token):
+        if settings.access_token or settings.read_token:
+            scheme, _, token = request.headers.get("authorization", "").partition(" ")
+            if scheme.lower() != "bearer" or not token:
+                raise HTTPException(401, "A valid workspace access token is required.")
+            token = token.encode()
+            if settings.access_token and secrets.compare_digest(token, settings.access_token.encode()):
                 return "owner"
-            if settings.read_token and secrets.compare_digest(token, settings.read_token):
+            if settings.read_token and secrets.compare_digest(token, settings.read_token.encode()):
                 if request.method != "GET":
                     raise HTTPException(403, "Read-only access cannot change this workspace.")
                 return "reader"

@@ -18,3 +18,9 @@ Live Meta access must be verified with the user's key; no fixture counts as live
 - [x] Sales-based stock planning: per-product trailing sales velocity, days remaining, estimated depletion dates, editable replenishment scenarios, explicit policy review, preservation of source thresholds, typed agent results and approval/audit integration. See docs/DEMAND_PLANNING.md.
 - [x] Preview feedback recovery: explicit calculating/completion/unchanged-result states, direct results/policy navigation, clear missing-history recovery, and an accurate stock-planning CTA in Agent Workspace. Preview remains separate from approval.
 - [x] Meta completion recovery: explicit reasoning/output allowance, one bounded larger-budget retry for length-truncated replies, distinct stop-reason errors, concise mapping evidence, and atomic rejection after exhausted retries. Full Python suite: 153 passed, 2 documented skips.
+
+## Independent audit · November 4, 2026
+
+- Intake and review now commit atomically. Overlap checks protect sales totals, read-only tokens fail closed and previously ordered inventory rows cannot be ordered again from another proposal. Supplier quote precision survives Excel generation.
+- The sales tool supports product, inclusive date and currency filters and returns source cells. The orchestrator requires tool evidence before publishing a business answer. Both live Python scenarios passed separately, including USD 270.00 for product A001.
+- The release Python suite with live Meta enabled passed 169 tests with one Windows symlink skip and one dependency deprecation warning. Both companies passed their real-provider browser workflows, alongside the demand, supplier-review, retail and mobile scenarios.

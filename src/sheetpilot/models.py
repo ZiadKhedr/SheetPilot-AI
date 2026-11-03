@@ -1,5 +1,6 @@
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from datetime import date
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from .semantics import ENTITIES, FIELDS
 
 Entity = Literal[tuple(ENTITIES)]
@@ -65,6 +66,38 @@ class AgentInput(Model):
 
 class EmptyArgs(Model):
     pass
+
+
+class InventoryArgs(Model):
+    product_ids: list[str] = Field(default_factory=list, max_length=1)
+
+
+class SalesArgs(Model):
+    product_id: str | None = Field(default=None, min_length=1, max_length=180)
+    date_from: date | None = None
+    date_to: date | None = None
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+
+    @model_validator(mode="after")
+    def ordered_dates(self):
+        if self.date_from and self.date_to and self.date_from > self.date_to:
+            raise ValueError("The start date must precede or equal the end date.")
+        return self
+
+
+class SalesFilter(Model):
+    field: Literal["product_id", "date_from", "date_to", "currency"]
+    value: str = Field(min_length=1, max_length=180)
+
+
+class SalesSelection(Model):
+    filters: list[SalesFilter] = Field(default_factory=list, max_length=4)
+
+    def scope(self):
+        fields = {f.field: f.value for f in self.filters}
+        if len(fields) != len(self.filters):
+            raise ValueError("Each sales filter may appear once.")
+        return SalesArgs.model_validate_strings(fields)
 
 
 class DraftArgs(Model):
