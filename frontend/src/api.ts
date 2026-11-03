@@ -20,7 +20,8 @@ export async function download(path:string,name:string){
  const anchor=document.createElement('a');anchor.href=url;anchor.download=name;anchor.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-export function formatMoney(amount:string|number,currency='USD'){
- return new Intl.NumberFormat('en-US',{style:'currency',currency,maximumFractionDigits:2}).format(Number(amount));
+export function formatMoney(amount:string|number,currency='USD',precision=2){
+ if(!/^[A-Z]{3}$/.test(currency))return String(amount)+' (currency needs review)';
+ return new Intl.NumberFormat('en-US',{style:'currency',currency,maximumFractionDigits:precision}).format(Number(amount));
 }
 export function label(value:string){return value.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())}

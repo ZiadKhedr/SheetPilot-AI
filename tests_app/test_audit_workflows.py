@@ -179,6 +179,14 @@ def test_subcent_supplier_quote_survives_normalization_approval_and_output(tmp_p
         review_mapping(store, workspace, table["id"], MappingInput(entity=entity, fields=fields,
             header_row=1, expected_revision=table["revision"]))
     confirm_relationships(store, workspace)
+    # Emulate an earlier mirror while leaving the immutable source workbook intact.
+    with store.connection(immediate=True) as con:
+        con.execute("""UPDATE records SET data=json_set(data,'$.unit_cost','0.13'),
+                    source=json_remove(source,'$.quote_precision_checked')
+                    WHERE workspace=? AND entity='suppliers' AND product_id='A'""", (workspace,))
+    with pytest.raises(Problem, match="original quote"):
+        propose(store, workspace, ["A"])
+    materialize(store, workspace)
     action = propose(store, workspace, ["A"])
     line, = action["lines"]
     assert (line["quantity"], line["unit_cost"], line["line_total"]) == ("6","0.125","0.75")

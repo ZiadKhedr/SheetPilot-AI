@@ -19,6 +19,8 @@ The HTTPX client uses Chat Completions and strict response_format.json_schema, t
 
 The Orchestrator plans with Meta and can call exactly three typed tools: sales_analysis, inventory_analysis, draft_purchase_orders. Those represent Sales, Inventory and Procurement specialists. The loop is capped at five turns and eight calls; unknown tools and invalid arguments are rejected. There is no arbitrary SQL, Python, filesystem or approval tool. Deterministic tools calculate quantities and money. Only concise final summaries and actual tool results enter the user-visible trace; private reasoning is not exposed.
 
+On November 4, 2026 the official catalog, structured generation and both live agent workflows were reverified. The sales tool now accepts a list of explicit filters (or an empty list), and inventory accepts zero or one product ID. The local backend renders business claims from completed tool results. If Meta returns prose before getting evidence, one bounded retry is allowed. Failed reverification clears the connection badge. A product-specific question for A001 returned the reviewed USD 270.00 with its source rows.
+
 401/403/404 and bad-request responses produce sanitized errors without raw provider bodies. Transient statuses retry at most twice with bounded backoff; long Retry-After values return a retry-later error. Timeouts never silently trigger a fake response.
 
 Test MockTransport responses exist only in unit tests for error/contract coverage. Guided tools are an explicitly labeled deterministic product path, not a simulated AI service. Live tests require an opt-in variable because they call the real API and may consume credits.

@@ -31,7 +31,7 @@ function WorkspaceApp(){
  const root='/workspaces/'+workspace;
  const reload=useCallback(async(id:string)=>{const [s,d]=await Promise.all([api<State>('/workspaces/'+id+'/state'),api<Dashboard>('/workspaces/'+id+'/dashboard')]);setState(s);setStats(d)},[]);
  async function initialize(){
-  setLoading(true);setError('');
+  setLoading(true);setError('');setState(null);setStats(emptyDashboard);setWorkspaces([]);
   try{
    const [list,p,catalog]=await Promise.all([api<Workspace[]>('/workspaces'),api<Provider>('/provider'),api<SemanticCatalog&{fields:string[]}>('/catalog')]);
    setProvider(p);setFields(catalog.fields);setSemanticCatalog(catalog);
@@ -51,7 +51,11 @@ function WorkspaceApp(){
   catch(e){setError((e as Error).message);if(workspace)await reload(workspace).catch(()=>{})}
   finally{setBusy('')}
  }
- async function switchWorkspace(id:string){setWorkspace(id);localStorage.setItem('sheetpilot-workspace',id);setError('');setNotice('');await reload(id)}
+ async function switchWorkspace(id:string){
+  setLoading(true);setState(null);setStats(emptyDashboard);setError('');setNotice('');
+  setWorkspace(id);localStorage.setItem('sheetpilot-workspace',id);
+  try{await reload(id)}catch(e){setError((e as Error).message);throw e}finally{setLoading(false)}
+ }
  async function loadDemo(company:string){
   setBusy('Loading the company’s real Excel fixtures…');setError('');
   try{const w=await api<Workspace>('/demo/'+company,'POST');setWorkspaces(ws=>[w,...ws]);await switchWorkspace(w.id);navigate('/mapping');setNotice('Three workbooks loaded. Review their structure and mappings before using the numbers.')}
@@ -59,7 +63,13 @@ function WorkspaceApp(){
  }
  async function upload(files:FileList|File[]|null){
   if(!files)return;await perform('Inspecting your Excel workbooks…',async()=>{
-   for(const file of Array.from(files)){const form=new FormData();form.append('file',file);await api(root+'/uploads','POST',form)}
+   const batch=Array.from(files), failed:string[]=[];
+   for(const [i,file] of batch.entries()){
+    setBusy('Inspecting '+file.name+' ('+(i+1)+' of '+batch.length+')…');
+    const form=new FormData();form.append('file',file);
+    try{await api(root+'/uploads','POST',form)}catch(e){failed.push(file.name+' — '+(e as Error).message)}
+   }
+   if(failed.length){navigate('/files');throw new Error((batch.length-failed.length)+' of '+batch.length+' workbooks imported. '+failed.join(' · '))}
    navigate('/files');
   },'Workbooks inspected. Your originals are preserved. Review mappings next.');
  }
@@ -69,7 +79,7 @@ function WorkspaceApp(){
   try{const w=await api<Workspace>('/workspaces','POST',{name:newName.trim()});setWorkspaces(ws=>[w,...ws]);setNewOpen(false);setNewName('');await switchWorkspace(w.id);navigate('/files')}
   catch(e){setError((e as Error).message)}finally{setBusy('')}
  }
- async function verify(){await perform('Verifying the official Meta API…',async()=>setProvider(await api<Provider>('/provider/verify','POST')),'Meta model access and a real generation request are verified.')}
+ async function verify(){setProvider(p=>({...p,verified:false,generation_verified:false}));await perform('Verifying the official Meta API…',async()=>setProvider(await api<Provider>('/provider/verify','POST')),'Meta model access and a real generation request are verified.')}
  useEffect(()=>{const target=location.hash&&document.getElementById(location.hash.slice(1));if(target)target.scrollIntoView({block:"start"});else window.scrollTo(0,0)},[location.pathname,location.hash]);
  const page=pages.find(p=>p.path===location.pathname)||pages[0];
  const context:Context={state:state!,stats,provider,fields,catalog:semanticCatalog,busy,perform,root,workspace,navigate};
@@ -77,12 +87,12 @@ function WorkspaceApp(){
   <input ref={fileInput} className="hidden" type="file" accept=".xlsx" multiple aria-label="Upload Excel workbooks" data-testid="file-upload" onChange={e=>{void upload(e.target.files);e.target.value=''}}/>
   <aside className={'sidebar '+(mobile?'mobile-open':'')}>
    <NavLink to="/" className="brand"><span className="brand-mark"><i/><i/><i/><i/></span><span>sheetpilot<span className="brand-ai">AI</span></span></NavLink>
-   <div className="workspace-switch"><span className="workspace-avatar">{state?.workspace.name.charAt(0)||'W'}</span><select aria-label="Select workspace" value={workspace} disabled={!!busy} onChange={e=>void switchWorkspace(e.target.value)}>{workspaces.map(w=><option key={w.id} value={w.id}>{w.name}</option>)}</select><ChevronDown size={14}/></div>
+   <div className="workspace-switch"><span className="workspace-avatar">{state?.workspace.name.charAt(0)||'W'}</span><select aria-label="Select workspace" value={workspace} disabled={loading||!!busy} onChange={e=>void switchWorkspace(e.target.value).catch(()=>{})}>{workspaces.map(w=><option key={w.id} value={w.id}>{w.name}</option>)}</select><ChevronDown size={14}/></div>
    <nav aria-label="Main navigation">{pages.map(p=><div key={p.path}>{p.section&&<p className="nav-section">{p.section}</p>}<NavLink to={p.path} end={p.path==='/'} onClick={()=>setMobile(false)} className={({isActive})=>'nav-link '+(isActive?'active':'')}><p.icon size={19}/><span>{p.name}</span>{p.path==='/approvals'&&stats.pending_actions>0&&<span className="nav-count">{stats.pending_actions}</span>}</NavLink></div>)}</nav>
-   <button className="new-workspace" onClick={()=>setNewOpen(true)}><Plus size={15}/>New workspace</button>
+   <button className="new-workspace" disabled={loading||!!busy} onClick={()=>setNewOpen(true)}><Plus size={15}/>New workspace</button>
    <div className="sidebar-bottom"><div className="preserved"><ShieldCheck size={18}/><div><strong>Your Excel, preserved.</strong><span>Every change stays in your control.</span></div></div><button onClick={()=>setSettingsOpen(true)} className="meta-status"><span className={'status-dot '+(provider.verified?'online':'')}/><span>{provider.verified?'Meta connected':provider.configured?'Meta ready to verify':'Connect Meta AI'}<small>{provider.model}</small></span><ArrowUpRight size={15}/></button></div>
   </aside>
-  <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="icon-button mobile-toggle" onClick={()=>setMobile(!mobile)} aria-label="Toggle navigation"><Menu size={20}/></button><span>Workspace</span><span className="crumb-divider">/</span><strong>{page.name}</strong></div><div className="top-actions"><span className="local-pill"><span className="status-dot online"/>Local workspace</span><Button onClick={()=>fileInput.current?.click()} disabled={!!busy}><Plus size={15}/>Upload workbooks</Button></div></header>
+  <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="icon-button mobile-toggle" onClick={()=>setMobile(!mobile)} aria-label="Toggle navigation"><Menu size={20}/></button><span>Workspace</span><span className="crumb-divider">/</span><strong>{page.name}</strong></div><div className="top-actions"><span className="local-pill"><span className="status-dot online"/>Local workspace</span><Button onClick={()=>fileInput.current?.click()} disabled={loading||!state||!!busy}><Plus size={15}/>Upload workbooks</Button></div></header>
    <main className="content">
     {error&&<div role="alert" className="alert error"><CircleX size={18}/><span>{error}</span><button className="icon-button" onClick={()=>setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
     {notice&&<div className="alert success" role="status"><CircleCheck size={18}/><span>{notice}</span><button className="icon-button" onClick={()=>setNotice('')} aria-label="Dismiss notification"><X size={16}/></button></div>}

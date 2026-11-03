@@ -26,7 +26,7 @@ test('missing supplier review is recoverable without automatic approval',async({
  expect(state.actions).toEqual([]);
  expect(state.runs[0].status).toBe('needs_review');
  expect(state.relationships).toEqual([]);
- await page.screenshot({path:'../outputs/regression-procurement-needs-review.png',fullPage:true});
+ await page.screenshot({path:test.info().outputPath('procurement-needs-review.png'),fullPage:true});
  await notice.getByRole('button',{name:'Discover & review supplier links',exact:true}).click();
  await expect(page).toHaveURL(/\/mapping#relationships$/);
  await expect(page.locator('#relationships')).toBeInViewport();
@@ -47,5 +47,14 @@ test('missing supplier review is recoverable without automatic approval',async({
  expect(state.actions[0].status).toBe('pending');
  expect(state.actions[0].output).toBeNull();
  expect(state.actions[0].totals).toEqual([{currency:'EGP',amount:'12630.00'}]);
+ await page.getByRole('link',{name:/^Approval center/}).click();
+ await page.getByRole('button',{name:'Review details'}).click();
+ await expect(page.getByRole('dialog')).toContainText('Affected source versions');
+ await page.getByRole('button',{name:'Close dialog'}).click();
+ await page.getByRole('button',{name:'Approve & generate Excel'}).click();
+ const download=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Download Excel'}).click();
+ expect((await download).suggestedFilename()).toMatch(/^Purchase-Orders-.*\.xlsx$/);
+ expect((await (await request.get(base+'/state')).json()).events.filter((e:any)=>e.kind==='action.executed')).toHaveLength(1);
 });
 

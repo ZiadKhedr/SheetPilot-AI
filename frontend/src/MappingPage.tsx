@@ -7,7 +7,7 @@ import { relationshipReview, relationshipSummary } from './relationshipReview';
 
 const entities:Entity[]=['unknown','sales','orders','inventory','products','suppliers','supplier_directory','customers','purchases','payments'];
 const required:Record<string,string[]>={sales:['product_id','quantity'],orders:['order_id'],inventory:['product_id','stock_quantity'],products:['product_id'],suppliers:['product_id','supplier_id','supplier_name','unit_cost'],supplier_directory:['supplier_id','supplier_name'],customers:['customer_id'],purchases:['purchase_order_id','product_id','quantity'],payments:['payment_id','payment_amount']};
-interface Preview{columns:Column[];row_count:number;header_candidates:{row:number;labels:string[]}[];arithmetic_evidence:string[];label_hints?:{currency:string|null}}
+interface Preview{columns:Column[];row_count:number;header_candidates:{row:number;labels:string[]}[];arithmetic_evidence:string[];label_hints?:{currency:string|null};sample_rows?:{row:number;values:Record<string,string|null>;formulas_or_errors:string[]}[]}
 
 export function MappingPage(context:Context){
  const {state,provider,root,busy,perform,fields,catalog}=context;
@@ -83,6 +83,13 @@ export function MappingEditor({table,workbook,fields,catalog,root,busy,save,rean
       {detail&&header===table.header_row&&field===table.fields[String(c.index)]&&<details className="field-evidence"><summary>{Math.round(detail.confidence*100)}% estimate · evidence{detail.confidence<.75?' · review carefully':''}</summary><p>{detail.evidence}</p>{!!detail.alternatives?.length&&<p>Alternatives: {detail.alternatives.map(label).join(', ')}</p>}</details>}
      </td></tr>
    })}</tbody></table></div>
+   {!!preview?.sample_rows?.length&&<details className="evidence"><summary>Preview mapped rows</summary>
+     <p>Read across one source row to check your current choices. {currency&&`Table currency: ${currency}. `}Mapped formulas and errors exclude that row from calculations.</p>
+     <div className="table-wrap"><table aria-label="Preview mapped rows"><thead><tr><th>Source row</th>{columns.filter(c=>used.includes(mapping[String(c.index)])).map(c=>
+       <th key={c.index}>{label(mapping[String(c.index)])}<small dir="auto">{c.label} · {c.coordinate}</small></th>)}</tr></thead>
+       <tbody>{preview.sample_rows.map(r=><tr key={r.row}><th>{r.row}</th>{columns.filter(c=>used.includes(mapping[String(c.index)])).map(c=>
+         <td key={c.index} dir="auto">{r.values[String(c.index)]??'Missing'}{r.formulas_or_errors.includes(String(c.index))&&<small>Formula or error</small>}</td>)}</tr>)}</tbody></table></div>
+   </details>}
    {!!preview?.arithmetic_evidence.length&&<div className="source-checks"><strong>Observed arithmetic checks</strong>{preview.arithmetic_evidence.map((e,i)=><p key={i}>{e}</p>)}</div>}
    {!!table.evidence.length&&<details className="evidence"><summary>Why this mapping? View evidence</summary><ul>{table.evidence.map((e,i)=><li key={i}>{e}</li>)}</ul></details>}
    {!!errors.length&&<div className="mapping-warning" role="status">{errors.join(' · ')}</div>}{warnings.map(w=><p className="mapping-warning" key={w}>{w}</p>)}

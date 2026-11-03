@@ -114,6 +114,7 @@ def materialize(store, workspace, con=None):
                     if not row["supplier_id"] or not identifier(row.get("supplier_name")):
                         raise ValueError("Supplier identifier or name is missing")
                     row["unit_cost"] = quoted_cost(row.get("unit_cost"))
+                    source["quote_precision_checked"] = True
                 elif entity not in ENTITY_CATALOG or entity == "unknown":
                     continue
                 # Retain richer meanings without treating order/payment totals as line revenue.

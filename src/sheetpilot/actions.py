@@ -50,6 +50,7 @@ def procurement_readiness(store, workspace, product_ids=None):
                 and relation["revisions"] == [left["revision"], right["revision"]]):
             links.append(relation)
     lines = []
+    legacy_cells = {}
     blockers = [{"code": "reorder_threshold_missing", "product_id": r["product_id"],
         "message": r["product_id"] + ": review a sales-demand policy with sufficient dated history, or map a source reorder point.",
         "next_step": "review_data", "inventory_table_id": r["source"]["table_id"]}
@@ -85,6 +86,23 @@ def procurement_readiness(store, workspace, product_ids=None):
             continue
         record = candidates[0]
         supplier = record["data"]
+        source = record["source"]
+        if not source.get("quote_precision_checked"):
+            # Older mirrors rounded unit prices to cents before extension.
+            key = (source["workbook_id"], source["sheet"])
+            if key not in legacy_cells:
+                workbook = store.get(workspace, "workbook", source["workbook_id"])
+                sheet = next(s for s in workbook["report"]["worksheets"] if s["title"] == source["sheet"])
+                legacy_cells[key] = {c["coordinate"]: c for c in sheet["populated_cells"]}
+            cell = legacy_cells[key].get(source["cells"].get("unit_cost"), {})
+            try:
+                matches = (cell.get("data_type") not in {"f","e"} and
+                           Decimal(quoted_cost(cell.get("value"))) == Decimal(supplier["unit_cost"]))
+            except ValueError:
+                matches = False
+            if not matches:
+                block("supplier_price_review", "the stored unit cost differs from the original quote. Confirm the supplier mapping again to refresh its precision.")
+                continue
         if not item.get("currency") or item["currency"] != supplier.get("currency"):
             block("currency_mismatch", "stock and supplier currencies must be explicit and match. Review their mappings and source values.")
             continue

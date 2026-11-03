@@ -3,6 +3,8 @@
 
 A working local hackathon application that connects unfamiliar Excel workbooks to a reviewed operational mirror, business dashboards, Meta-powered specialist tools, human approvals, and downloadable purchase-order workbooks.
 
+Read the [independent audit](AUDIT_REPORT.md), [changes and scenario results](IMPROVEMENTS.md) and [four-minute demo](docs/DEMO_SCRIPT.md).
+
 **No migration away from Excel. No invented KPIs. No automatic source edits.**
 
 ## Start this prepared workspace (Windows)
@@ -52,6 +54,8 @@ Edit .env locally to set the Meta key. Keep this MVP on localhost. Optional `SHE
 
 For frontend development, run the backend on 8000 and `pnpm --dir frontend dev` on 5173. Vite proxies /api to FastAPI.
 
+For a clean demonstration on a prepared machine, choose a new data directory in the current terminal before starting. For example, use `$env:SHEETPILOT_DATA_DIR="work/demo-$(Get-Date -Format yyyyMMdd-HHmmss)"` in PowerShell. Existing workspaces stay in their own directories. If you configure only a reader token, all writes are disabled. Owner and reader credentials must differ.
+
 ## The complete workflow
 
 1. Create a workspace, upload the Sales, Inventory and Suppliers workbooks, or load one of the two fictional demo companies.
@@ -66,6 +70,10 @@ For frontend development, run the backend on 8000 and `pnpm --dir frontend dev` 
 10. Activity Timeline records actual processing, reviews, tools, approvals, failures and executions.
 
 **Guided check** and **Label suggestions · no AI** are explicitly deterministic alternatives, never represented as live AI.
+
+On a sales mapping, expand **Preview mapped rows** to see your field choices alongside original row numbers. On Overview, choose **Inspect sales rows** under revenue to find the exact workbook, sheet and amount cell or quantity × unit-price cells. In Agent Workspace, try “What is the reviewed sales revenue for product ID A001 alone, across all dates?” The Electronics answer is USD 270.00. The tool trace shows the selected scope and contributing evidence.
+
+When upgrading a previously reviewed workspace that uses fractional-cent supplier prices, confirm the supplier mapping again before drafting. This reloads the original quote precision into the derived records.
 
 ## Demo datasets
 
@@ -96,7 +104,7 @@ pnpm --dir frontend e2e
 
 For Playwright's bundled Chromium instead of installed Edge, omit PLAYWRIGHT_CHANNEL and install its browser once: `pnpm --dir frontend exec playwright install chromium`.
 
-The browser suite starts a fresh backend on 8010 using .data/e2e, uploads both datasets through the UI, performs real Meta mapping and agent calls, confirms mappings/relationships, approves, downloads Excel, checks the timeline, and tests mobile navigation. Live tests are opt-in, never silently mocked.
+The browser suite starts a fresh backend on 8010 with a unique database under `work/e2e/`. With the live flag it uploads both datasets through the UI, performs real Meta mapping and agent calls, confirms mappings/relationships, approves, downloads Excel and checks the timeline. An independent guided browser test exercises approval and download without an API key. Screenshots and live downloads are under `frontend/test-results/`. After a live browser run, use `.\.venv\Scripts\python.exe scripts/validate_downloads.py` to compare both downloads with the fictional company oracles.
 
 In this managed Windows environment, filesystem link tests and browser launches require normal execution permissions. A new `--basetemp=work/your-test-run` directory avoids a restricted system temp location. A real symlink test is skipped if the OS account cannot create symlinks.
 

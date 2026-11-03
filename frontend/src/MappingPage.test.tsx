@@ -34,6 +34,17 @@ test('duplicate meanings block confirmation; draft remains available',async()=>{
  expect(screen.getByText('Each meaning can be used only once.')).toBeVisible();
  expect(screen.getByRole('button',{name:'Save draft'})).toBeEnabled();
 });
+
+test('row preview pairs current meanings with source values and flags formulas',async()=>{
+ vi.mocked(api).mockResolvedValue({columns:table.columns,row_count:3,header_candidates:[],arithmetic_evidence:[],
+  sample_rows:[{row:4,values:{'1':'SKU-42','2':'200','3':'=B4+1'},formulas_or_errors:['3']}]});
+ render(<MappingEditor table={table} workbook={workbook} fields={fields} root="/workspaces/test" busy={false} save={vi.fn()} reanalyze={()=>{}}/>);
+ fireEvent.click(await screen.findByText('Preview mapped rows'));
+ const preview=screen.getByRole('table',{name:'Preview mapped rows'});
+ expect(preview).toHaveTextContent('SKU-42');
+ expect(preview).toHaveTextContent('Formula or error');
+ expect(preview).toHaveTextContent('Stock quantity');
+});
 test('header change reloads source columns and clears old assignments',async()=>{
  setup();await waitFor(()=>expect(screen.getByRole('button',{name:'Confirm mapping'})).toBeEnabled());
  vi.mocked(api).mockResolvedValue({columns:[{index:1,label:'New SKU',coordinate:'A2',samples:['N01']}],row_count:2,header_candidates:[],arithmetic_evidence:[]});

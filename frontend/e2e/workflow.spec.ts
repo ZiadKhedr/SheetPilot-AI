@@ -19,11 +19,15 @@ for(const company of [
   await expect(page.getByRole('heading',{name:'Excel file manager',exact:true})).toBeVisible();
   await page.getByTestId('file-upload').setInputFiles(company.files.map(file=>path.resolve('../demo_data',company.key,file)));
   for(const file of company.files)await expect(page.getByRole('heading',{name:file,exact:true})).toBeVisible();
-  await page.getByRole('link',{name:'Mapping review',exact:true}).click();
+  await page.getByRole('button',{name:'Review mappings',exact:true}).click();
   await page.getByRole('button',{name:'Analyze with Meta',exact:true}).click();
   await expect(page.getByText('Meta suggestions are ready for your review.',{exact:true})).toBeVisible({timeout:150000});
   for(const entity of ['sales','inventory','suppliers']){
    const card=page.getByTestId('mapping-'+entity);
+   if(entity==='sales'){
+    await card.getByText('Preview mapped rows',{exact:true}).click();
+    await expect(card.getByRole('table',{name:'Preview mapped rows'})).toContainText('Product id');
+   }
    await card.getByRole('button',{name:'Confirm mapping',exact:true}).click();
    await expect(card).toHaveAttribute('data-status','confirmed');
   }
@@ -32,17 +36,24 @@ for(const company of [
   await expect(confirmations.first()).toBeVisible();
   const count=await confirmations.count();
   for(let i=0;i<count;i++){await confirmations.first().click();await expect(confirmations).toHaveCount(count-i-1)}
-  await page.screenshot({path:'../outputs/browser-'+company.key+'-mapping.png',fullPage:true});
+  await page.screenshot({path:test.info().outputPath('browser-'+company.key+'-mapping.png'),fullPage:true});
   await page.getByRole('link',{name:'Overview',exact:true}).click();
   if(company.key==='company_a')await expect(page.getByTestId('metric-sales-revenue')).toHaveText(company.revenue);
   else await expect(page.getByTestId('metric-sales-revenue')).toContainText('11,890.00');
   await expect(page.getByTestId('metric-needs-attention')).toHaveText('3');
-  await page.screenshot({path:'../outputs/browser-'+company.key+'-dashboard.png',fullPage:true});
+  await page.getByRole('button',{name:'Inspect sales rows'}).click();
+  const evidence=page.getByRole('dialog',{name:'Reviewed sales rows'});
+  await expect(evidence).toContainText(company.files[0]);
+  await evidence.getByLabel('Product ID').fill(company.key==='company_a'?'A001':'R01');
+  await evidence.getByRole('button',{name:'Filter',exact:true}).click();
+  await expect(evidence.getByText(company.key==='company_a'?'A001':'R01',{exact:false}).first()).toBeVisible();
+  await evidence.getByRole('button',{name:'Close dialog'}).click();
+  await page.screenshot({path:test.info().outputPath('browser-'+company.key+'-dashboard.png'),fullPage:true});
   await page.getByRole('link',{name:'Agent workspace',exact:true}).click();
   await page.getByRole('button',{name:'Ask Meta',exact:true}).click();
   await expect(page.getByText('Agent run recorded. Review pending actions before execution.',{exact:true})).toBeVisible({timeout:150000});
   await expect(page.locator('.tool-trace').getByText('Procurement Agent',{exact:true})).toBeVisible();
-  await page.screenshot({path:'../outputs/browser-'+company.key+'-agents.png',fullPage:true});
+  await page.screenshot({path:test.info().outputPath('browser-'+company.key+'-agents.png'),fullPage:true});
   await page.getByRole('link',{name:/^Approval center/}).click();
   await expect(page.locator('.approval-total')).toContainText(company.total);
   await page.getByRole('button',{name:'Review details',exact:true}).click();
@@ -52,8 +63,8 @@ for(const company of [
   await expect(page.getByText('Excel output generated. Your original workbooks are unchanged.',{exact:true})).toBeVisible();
   const wait=page.waitForEvent('download');
   await page.getByRole('button',{name:'Download Excel',exact:true}).click();
-  const output=await wait;await output.saveAs(path.resolve('../outputs/browser-'+company.key+'-purchase-orders.xlsx'));
-  await page.screenshot({path:'../outputs/browser-'+company.key+'-approval.png',fullPage:true});
+  const output=await wait;await output.saveAs(test.info().outputPath('browser-'+company.key+'-purchase-orders.xlsx'));
+  await page.screenshot({path:test.info().outputPath('browser-'+company.key+'-approval.png'),fullPage:true});
   await page.getByRole('link',{name:'Activity timeline',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Approved purchase orders generated; originals preserved.',exact:true})).toBeVisible();
   expect(errors).toEqual([]);
@@ -66,5 +77,5 @@ test('mobile navigation and layout',async({page})=>{
  await page.getByRole('button',{name:'Toggle navigation',exact:true}).click();
  await page.getByRole('link',{name:'Excel files',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Excel file manager',exact:true})).toBeVisible();
- await page.screenshot({path:'../outputs/browser-mobile.png',fullPage:true});
+ await page.screenshot({path:test.info().outputPath('browser-mobile.png'),fullPage:true});
 });

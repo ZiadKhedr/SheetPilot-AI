@@ -65,6 +65,12 @@ The server defaults to loopback. Optional owner/read-only bearer tokens are enfo
 
 Before hosting: implement proper identity, tenant membership, CSRF/session policy, stronger audit immutability, isolated ingestion workers, OS memory/time limits, encrypted backups and production secret management.
 
+## Review consistency and evidence
+
+The current SQLite implementation commits upload metadata, tables and the intake event together. Reviews rebuild the operational mirror on the same write transaction. Read paths suppress ambiguous older overlapping mappings. Reviewed sales evidence is paged at `GET /api/workspaces/{workspace}/sales/evidence`. The dashboard and scoped sales tool share Decimal aggregation. Meta selects tools and filters, and published business numbers are rendered from their results. A model-supplied final sentence is never the authority for an amount or an approval.
+
+Purchase proposals also check for overlapping inventory source rows under the write lock. Separate subsets cannot execute against the same on-hand row twice. Local Excel publication and the SQLite commit are separate durability mechanisms. After a hard interruption, a file can exist without an executed database record. Downloads require an executed record and a matching digest. Pending actions can be retried.
+
 ## PostgreSQL path
 
 Retain UUIDs, workspace scoping, service boundaries and canonical records. Replace sqlite3 repository transactions with a PostgreSQL adapter/migrations, JSON text with JSONB, and BEGIN IMMEDIATE with row locks plus unique idempotency constraints. Move binaries to private object storage and retain content hashes/version metadata. Introduce a durable outbox/job worker for ingestion and execution; do not put cloud sync inside agent prompts.

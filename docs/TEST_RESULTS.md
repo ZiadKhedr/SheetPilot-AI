@@ -1,5 +1,21 @@
 # SheetPilot AI — verification evidence
 
+## Independent audit run · November 4, 2026
+
+| Verification | Observed |
+| --- | --- |
+| Full pytest suite with live Meta enabled | **169 passed, 1 skipped** in 141.33 seconds on Windows on the final compatibility run. Both real Meta tests ran. The skipped CLI test requires symlink privileges. Starlette emitted one TestClient dependency deprecation warning. |
+| Real Meta account check | The official `/models` catalog included `muse-spark-1.3` and a structured ping succeeded. The live mapping, replenishment, approval and scoped A001 revenue tests passed. |
+| Frontend tests | **34 passed** across eight files, including mapped-row preview, source cells, unknown products and retry. |
+| Build | TypeScript project check and Vite production build passed. Python bytecode compilation and `git diff --check` passed. No standalone Python or frontend linter is configured or installed here. |
+| Browser | Seven distinct scenarios passed in headless Edge. The final live run passed six tests in 4.2 minutes. A seventh test passed separately and verified partial batch recovery and stale-data handling after a failed workspace switch. Playwright started the production frontend and a fresh FastAPI/SQLite workspace for each run. |
+| Download inspection | Both Excel files reopened. All three order lines per business matched the independent product/quantity/amount oracle. Electronics totaled USD 1,809.00 and restaurant totaled EGP 12,630.00. Each of the six trace rows per file matched an original workbook hash, sheet, range and product cell. Both downloads contained an execution sheet and no formulas. |
+| Packaging | `docker compose config --quiet` passed. Docker Desktop's Linux engine pipe was absent, so container build/start was not executed. The browser tests started the native production app. |
+
+The first live workflow failed because the model encoded unused filters as the string `"null"`. The final schema accepts an explicit array of filters. No fake fallback was introduced. One new frontend test required cleanup between dialogs and one quote test needed an explicit header review. Earlier sandboxed test attempts and the pnpm store mismatch are documented in [IMPROVEMENTS.md](../IMPROVEMENTS.md). All product verification used fictional inputs.
+
+The following is historical evidence from the initial build.
+
 Date: 2026-11-02. Local Windows host. Python 3.12.14, pytest 8.4.2, OpenPyXL 3.1.5, Pydantic 2.14.1, Node 24.22.1, Vite 7.3.7, Vitest 3.2.7, installed Microsoft Edge via Playwright.
 
 ## Original baseline
