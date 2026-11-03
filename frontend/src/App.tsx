@@ -6,7 +6,7 @@ import { Badge, Busy, Button, Empty, Modal } from './components';
 import { Analytics, Overview, Welcome } from './DashboardPage';
 import { ActivityPage, FilesPage, MappingPage, Structure } from './DataPages';
 import { AgentWorkspace, ApprovalCenter } from './AgentPages';
-import type { Context, Dashboard, Provider, State, Workspace } from './types';
+import type { Context, Dashboard, Provider, SemanticCatalog, State, Workspace } from './types';
 
 const pages=[
  {path:'/',name:'Overview',icon:LayoutDashboard,section:'workspace'},
@@ -25,6 +25,7 @@ function WorkspaceApp(){
  const [workspaces,setWorkspaces]=useState<Workspace[]>([]),[workspace,setWorkspace]=useState(localStorage.getItem('sheetpilot-workspace')||'');
  const [state,setState]=useState<State|null>(null),[stats,setStats]=useState<Dashboard>(emptyDashboard),[provider,setProvider]=useState<Provider>({configured:false,verified:false,model:'muse-spark-1.3',generation_verified:false});
  const [fields,setFields]=useState<string[]>([]),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[loading,setLoading]=useState(true);
+ const [semanticCatalog,setSemanticCatalog]=useState<SemanticCatalog>();
  const [newOpen,setNewOpen]=useState(false),[newName,setNewName]=useState(''),[mobile,setMobile]=useState(false),[settingsOpen,setSettingsOpen]=useState(false),[accessToken,setAccessToken]=useState(sessionStorage.getItem('sheetpilot-token')||'');
  const fileInput=useRef<HTMLInputElement>(null);
  const root='/workspaces/'+workspace;
@@ -32,8 +33,8 @@ function WorkspaceApp(){
  async function initialize(){
   setLoading(true);setError('');
   try{
-   const [list,p,catalog]=await Promise.all([api<Workspace[]>('/workspaces'),api<Provider>('/provider'),api<{fields:string[]}>('/catalog')]);
-   setProvider(p);setFields(catalog.fields);
+   const [list,p,catalog]=await Promise.all([api<Workspace[]>('/workspaces'),api<Provider>('/provider'),api<SemanticCatalog&{fields:string[]}>('/catalog')]);
+   setProvider(p);setFields(catalog.fields);setSemanticCatalog(catalog);
    let available=list;
    if(!available.length)available=[await api<Workspace>('/workspaces','POST',{name:'My workspace'})];
    setWorkspaces(available);
@@ -71,7 +72,7 @@ function WorkspaceApp(){
  async function verify(){await perform('Verifying the official Meta API…',async()=>setProvider(await api<Provider>('/provider/verify','POST')),'Meta model access and a real generation request are verified.')}
  useEffect(()=>{const target=location.hash&&document.getElementById(location.hash.slice(1));if(target)target.scrollIntoView({block:"start"});else window.scrollTo(0,0)},[location.pathname,location.hash]);
  const page=pages.find(p=>p.path===location.pathname)||pages[0];
- const context:Context={state:state!,stats,provider,fields,busy,perform,root,workspace,navigate};
+ const context:Context={state:state!,stats,provider,fields,catalog:semanticCatalog,busy,perform,root,workspace,navigate};
  return <div className="app-shell">
   <input ref={fileInput} className="hidden" type="file" accept=".xlsx" multiple aria-label="Upload Excel workbooks" data-testid="file-upload" onChange={e=>{void upload(e.target.files);e.target.value=''}}/>
   <aside className={'sidebar '+(mobile?'mobile-open':'')}>

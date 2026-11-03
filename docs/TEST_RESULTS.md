@@ -66,3 +66,12 @@ Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS
 - Python: 102 passed, 2 skipped (Windows symlink privilege and opt-in live Meta), one dependency deprecation warning.
 - Frontend: 10 unit tests passed; TypeScript and production build passed.
 - Real-backend browser regression passed: absent links create no action; discovery alone does not approve; explicit confirmation unlocks a pending EGP 12,630 draft with no output workbook. This regression uses guided tools, not live Meta.
+
+## Advanced mapping and relationships — 2026-11-03
+- Full offline Python suite: **124 passed, 2 skipped**, one FastAPI/Starlette dependency deprecation warning. Skips: Windows symlink privilege and opt-in live Meta test.
+- Frontend: **13 unit tests passed**; TypeScript and production build passed.
+- Playwright with real backend: **3 passed, 2 opt-in live-browser tests skipped**. Covers procurement review recovery, four-sheet retail mapping/relationship review, and mobile navigation.
+- Live official Meta mapping on the independent synthetic retail fixture: all four entities and price/discount/stock/order/customer meanings matched expectations; GBP was proposed from explicit monetary headers; all three expected identifier links appeared as unconfirmed previews. One mapping call completed in 44.4 seconds. Sanitized evidence: [validation/semantic-mapping-live.json](validation/semantic-mapping-live.json).
+- Separate opt-in live Meta regression: **1 passed in 221.41 seconds**. Existing electronics mapping, deterministic analytics, actual Meta tool orchestration, pending purchase proposal, explicit test approval and Excel output all passed.
+- Negative/edge regressions include omitted/foreign AI tables, unsupported currency, atomic batches, concurrent review, invalid headers, duplicate meanings, no-overlap diagnostics, normalized-only IDs, leading zeroes, ambiguous masters, stale joins, order-total double-counting, threshold-free inventory and broader entity retention.
+- Originals remain byte-for-byte preserved; no source data was auto-confirmed. Live checks used synthetic/fictional data only. Current uploaded business data was inspected locally; it was not sent to Meta for this validation.
