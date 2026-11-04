@@ -1,5 +1,6 @@
 from pathlib import Path
 import secrets
+import sqlite3
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
@@ -36,6 +37,12 @@ def create_app(settings=None):
     async def problem_handler(request, exc):
         return JSONResponse(status_code=exc.status, content={"detail": str(exc)})
 
+    @app.exception_handler(sqlite3.OperationalError)
+    async def storage_handler(request, exc):
+        return JSONResponse(status_code=503, content={"detail":
+            "Workspace storage is unavailable. Restore access to the configured data folder "
+            "and retry. If the folder was removed, restore its backup before restarting the server."})
+
     def auth(request: Request):
         if settings.access_token or settings.read_token:
             scheme, _, token = request.headers.get("authorization", "").partition(" ")
@@ -58,6 +65,8 @@ def create_app(settings=None):
 
     @app.get("/api/health")
     def health():
+        with store.connection() as con:
+            con.execute("SELECT id FROM workspaces LIMIT 1").fetchone()
         return {"status": "ok", "application": "SheetPilot AI"}
 
     @app.get("/api/workspaces", dependencies=[Depends(auth)])

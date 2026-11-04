@@ -1,4 +1,12 @@
 # SheetPilot AI build progress
+
+## Workspace storage recovery · November 4, 2026
+
+- Diagnosed the reported workspace-list 500 from the running server log: `sqlite3.OperationalError: unable to open database file`. The configured `.data` directory was absent. No matching original workspace database was found among 1,218 local work/test databases; previous uploads/reviews were not recovered.
+- Restored normal startup with a new local data folder and replaced the stale port-8000 server. Storage paths are absolute; request-time connections cannot silently create a replacement database. Storage failures return an actionable 503; health checks verify the workspace table and the UI supports retrying initialization.
+- Recovery/API subset: 10 passed. Full offline Python suite: 170 passed, 3 skipped, one existing dependency warning. Frontend: 34 passed; TypeScript and production build passed. Installed Edge loaded all seven primary routes against the running port-8000 app with no 500s or page errors. No live Meta calls were needed for this storage fix.
+- Existing real-backend browser regressions in installed Edge: 5 passed, 2 opt-in live Meta cases skipped (29.8 seconds). Covers demand policy, partial upload recovery, supplier review, retail mappings/relationships and mobile navigation. Initial launches without the Edge channel failed because bundled Chromium was absent; the Edge rerun passed.
+
 - [x] Inspect Phase 1 and establish Git baseline: 57 passed, 1 symlink test skipped.
 - [x] 1. Working upload and structure explorer — 2 new API tests passed; React upload surface connected.
 - [x] 2. Official Meta provider, reviewed mappings and relationship proposals — live key/model/structured generation verified; provider and mapping validation tests pass.

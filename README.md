@@ -24,6 +24,8 @@ Open **http://127.0.0.1:8000**. Stop with Ctrl+C. If your Windows script policy 
 
 Your real Meta key belongs in ignored `.env` as `MODEL_API_KEY`. Never commit it or paste it into the UI. In Connections, verify the provider; a successful model-catalog request and an actual structured generation are required for “Meta connected.”
 
+Workspace data and uploaded originals live in ignored `.data/` (or `SHEETPILOT_DATA_DIR`). Keep this folder between runs and back up the whole folder with the server stopped. Git does not back it up. If storage becomes unavailable, restore the folder/access and click **Retry connection**. Restore any backup before restarting a server whose data folder was deleted; a fresh start with no data folder initializes an empty database.
+
 ## Clean setup
 
 Requirements: Python 3.10+ (tested on 3.12), Node 22.19+ (tested on 24), and pnpm 11.

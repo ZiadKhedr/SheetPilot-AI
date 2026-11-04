@@ -97,7 +97,7 @@ function WorkspaceApp(){
     {error&&<div role="alert" className="alert error"><CircleX size={18}/><span>{error}</span><button className="icon-button" onClick={()=>setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
     {notice&&<div className="alert success" role="status"><CircleCheck size={18}/><span>{notice}</span><button className="icon-button" onClick={()=>setNotice('')} aria-label="Dismiss notification"><X size={16}/></button></div>}
     {busy&&<div className="progress-banner"><Busy message={busy}/></div>}
-    {loading?<div className="skeleton"><div/><div/><div/></div>:!state?<Empty icon={<Database/>} title="Connect to your workspace">Check that the backend is running. If an access token is configured, enter it in Connection settings.<Button onClick={()=>setSettingsOpen(true)}>Connection settings</Button></Empty>:
+    {loading?<div className="skeleton"><div/><div/><div/></div>:!state?<Empty icon={<Database/>} title="Connect to your workspace">Check that the backend is running. If an access token is configured, enter it in Connection settings.<Button onClick={()=>void initialize()}>Retry connection</Button><Button onClick={()=>setSettingsOpen(true)}>Connection settings</Button></Empty>:
     <>
     {page.path==='/'&&<Overview {...context}>{!state.workbooks.length&&<Welcome loadDemo={loadDemo} upload={()=>fileInput.current?.click()} busy={!!busy}/>}</Overview>}
     {page.path==='/files'&&<FilesPage {...context} upload={upload} loadDemo={loadDemo} browse={()=>fileInput.current?.click()}/>}

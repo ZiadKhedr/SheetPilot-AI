@@ -23,12 +23,13 @@ class Problem(ValueError):
 
 class Store:
     def __init__(self, root: Path):
+        root = root.resolve()
         self.root = root
         root.mkdir(parents=True, exist_ok=True)
         (root / "originals").mkdir(exist_ok=True)
         (root / "outputs").mkdir(exist_ok=True)
         self.path = root / "sheetpilot.sqlite"
-        with self.connection() as con:
+        with self.connection(create=True) as con:
             con.executescript("""
             PRAGMA journal_mode=WAL;
             CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,workspace TEXT NOT NULL,table_id TEXT NOT NULL,
@@ -45,8 +46,11 @@ class Store:
             """)
 
     @contextmanager
-    def connection(self, immediate=False):
-        con = sqlite3.connect(self.path, timeout=20)
+    def connection(self, immediate=False, *, create=False):
+        # Only startup may create a database. Losing storage during a running
+        # session must never silently replace the workspace with an empty file.
+        uri = self.path.as_uri() + ("?mode=rwc" if create else "?mode=rw")
+        con = sqlite3.connect(uri, uri=True, timeout=20)
         con.row_factory = sqlite3.Row
         con.execute("PRAGMA foreign_keys=ON")
         try:

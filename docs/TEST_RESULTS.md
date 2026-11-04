@@ -1,5 +1,13 @@
 # SheetPilot AI — verification evidence
 
+## Workspace storage recovery · November 4, 2026
+
+- Reproduced database/folder loss in API regressions: workspace reads, writes and health return sanitized actionable 503 responses, never create an empty replacement file, and recover the original workspace after storage restoration. A relative store path also survives a working-directory change.
+- Full offline suite: **170 passed, 3 skipped**, one existing Starlette warning. The skips are the Windows symlink test and two opt-in Meta cases. Focused recovery/upload/API workflow subset: **10 passed**.
+- Frontend: **34 passed**; TypeScript and Vite build passed using installed local tools. The pnpm wrapper attempted a forbidden sandbox symlink; direct Node execution of the existing TypeScript/Vite/Vitest installations succeeded.
+- Existing browser suite in installed Edge: **5 passed, 2 live Meta cases skipped**, 29.8 seconds. An initial bundled-Chromium launch failed because its executable was absent. No live Meta calls were performed for this fix.
+- The repaired local server on port 8000 passed a separate seven-route browser smoke check and database health check, with no 500 responses or browser page errors. The original `.data` directory was missing before the repair; previous user workspaces/uploads were not recovered. The running app now uses newly initialized local storage.
+
 ## Independent audit run · November 4, 2026
 
 | Verification | Observed |
