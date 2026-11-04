@@ -56,5 +56,19 @@ test('missing supplier review is recoverable without automatic approval',async({
  await page.getByRole('button',{name:'Download Excel'}).click();
  expect((await download).suggestedFilename()).toMatch(/^Purchase-Orders-.*\.xlsx$/);
  expect((await (await request.get(base+'/state')).json()).events.filter((e:any)=>e.kind==='action.executed')).toHaveLength(1);
+ const before=await (await request.get(base+'/state')).json();
+ await page.getByRole('link',{name:'Agent workspace',exact:true}).click();
+ await page.getByRole('button',{name:'Run guided check',exact:true}).click();
+ const feedback=page.getByRole('region',{name:'Latest guided check'});
+ await expect(feedback).toContainText('Check completed. No AI was used.');
+ await expect(feedback).toContainText('was already generated after approval');
+ await expect(feedback).toContainText('No duplicate proposal or workbook was created');
+ await feedback.getByRole('button',{name:'View this check’s details'}).click();
+ const after=await (await request.get(base+'/state')).json();
+ await expect(page.locator('#run-'+after.runs.at(-1).id)).toBeFocused();
+ expect(after.runs).toHaveLength(before.runs.length+1);
+ expect(after.actions).toEqual(before.actions);
+ expect(after.events.filter((e:any)=>e.kind==='action.executed')).toHaveLength(1);
+ await page.screenshot({path:test.info().outputPath('guided-check-existing-output.png'),fullPage:true});
 });
 

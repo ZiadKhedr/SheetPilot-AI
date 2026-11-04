@@ -1,5 +1,12 @@
 # SheetPilot AI — verification evidence
 
+## Guided-check feedback · November 4, 2026
+
+- Diagnosed repeated successful checks returning an already approved purchase-order action. Guided checks now report sales/inventory findings and explicitly explain existing outputs without claiming a new execution. Empty reviewed inventory returns mapping advice instead of failing the run.
+- Added adjacent checking/completion/error feedback, links to the exact new run and Approval Center, and an accurate existing-output button label. Component regressions cover immediate progress, repeated clicks and retry after errors. Backend/browser regressions repeat a guided check after approval and verify the existing action/output and execution count stay unchanged.
+- Full offline Python suite: **172 passed, 3 skipped**, one existing Starlette warning. Frontend: **36 passed**. TypeScript and Vite build passed. Real-backend Edge browser suite: **5 passed, 2 opt-in Meta cases skipped**, 40.5 seconds. No live provider calls were needed.
+- Restarted the local app and verified the actual user-selected guided-check button through the in-app browser. The new check displayed current sales/inventory facts, linked the previously approved output, and stated that no duplicate workbook was created. The details link focused the new run. Existing uploads and approval were retained.
+
 ## Workspace storage recovery · November 4, 2026
 
 - Reproduced database/folder loss in API regressions: workspace reads, writes and health return sanitized actionable 503 responses, never create an empty replacement file, and recover the original workspace after storage restoration. A relative store path also survives a working-directory change.

@@ -2,7 +2,7 @@
 import json
 from datetime import date
 
-from .actions import propose, ProcurementBlocked
+from .actions import propose, procurement_readiness, ProcurementBlocked
 from .analytics import sales_evidence, inventory_tool
 from .demand import demand_analysis
 from .models import DraftArgs, InventoryArgs, SalesSelection
@@ -41,6 +41,15 @@ def tool_summary(step):
             if plan and plan.get("days_remaining") is not None:
                 summary += f" At the observed sales rate, estimated cover is {plan['days_remaining']} days as of {plan['window_end']} ({plan['status']})."
         return summary
+    if result["status"] == "no_action":
+        return result["message"]
+    if result["status"] == "executed":
+        return (f"Purchase-order workbook {result['action_id'][:8]} was already generated after approval. "
+                "No duplicate proposal or workbook was created by this check. View the existing output in Approval Center. "
+                "On-hand stock stays unchanged until you upload an updated inventory snapshot.")
+    if result["status"] in {"rejected", "conflicted"}:
+        return (f"Existing proposal {result['action_id'][:8]} is {result['status']}. "
+                "No new proposal or workbook was created. Review the source data and proposal in Approval Center.")
     amounts = ", ".join(f"{r['currency']} {r['amount']}" for r in result["totals"])
     return f"Purchase-order proposal {result['action_id'][:8]} is {result['status']}. Total: {amounts}."
 
@@ -82,6 +91,16 @@ def run_agents(store, workspace, message, mode, provider):
             agent = "Inventory Agent"
         else:
             try:
+                readiness = procurement_readiness(store, workspace, values.product_ids)
+                if not readiness["blockers"] and not readiness["low_stock_count"]:
+                    result = {"status": "no_action", "draft_created": False, "approval_required": False,
+                              "message": ("No reviewed inventory is available. Confirm an inventory mapping to assess replenishment."
+                                          if not inventory_tool(store, workspace) else
+                                          "No reviewed products are below their reorder point. No purchase-order draft is needed.")}
+                    run["steps"].append(dict(agent="Procurement Agent", tool=name, status="completed", result=result))
+                    store.put(workspace, "run", run)
+                    store.event(workspace, "agent.tool", "Procurement check completed without a draft.", {"run_id": run["id"], "tool": name})
+                    return result
                 action = propose(store, workspace, values.product_ids)
             except ProcurementBlocked as exc:
                 result = {"status": "needs_review", "human_review_required": True,
@@ -107,9 +126,9 @@ def run_agents(store, workspace, message, mode, provider):
         if mode == "guided":
             execute("sales_analysis", "{}")
             execute("inventory_analysis", "{}")
-            result = execute("draft_purchase_orders", '{"product_ids":[]}')
-            if "action_id" in result:
-                run["summary"] = f"Guided tool check completed. Proposal {result['action_id'][:8]} is {result['status']}; no order is sent automatically."
+            execute("draft_purchase_orders", '{"product_ids":[]}')
+            if not run["blockers"]:
+                run["summary"] = "Guided check completed. No AI was used.\n" + "\n".join(tool_summary(step) for step in run["steps"])
         else:
             tools = [{"type": "function", "function": {"name": name, "description": DESCRIPTIONS[name],
                 "strict": True, "parameters": strict_schema(model.model_json_schema())}} for name,model in TOOL_MODELS.items()]
