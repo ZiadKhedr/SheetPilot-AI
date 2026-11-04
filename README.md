@@ -1,17 +1,40 @@
 # SheetPilot AI
-### Your Spreadsheets. Your AI Workforce.
 
-A working local hackathon application that connects unfamiliar Excel workbooks to a reviewed operational mirror, business dashboards, Meta-powered specialist tools, human approvals, and downloadable purchase-order workbooks.
+**Your Spreadsheets. Your AI Workforce.**
 
-For reviewers: [project description](docs/JUDGE_DESCRIPTION.md), [architecture](ARCHITECTURE.md), [demo script](docs/DEMO_SCRIPT.md), [test results](docs/TEST_RESULTS.md) and [known limitations](docs/KNOWN_LIMITATIONS.md).
+Turn business Excel files into reviewed analytics and human-approved purchase orders. SheetPilot AI uses the official Meta Model API to propose business mappings and coordinate Sales, Inventory and Procurement tools, while deterministic Python calculates quantities and money.
 
-**No migration away from Excel. No invented KPIs. No automatic source edits.**
+Built for the Meta AI Hackathon with React, TypeScript, FastAPI and SQLite.
 
-## Clean setup
+[Project description](docs/JUDGE_DESCRIPTION.md) · [Demo script](docs/DEMO_SCRIPT.md) · [Architecture](ARCHITECTURE.md) · [Verification results](docs/TEST_RESULTS.md) · [Known limitations](docs/KNOWN_LIMITATIONS.md)
 
-Requirements: Python 3.10+ (tested on 3.12), Node 22.19+ (tested on 24), and pnpm 11.
+## What it does
 
-Windows:
+- **Understand unfamiliar workbooks:** inspect worksheets, table regions, headers, formulas and hidden sheets, including English and Arabic layouts.
+- **Review Meta proposals:** confirm business entities, column meanings and relationships backed by identifier overlap.
+- **Explore business performance:** view revenue, sales trends, inventory and stock-planning calculations from reviewed records, with links to source cells.
+- **Work with specialist agents:** ask Meta to select typed Sales, Inventory and Procurement tools and inspect their execution results.
+- **Approve an Excel output:** review a pending purchase proposal, approve or reject it, and download an additional workbook with Purchase Orders, Source Trace and Execution sheets.
+
+Original workbooks remain unchanged. Mapping and relationship review precede operational use; generating a purchase-order workbook requires human approval. Source hashes, deterministic calculations, idempotent execution and an audit timeline make the result traceable.
+
+## Quick start
+
+### Requirements
+
+- Python 3.10+; tested with Python 3.12.
+- Node.js 22.19+; tested with Node.js 24.
+- pnpm 11.
+- A Meta Model API key with access to the configured model for AI features. The tested default is `muse-spark-1.3`.
+
+### 1. Clone and install
+
+```sh
+git clone https://github.com/ZiadKhedr/SheetPilot-AI.git
+cd SheetPilot-AI
+```
+
+**Windows PowerShell**
 
 ```powershell
 py -3.12 -m venv .venv
@@ -19,10 +42,9 @@ py -3.12 -m venv .venv
 Copy-Item .env.example .env
 pnpm --dir frontend install --frozen-lockfile
 pnpm --dir frontend build
-.\scripts\start.ps1
 ```
 
-macOS/Linux:
+**macOS / Linux**
 
 ```sh
 python3 -m venv .venv
@@ -30,99 +52,151 @@ python3 -m venv .venv
 cp .env.example .env
 pnpm --dir frontend install --frozen-lockfile
 pnpm --dir frontend build
+```
+
+### 2. Configure Meta
+
+Edit the new `.env` file and set:
+
+```dotenv
+MODEL_API_KEY=your_meta_api_key
+META_MODEL=muse-spark-1.3
+```
+
+The client uses the official `https://api.meta.ai/v1` endpoint. Keep the key in the server environment or ignored `.env`; never put it in frontend code or the browser UI. Meta receives bounded table summaries and small source samples for mapping, rather than workbook binaries. See [Meta integration](docs/META_API.md) for details.
+
+### 3. Start the app
+
+**Windows PowerShell**
+
+```powershell
+.\scripts\start.ps1
+```
+
+If PowerShell blocks script execution, start the server directly:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn sheetpilot.api:app --host 127.0.0.1 --port 8000
+```
+
+**macOS / Linux**
+
+```sh
 sh scripts/start.sh
 ```
 
-Edit .env locally to set `MODEL_API_KEY`. The key stays on the server. In Connections, verify the provider; both a model-catalog request and an actual structured generation must succeed for Meta to show as connected.
+Open [SheetPilot AI](http://127.0.0.1:8000). FastAPI serves the built frontend and API together. In **Connections**, verify Meta: both the model-catalog request and a structured generation must succeed for the provider to show as connected. Stop the server with Ctrl+C.
 
-Workspace data and immutable uploaded originals live in ignored `.data/` (or `SHEETPILOT_DATA_DIR`). Back up this folder with the server stopped; Git does not back it up. If storage becomes unavailable, restore the folder and click **Retry connection**.
+## Try the complete workflow
 
-Keep this MVP on localhost. Optional `SHEETPILOT_ACCESS_TOKEN` enables owner authentication and `SHEETPILOT_READ_TOKEN` grants GET-only access. Enter those workspace tokens (not the Meta key) in Connections when configured. This is a local single-operator MVP, not a production identity/tenant system.
+1. Create a workspace and load a fictional demo company, or upload its three workbooks from `demo_data/`.
+2. Open **Structure Explorer** to inspect detected tables and source ranges.
+3. In **Mapping Review**, choose **Analyze with Meta**, inspect the proposed meanings and mapped-row previews, then confirm the business tables. Exclude unrelated tables.
+4. Discover relationships, review identifier-overlap evidence and confirm the appropriate links.
+5. Open **Overview** or **Business Analytics**. Use **Inspect sales rows** to trace revenue to original workbook cells.
+6. In **Agent Workspace**, ask: “Analyze inventory and draft purchase orders for all low-stock products.” Inspect the specialist tool results and pending proposal.
+7. In **Approval Center**, review quantities, costs, validations and source versions. Approve to generate and download the workbook, or reject to generate no output.
+8. Open **Activity Timeline** to inspect the recorded reviews, agent runs, approval and execution.
 
-For frontend development, run the backend on 8000 and `pnpm --dir frontend dev` on 5173. Vite proxies /api to FastAPI.
+For a scoped sales example with the Electronics dataset, ask: “What is the reviewed sales revenue for product ID A001 alone, across all dates?” Its fixture expectation is USD 270.00; the sales tool exposes the contributing source rows.
 
-For a clean demonstration on a prepared machine, choose a new data directory in the current terminal before starting. For example, use `$env:SHEETPILOT_DATA_DIR="work/demo-$(Get-Date -Format yyyyMMdd-HHmmss)"` in PowerShell. Existing workspaces stay in their own directories. If you configure only a reader token, all writes are disabled. Owner and reader credentials must differ.
+**Label suggestions · no AI** and **Guided check** are deterministic alternatives available without a Meta key. They are labeled separately from Meta-generated results. The [demo script](docs/DEMO_SCRIPT.md) walks through a four-minute presentation.
 
-## The complete workflow
+## Included demo datasets
 
-1. Create a workspace, upload the Sales, Inventory and Suppliers workbooks, or load one of the two fictional demo companies.
-2. Explore worksheet ranges, proposed headers, hidden sheets, merged cells and formula expressions. Add a rectangular source region manually if needed.
-3. Choose **Analyze with Meta**. Only bounded table summaries and small samples are sent. The key stays on the server.
-4. Review each proposed entity/column meaning and confirm the business tables. Exclude unrelated tables. Unmapped extra columns remain custom fields.
-5. Discover relationships. Inspect actual identifier overlaps and explicitly confirm links.
-6. Open Overview or Business Analytics. Every metric is computed from reviewed records, with currency kept explicit.
-7. Ask Meta to analyze sales/inventory and draft purchase orders. The Orchestrator calls typed Sales, Inventory and Procurement tools.
-8. Inspect line items, validation checks, and source versions in Approval Center. Approve or reject.
-9. Approval creates an additional real Excel workbook. Download it and inspect Purchase Orders, Source Trace and Execution. Rejection generates nothing.
-10. Activity Timeline records actual processing, reviews, tools, approvals, failures and executions.
+| Fictional business | Workbook layout | Reviewed revenue | Low-stock products | Purchase draft |
+| --- | --- | ---: | ---: | ---: |
+| Electronics distribution | English labels, offset headers and tables | USD 1,258.00 | 3 | 82 units / USD 1,809.00 |
+| Restaurant supply | Arabic labels and different layouts | EGP 11,890.00 | 3 | 47 units / EGP 12,630.00 |
 
-**Guided check** and **Label suggestions · no AI** are explicitly deterministic alternatives, never represented as live AI.
+Both datasets include duplicate rows, missing identifiers, numeric text, unrelated tables, hidden sheets and formulas. These figures are independent fixture expectations; the application calculates its results from reviewed source data. See the [dataset guide](docs/DEMO_DATA.md).
 
-On a sales mapping, expand **Preview mapped rows** to see your field choices alongside original row numbers. On Overview, choose **Inspect sales rows** under revenue to find the exact workbook, sheet and amount cell or quantity × unit-price cells. In Agent Workspace, try “What is the reviewed sales revenue for product ID A001 alone, across all dates?” The Electronics answer is USD 270.00. The tool trace shows the selected scope and contributing evidence.
+## Development and tests
 
-When upgrading a previously reviewed workspace that uses fractional-cent supplier prices, confirm the supplier mapping again before drafting. This reloads the original quote precision into the derived records.
+For frontend development, keep the backend running on port 8000 and run `pnpm --dir frontend dev` in a second terminal. Vite serves the frontend on port 5173 and proxies `/api` to FastAPI.
 
-## Demo datasets
-
-| Business | Schemas | Expected reviewed revenue | Stock | Low-stock | Expected purchase draft |
-|---|---|---:|---:|---:|---:|
-| Electronics | English labels, offset rows/columns | USD 1,258.00 | 34 | 3 | 82 units / USD 1,809.00 |
-| Restaurant supply | Different Arabic labels/layouts | EGP 11,890.00 | 24 | 3 | 47 units / EGP 12,630.00 |
-
-Both contain exact duplicate sales, a missing product identifier, numeric text, admin tables, hidden sheets and formulas. Totals are independent fixture expectations, not values imported by production analytics. See [demo guide](docs/DEMO_DATA.md); regenerate with `python scripts/generate_demo_data.py`.
-
-## Tests
+Run backend tests using your virtual environment:
 
 ```powershell
+# Windows
 .\.venv\Scripts\python.exe -m pytest -q
-pnpm --dir frontend test
-pnpm --dir frontend build
 ```
 
-Live tests use the actual Meta account and may consume API credits:
+```sh
+# macOS / Linux
+.venv/bin/python -m pytest -q
+```
+
+Run frontend checks and browser regressions:
+
+```sh
+pnpm --dir frontend test
+pnpm --dir frontend build
+pnpm --dir frontend exec playwright install chromium
+pnpm --dir frontend e2e
+```
+
+Playwright starts a separate backend on port 8010 with an isolated data directory under `work/e2e/`. The default suite exercises the deterministic workflow; live Meta browser tests are opt-in. Browser artifacts are written to ignored `frontend/test-results/` and `frontend/playwright-report/`.
+
+To run real-provider tests in **PowerShell** after configuring `.env`:
 
 ```powershell
 $env:SHEETPILOT_LIVE_META_TEST="1"
 .\.venv\Scripts\python.exe -m pytest tests_app/test_live_meta.py -v
 $env:SHEETPILOT_E2E_META="1"
-$env:PLAYWRIGHT_CHANNEL="msedge"
 pnpm --dir frontend e2e
 ```
 
-For Playwright's bundled Chromium instead of installed Edge, omit PLAYWRIGHT_CHANNEL and install its browser once: `pnpm --dir frontend exec playwright install chromium`.
+On macOS/Linux, use `SHEETPILOT_LIVE_META_TEST=1 .venv/bin/python -m pytest tests_app/test_live_meta.py -v` and `SHEETPILOT_E2E_META=1 pnpm --dir frontend e2e`.
 
-The browser suite starts a fresh backend on 8010 with a unique database under `work/e2e/`. With the live flag it uploads both datasets through the UI, performs real Meta mapping and agent calls, confirms mappings/relationships, approves, downloads Excel and checks the timeline. An independent guided browser test exercises approval and download without an API key. Screenshots and live downloads are under `frontend/test-results/`. After a live browser run, use `.\.venv\Scripts\python.exe scripts/validate_downloads.py` to compare both downloads with the fictional company oracles.
+Live tests call the actual provider and may consume API credits. To use installed Edge instead of bundled Chromium, set `PLAYWRIGHT_CHANNEL=msedge`. After a live browser run, run `scripts/validate_downloads.py` with the virtual-environment Python to inspect both downloaded workbooks against the demo expectations.
 
-On Windows, the symlink test is skipped if the OS account lacks symlink privileges.
+Recorded results, skips and verification boundaries are in [TEST_RESULTS.md](docs/TEST_RESULTS.md). Unit-test provider mocks are confined to tests.
 
-Actual results and verification limits are in [TEST_RESULTS.md](docs/TEST_RESULTS.md).
+## Configuration and storage
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `MODEL_API_KEY` | Server-side Meta credential | Unset |
+| `META_MODEL` | Meta model identifier | `muse-spark-1.3` |
+| `SHEETPILOT_DATA_DIR` | SQLite, immutable uploads and generated workbooks | `.data` |
+| `SHEETPILOT_ACCESS_TOKEN` | Optional owner token | Unset |
+| `SHEETPILOT_READ_TOKEN` | Optional read-only token | Unset |
+
+Keep this single-operator MVP on localhost. When workspace tokens are configured, enter them in **Connections**. Owner and reader tokens must differ; configuring only a reader token disables writes.
+
+Runtime data is ignored by Git. Back up the entire data directory with the server stopped. If storage becomes unavailable, restore it before restarting and use **Retry connection**. Starting with no data directory initializes an empty database. For a fresh demo, select a different `SHEETPILOT_DATA_DIR` rather than deleting existing workspaces.
 
 ## Docker Compose
+
+After creating `.env` and configuring the Meta key:
 
 ```sh
 docker compose up --build
 ```
 
-Open http://127.0.0.1:8000. Compose reads .env for the server-side key and uses a named volume for SQLite, immutable uploads and outputs. The Dockerfile builds React separately and runs Python as a non-root user. .env, .data, test artifacts and local dependencies are excluded from the image build context.
+Open [SheetPilot AI](http://127.0.0.1:8000). Compose binds to loopback and persists SQLite and workbooks in a named volume. The Dockerfile builds the frontend and runs the Python app as a non-root user.
 
-Compose configuration is validated. Container build/start was not executed on this host because the Docker engine is stopped; local production startup and browser workflows were exercised.
+Compose configuration has been validated. Container build and startup have not been verified on the development host; native startup and browser workflows have been tested.
 
-## Code map
+## Repository guide
 
-- `src/excel_intelligence/`: preserved Phase 1 analyzer and CLI
-- `src/sheetpilot/`: API, storage, ingestion, semantics, analytics, agents, approvals
-- `frontend/`: React/TypeScript/Tailwind, Radix dialogs, Recharts, unit and browser tests
-- `demo_data/`: six fictional workbooks and independent test oracle
-- `tests/`, `tests_app/`: analyzer and app regression/integration tests
-- `.data/`: ignored runtime data, source snapshots and generated workbooks
-- `docs/`: architecture details, test evidence, limitations, demo script and judge description
+| Path | Contents |
+| --- | --- |
+| `src/excel_intelligence/` | Offline, read-only workbook analyzer and CLI |
+| `src/sheetpilot/` | FastAPI, Meta integration, SQLite, analytics, tools and approvals |
+| `frontend/` | React/TypeScript interface, component tests and Playwright scenarios |
+| `demo_data/` | Two fictional businesses and their expected results |
+| `tests/`, `tests_app/` | Analyzer and application regression tests |
+| `scripts/` | Startup, demo generation and verification utilities |
+| `docs/` | Technical guides, demo instructions, test evidence and limitations |
 
-The original CLI is still available: `excel-analyze workbook.xlsx -o report.json`. Its detailed contract is preserved in [PHASE1_CLI.md](docs/PHASE1_CLI.md).
+The standalone analyzer remains available as `excel-analyze workbook.xlsx -o report.json`. See the [CLI guide](docs/PHASE1_CLI.md).
 
-## Limits
+## Current boundaries
 
-Unfamiliar structures are proposals, not guaranteed comprehension. Irregular forms may need manual region selection. Formula values are never calculated; mapped formula/error values require review and are excluded from operational calculations. Ambiguous numeric text with commas is flagged rather than guessed. Exact duplicate source rows are excluded from the derived mirror and surfaced as quality issues.
+Unfamiliar layouts may require manual region selection and mapping review. Formula expressions are inspected but never executed or recalculated. Ambiguous numeric values and invalid required fields need review; exact duplicate rows are excluded from the operational mirror and reported as quality issues.
 
-Money uses Decimal; currencies are never silently combined or converted. Stock is an on-hand snapshot: historical sales are not subtracted again. Target stock defaults to twice the reorder threshold only when no target field is mapped. Purchase orders do not increase on-hand inventory.
+Money uses `Decimal`, and currencies stay separate. Inventory represents an on-hand snapshot; historical sales are not deducted again. Purchase-order generation leaves stock quantities unchanged. The app does not implement live OneDrive/SharePoint synchronization, supplier emailing or production multi-user identity and tenant controls.
 
-See [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md). No OneDrive/SharePoint sync, supplier emailing, multi-user SSO, or perfect arbitrary-file comprehension is claimed.
+See [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) for the full scope.
