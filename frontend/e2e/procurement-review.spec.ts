@@ -20,6 +20,7 @@ test('missing supplier review is recoverable without automatic approval',async({
  const notice=page.getByRole('region',{name:'Procurement review required'});
  await expect(notice.getByRole('heading',{name:'Procurement needs your review'})).toBeVisible();
  await expect(notice).toContainText('R01');
+ await page.getByText('Ask a custom question or run the full guided check',{exact:true}).click();
  await page.getByRole('button',{name:'Run guided check',exact:true}).click();
  await expect(page.locator('.run-heading').getByText('Needs review',{exact:true})).toBeVisible();
  let state=await (await request.get(base+'/state')).json();
@@ -40,6 +41,7 @@ test('missing supplier review is recoverable without automatic approval',async({
  await page.getByRole('link',{name:'Agent workspace',exact:true}).click();
  const ready=await (await request.get(base+'/procurement/readiness')).json();
  expect(ready.ready).toBe(true);
+ await page.getByText('Ask a custom question or run the full guided check',{exact:true}).click();
  await page.getByRole('button',{name:'Run guided check',exact:true}).click();
  await expect(page.locator('.run-heading').getByText('Completed',{exact:true})).toBeVisible();
  state=await (await request.get(base+'/state')).json();
@@ -58,6 +60,7 @@ test('missing supplier review is recoverable without automatic approval',async({
  expect((await (await request.get(base+'/state')).json()).events.filter((e:any)=>e.kind==='action.executed')).toHaveLength(1);
  const before=await (await request.get(base+'/state')).json();
  await page.getByRole('link',{name:'Agent workspace',exact:true}).click();
+ await page.getByText('Ask a custom question or run the full guided check',{exact:true}).click();
  await page.getByRole('button',{name:'Run guided check',exact:true}).click();
  const feedback=page.getByRole('region',{name:'Latest guided check'});
  await expect(feedback).toContainText('Check completed. No AI was used.');

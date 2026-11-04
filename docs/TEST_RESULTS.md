@@ -1,5 +1,14 @@
 # SheetPilot AI — verification evidence
 
+## Agent jobs and visible work products · November 4, 2026
+
+- Added five named jobs, equal-window sales comparisons, ranked inventory risks, a read-only supplier review, visible specialist deliverables and source-backed text work reports. Real persisted tool steps drive progress; counts/runtime are measured. Purchase preparation remains a separate allowlisted action with human approval.
+- Full offline Python suite: **183 passed, 4 skipped**, one existing Starlette warning, 27.87 seconds. Skips are the Windows symlink test and three opt-in real Meta cases. New regressions cover independent Decimal comparison totals, separate currencies, zero baselines, incomplete history, read-only tool rejection, real step persistence, input-context drift, historical source versions, report immutability and auth/workspace scope.
+- Frontend: **45 passed** across nine files. TypeScript and Vite build passed. Covers typed job submission, actual progress-response rendering, measured work tallies, older missing priority metadata and current status for historical proposals.
+- Real-backend Edge browser suite: **6 passed, 2 live Meta cases skipped**, 18.1 seconds. The new scenario produces four deliverables, downloads and inspects a source-traced report, verifies no purchase action, and checks a 390-pixel layout. Existing mapping, demand, procurement, recovery and mobile workflows pass.
+- Separate real official Meta business-review test: **1 passed in 21.49 seconds**, on fictional Company A in an isolated store. Meta completed sales totals, comparison, inventory and supplier checks; the grounded summary matched USD 1,258 and no purchase action/output was created. Contract mocks remain confined to tests.
+- Verified an actual local business-review job through the in-app browser using explicitly labeled guided/data-check mode. The completed report was downloaded from its real API endpoint. A before/after comparison confirmed source mappings, relationships, policy, purchase actions/events and original/output workbook hashes were unchanged; only agent run/audit records were added.
+
 ## Stock outlook usability redesign · November 4, 2026
 
 - Replaced the initial planning form/table with an attention summary and product cards ordered by urgency. Everyday labels show stock, typical daily sales, estimated days of stock and the current top-up source. Delivery-time tests, arithmetic and ordering-rule review are revealed separately. Original backend arithmetic, source-rule precedence and approval requirements are unchanged.

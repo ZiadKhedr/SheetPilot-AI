@@ -50,9 +50,10 @@ for(const company of [
   await evidence.getByRole('button',{name:'Close dialog'}).click();
   await page.screenshot({path:test.info().outputPath('browser-'+company.key+'-dashboard.png'),fullPage:true});
   await page.getByRole('link',{name:'Agent workspace',exact:true}).click();
+  await page.getByText('Ask a custom question or run the full guided check',{exact:true}).click();
   await page.getByRole('button',{name:'Ask Meta',exact:true}).click();
-  await expect(page.getByText('Agent run recorded. Review pending actions before execution.',{exact:true})).toBeVisible({timeout:150000});
-  await expect(page.locator('.tool-trace').getByText('Procurement Agent',{exact:true})).toBeVisible();
+  await expect(page.getByRole('region',{name:'Latest guided check'})).toContainText('Meta planned the tool calls.',{timeout:150000});
+  await expect(page.locator('.agent-deliverable').getByText('Procurement Agent',{exact:true})).toBeVisible();
   await page.screenshot({path:test.info().outputPath('browser-'+company.key+'-agents.png'),fullPage:true});
   await page.getByRole('link',{name:/^Approval center/}).click();
   await expect(page.locator('.approval-total')).toContainText(company.total);

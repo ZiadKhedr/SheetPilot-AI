@@ -53,3 +53,16 @@ def test_real_meta_answers_a_scoped_sales_question_without_a_purchase_action(tmp
     assert matching and matching[0]["revenue"] == [{"currency":"USD","amount":"270.00"}]
     assert all(r["product_id"]=="A001" and r["source"]["cells"]["revenue"] for r in matching[0]["rows"])
     assert "USD 270.00" in run["summary"]
+
+
+def test_real_meta_business_review_completes_required_checks_without_purchase_actions(tmp_path):
+    from tests_app.helpers import load_company, confirm_relationships
+    store=Store(tmp_path/"business-review")
+    workspace,_=load_company(store)
+    confirm_relationships(store,workspace)
+    run=run_agents(store,workspace,"Prepare a complete business review, including sales totals, a 7-day comparison, stock risks and supplier readiness. Do not draft any purchase order.","meta",MetaProvider(),"daily_review")
+    assert run["status"]=="completed" and run["origin"]=="meta"
+    assert {s["tool"] for s in run["steps"]}=={"sales_analysis","sales_comparison","inventory_analysis","procurement_review"}
+    assert "USD 1258.00" in run["summary"]
+    assert run["work"]["completed_checks"]>=4 and run["elapsed_ms"]>0
+    assert not run["action_ids"] and not store.list(workspace,"action")

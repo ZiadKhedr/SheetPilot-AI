@@ -1,5 +1,6 @@
-from fastapi import Depends
-from fastapi.responses import FileResponse
+import json
+from fastapi import Depends, Path
+from fastapi.responses import FileResponse, Response
 
 from .actions import propose, review_action, procurement_readiness
 from .agents import run_agents
@@ -49,4 +50,24 @@ def register_actions(app, store, auth):
     @app.post("/api/workspaces/{workspace}/agents", dependencies=[Depends(auth)])
     def agents(workspace: str, body: AgentInput):
         store.workspace(workspace)
-        return run_agents(store, workspace, body.message, body.mode, app.state.provider_factory())
+        return run_agents(store, workspace, body.message, body.mode, app.state.provider_factory(), body.task, body.request_id)
+
+    @app.get("/api/workspaces/{workspace}/agents/progress/{request_id}", dependencies=[Depends(auth)])
+    def progress(workspace: str, request_id: str = Path(pattern=r"^[a-f0-9]{32}$")):
+        store.workspace(workspace)
+        with store.connection() as con:
+            row = con.execute("SELECT payload FROM objects WHERE workspace=? AND kind='run' "
+                "AND json_extract(payload,'$.request_id')=? ORDER BY created DESC,rowid DESC LIMIT 1",
+                (workspace,request_id)).fetchone()
+        if row is None:
+            raise Problem("This job has not started yet.",404)
+        return json.loads(row[0])
+
+    @app.get("/api/workspaces/{workspace}/agent-runs/{identifier}/report", dependencies=[Depends(auth)])
+    def work_report(workspace: str, identifier: str):
+        from .agent_work import report_text
+        run = store.get(workspace,"run",identifier)
+        if run["status"] == "running":
+            raise Problem("Wait for this job to finish before downloading its report.",409)
+        return Response(report_text(store,workspace,run),media_type="text/plain; charset=utf-8",
+            headers={"Content-Disposition":f'attachment; filename="Agent-Work-{run["id"][:8]}.txt"'})

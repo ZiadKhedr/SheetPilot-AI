@@ -43,6 +43,8 @@ Mappings have revisions and optimistic concurrency checks. Re-review invalidates
 
 ## Meta boundary
 
+The agent job/work-report layer is described in [docs/AGENT_WORK.md](docs/AGENT_WORK.md). Named read-only jobs restrict the model's tool allowlist and require their checks to finish. New sales-period comparisons and supplier reviews produce source-backed work products. Runs expose actual step progress/runtime and downloadable text reports while preserving the separate purchase-approval boundary.
+
 HTTPX calls https://api.meta.ai/v1 with MODEL_API_KEY from the server environment/ignored .env. muse-spark-1.3 is the tested default. No OpenAI agent framework is required.
 
 The semantic endpoint sends bounded summaries with source IDs, labels and samples, not workbook binaries. Strict provider JSON Schema is validated again with Pydantic and membership/uniqueness checks against actual supplied tables and columns. Suggestions never self-confirm.

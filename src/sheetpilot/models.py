@@ -62,6 +62,8 @@ class ReviewInput(Model):
 class AgentInput(Model):
     message: str = Field(min_length=1, max_length=2000)
     mode: Literal["meta", "guided"] = "meta"
+    task: Literal["custom", "daily_review", "sales_review", "stock_review", "supplier_review", "replenishment"] = "custom"
+    request_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
 
 
 class EmptyArgs(Model):
@@ -102,6 +104,22 @@ class SalesSelection(Model):
 
 class DraftArgs(Model):
     product_ids: list[str] = Field(max_length=100)
+
+
+class ComparisonFilter(Model):
+    field: Literal["product_id", "currency"]
+    value: str = Field(min_length=1, max_length=180)
+
+
+class ComparisonArgs(Model):
+    window_days: int = Field(default=7, ge=1, le=90)
+    filters: list[ComparisonFilter] = Field(default_factory=list, max_length=2)
+
+    def scope(self):
+        fields = {f.field: f.value for f in self.filters}
+        if len(fields) != len(self.filters):
+            raise ValueError("Each comparison filter may appear once.")
+        return SalesArgs.model_validate_strings(fields)
 
 
 class Ping(Model):
