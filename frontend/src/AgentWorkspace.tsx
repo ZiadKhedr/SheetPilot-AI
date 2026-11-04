@@ -22,27 +22,47 @@ export function AgentWorkspace({state,provider,root,busy,perform,navigate}:Conte
  const [runMode,setRunMode]=useState<'meta'|'guided'>('guided');
  const [running,setRunning]=useState(''),[live,setLive]=useState<Run|null>(null),[result,setResult]=useState<Run|null>(null),[jobError,setJobError]=useState('');
  const active=useRef(''),timer=useRef<ReturnType<typeof setInterval>|null>(null);
+ const [connectionError,setConnectionError]=useState('');
  useEffect(()=>{setResult(null);setLive(null);setJobError('');setRunning('');active.current='';return()=>{active.current='';if(timer.current)clearInterval(timer.current)}},[root]);
  useEffect(()=>{let valid=true;setReadiness(null);setReadinessError('');
   api<ProcurementReadiness>(root+'/procurement/readiness').then(r=>{if(valid)setReadiness(r)}).catch(e=>{if(valid)setReadinessError((e as Error).message)});
   return()=>{valid=false};
  },[root,state.tables,state.relationships]);
 
+ function stopMonitoring(){if(timer.current)clearInterval(timer.current);active.current='';setRunning('');setLive(null);setConnectionError('')}
+ function monitor(tag:string){
+  if(timer.current)clearInterval(timer.current);
+  timer.current=setInterval(()=>{void api<Run>(root+'/agents/progress/'+tag).then(r=>{
+   if(active.current!==tag)return;setConnectionError('');
+   if(['queued','running'].includes(r.status))setLive(r);
+   else{setResult(r);stopMonitoring();void perform('Refreshing saved job results…',async()=>{})}
+  }).catch(e=>{if(active.current===tag)setConnectionError('Browser connection interrupted. The server job keeps its saved progress. '+(e as Error).message)})},1200);
+ }
+ useEffect(()=>{
+  if(active.current)return;
+  const saved=state.runs.slice().reverse().find(r=>r.job_id&&r.request_id&&['queued','running'].includes(r.status));
+  if(saved?.request_id){active.current=saved.request_id;setRunning(saved.task||'custom');setRunMode(saved.origin==='meta'?'meta':'guided');setLive(saved);monitor(saved.request_id)}
+ },[root,state.runs]);
  async function start(task:string,execution:'meta'|'guided',question:string){
   if(active.current)return;
   const tag=crypto.randomUUID().replaceAll('-','');active.current=tag;setRunning(task);setRunMode(execution);setLive(null);setResult(null);setJobError('');
-  const polling=setInterval(()=>{void api<Run>(root+'/agents/progress/'+tag).then(r=>{if(active.current===tag)setLive(r)}).catch(()=>{})},1200);timer.current=polling;
-  try{await perform(execution==='meta'?'Meta is choosing and running specialist tools…':'Running the reviewed-data checks…',async()=>{
-   try{const r=await api<Run>(root+'/agents','POST',{message:question,mode:execution,task,request_id:tag});if(active.current===tag)setResult(r)}
-   catch(e){if(active.current===tag)setJobError((e as Error).message);throw e}
-  })}finally{clearInterval(polling);if(active.current===tag){active.current='';setRunning('');setLive(null)}}
+  monitor(tag);
+  await perform('Saving the job for server execution…',async()=>{
+   try{const r=await api<Run>(root+'/agents','POST',{message:question,mode:execution,task,request_id:tag,durable:true,...(state.next_steps?{expected_fingerprint:state.next_steps.fingerprint}:{})});if(active.current===tag){if(['queued','running'].includes(r.status))setLive(r);else{setResult(r);stopMonitoring()}}}
+   catch(e){if(active.current===tag){setJobError((e as Error).message);stopMonitoring()}throw e}
+  });
+ }
+ async function retry(run:Run){
+  if(!run.job_id||!state.next_steps)return;
+  const tag=crypto.randomUUID().replaceAll('-','');active.current=tag;setRunning(run.task||'custom');setRunMode(run.origin==='meta'?'meta':'guided');setJobError('');setResult(null);monitor(tag);
+  await perform('Saving an explicitly requested retry…',async()=>{try{setLive(await api<Run>(root+'/jobs/'+run.job_id+'/retry','POST',{request_id:tag,expected_fingerprint:state.next_steps!.fingerprint}))}catch(e){setJobError((e as Error).message);stopMonitoring();throw e}});
  }
  function reviewPrerequisites(){
   if(readiness?.blockers.some(b=>b.next_step==='review_relationships'))void perform('Discovering supplier links for your review…',async()=>{await api(root+'/relationships/discover','POST');navigate('/mapping#relationships')});
   else if(readiness?.blockers.some(b=>b.code==='reorder_threshold_missing'))navigate('/analytics#demand-planner');
   else navigate('/mapping');
  }
- const history=state.runs.slice().reverse();
+ const history=state.runs.slice().reverse().filter(r=>!['queued','running'].includes(r.status));
  const reports=result&&!history.some(r=>r.id===result.id)?[result,...history]:history;
  const working=!!busy||!!running;
  return <>
@@ -50,14 +70,14 @@ export function AgentWorkspace({state,provider,root,busy,perform,navigate}:Conte
   <div className="agent-team-strip">{roles.map(a=>{const count=state.runs.reduce((n,r)=>n+r.steps.filter(s=>s.agent===a.name&&s.status==='completed').length,0);const doing=live?.steps.some(s=>s.agent===a.name&&s.status==='running');return <div key={a.name}><a.icon size={20}/><strong>{a.name}</strong><p>{a.role}</p><small>{a.name==='Orchestrator'?state.runs.filter(r=>r.status==='completed').length+' completed runs':count+' completed checks'}{doing?' · Working now':''}</small></div>})}</div>
   <div className="agent-job-toolbar"><div><h3>Choose the work to hand over</h3><p>Reports are read-only. Only “Prepare purchase drafts” creates an approval item.</p></div><label>How to run<select aria-label="Job execution mode" value={mode} disabled={working} onChange={e=>setMode(e.target.value as 'meta'|'guided')}><option value="meta" disabled={!provider.configured}>Meta chooses and runs tools</option><option value="guided">Data checks · no AI</option></select></label></div>
   <div className="agent-jobs">{jobs.map(j=><article className="panel agent-job" aria-label={j.name} key={j.id}><span className="job-owner"><j.icon size={17}/>{j.agent}</span><h3>{j.name}</h3><p>{j.description}</p><small>You receive: {j.output}</small><Button disabled={working||(mode==='meta'&&!provider.configured)} onClick={()=>void start(j.id,mode,j.prompt)}>{running===j.id?'Working…':'Start job'}<ArrowRight size={14}/></Button></article>)}</div>
-  {!!running&&<section className="panel agent-live" aria-label="Live job activity"><h3>Agents at work</h3>{!live?.steps.length?<p role="status">{runMode==='meta'?'The Orchestrator is choosing tools for this job.':'Starting the reviewed-data checks.'}</p>:<ol>{live.steps.map((s,i)=><li key={i}><strong>{s.agent}</strong><span>{s.status==='running'?'Running '+s.tool.replaceAll('_',' ')+'…':s.status==='completed'?'Completed '+s.tool.replaceAll('_',' '):s.status==='needs_review'?'Waiting for review':s.status}</span></li>)}</ol>}<small>Activity appears when the backend starts or completes a real tool call.</small></section>}
+  {!!running&&<section className="panel agent-live" aria-label="Live job activity"><h3>Agents at work</h3>{!live?.steps.length?<p role="status">{live?.status==='queued'?'Queued for the local worker.':runMode==='meta'?'The Orchestrator is choosing tools for this job.':'Starting the reviewed-data checks.'}</p>:<ol>{live.steps.map((s,i)=><li key={i}><strong>{s.agent}</strong><span>{s.status==='running'?'Running '+s.tool.replaceAll('_',' ')+'…':s.status==='completed'?'Completed '+s.tool.replaceAll('_',' '):s.status==='needs_review'?'Waiting for review':s.status}</span></li>)}</ol>}<small>Progress is saved on the server. Reloading reconnects to this job.</small>{connectionError&&<p role="alert">{connectionError}</p>}{live?.job_id&&<Button variant="secondary" disabled={!!busy||live.cancel_requested} onClick={()=>void perform('Requesting cancellation at a safe step…',async()=>{const r=await api<Run>(root+'/jobs/'+live.job_id+'/cancel','POST');if(['queued','running'].includes(r.status))setLive(r);else{setResult(r);stopMonitoring()}})}>{live.cancel_requested?'Cancellation requested':'Cancel job'}</Button>}</section>}
   {jobError&&<p className="alert error" role="alert">{running==='custom'?'Guided check failed: ':'Job failed: '}{jobError}</p>}
-  {result&&<section className="agent-job-feedback" aria-label="Latest guided check"><p role="status">{result.status==='needs_review'?'Check completed — review required.':'Check completed.'} {result.origin==='meta'?'Meta planned the tool calls.':'No AI was used.'}</p><p>{result.task&&result.task!=='custom'?'Your work report is ready below. Review the findings or download it to share.':result.summary}</p><Button variant="secondary" onClick={()=>{const el=document.getElementById('run-'+result.id);el?.scrollIntoView({block:'start',behavior:'smooth'});el?.focus({preventScroll:true})}}>View this check’s details<ArrowRight size={14}/></Button>{!!result.action_ids.length&&<Button variant="ghost" onClick={()=>navigate('/approvals')}>Open Approval Center<ArrowRight size={14}/></Button>}</section>}
+  {result&&<section className="agent-job-feedback" aria-label="Latest guided check"><p role="status">{result.status==='needs_review'?'Check completed — review required.':result.status==='completed'?'Check completed.':'Job '+result.status+'.'} {result.origin==='meta'?'Meta planned the tool calls.':'No AI was used.'}</p><p>{['completed','needs_review'].includes(result.status)&&result.task&&result.task!=='custom'?'Your work report is ready below. Review the findings or download it to share.':result.summary}</p><Button variant="secondary" onClick={()=>{const el=document.getElementById('run-'+result.id);el?.scrollIntoView({block:'start',behavior:'smooth'});el?.focus({preventScroll:true})}}>View this check’s details<ArrowRight size={14}/></Button>{!!result.action_ids.length&&<Button variant="ghost" onClick={()=>navigate('/approvals')}>Open Approval Center<ArrowRight size={14}/></Button>}</section>}
   {readiness&&<ProcurementReviewNotice readiness={readiness} busy={working} onReview={reviewPrerequisites}/>}
   {readinessError&&<p className="alert warning">Readiness check unavailable: {readinessError}</p>}
   <details className="panel agent-custom"><summary>Ask a custom question or run the full guided check</summary><div className="agent-prompt"><form onSubmit={e=>{e.preventDefault();void start('custom','meta',message)}}><textarea aria-label="Ask your AI workforce" value={message} maxLength={2000} onChange={e=>setMessage(e.target.value)}/><div className="prompt-footer"><span><ShieldCheck size={14}/>Agents prepare proposals. Only you approve them.</span><Button type="submit" disabled={working||!provider.configured||!message.trim()}>Ask Meta</Button></div></form><div className="guided-path"><span>Full sales, stock and purchase-preparation check. No model is used.</span><Button variant="ghost" disabled={working} onClick={()=>void start('custom','guided','Guided replenishment check')}>{running==='custom'?'Checking…':'Run guided check'}<ArrowRight size={14}/></Button></div></div></details>
   <div className="agent-work-heading"><h2>Work delivered</h2><p>Open results, inspect source cells, or download the brief for a colleague.</p></div>
   {!reports.length&&<div className="panel agent-no-work">Choose a job above. Its findings and work report will appear here.</div>}
-  {reports.map(run=><AgentWorkReport key={run.id} run={run} state={state} root={root} busy={busy} perform={perform} navigate={navigate} onReview={reviewPrerequisites}/>)}
+  {reports.map(run=><div key={run.id}>{run.stale&&<p className="alert warning">These findings use an older source or review revision. Run a new job on the current data.</p>}{run.job_id&&['failed','interrupted','cancelled'].includes(run.status)&&<section className="panel recovery-panel"><p>{run.summary}</p><p>An explicit retry starts a new attempt and may call Meta again. Reconnecting to a saved job never retries it.</p><Button disabled={working||run.input_fingerprint!==state.next_steps?.fingerprint} onClick={()=>void retry(run)}>Retry job explicitly</Button>{run.input_fingerprint!==state.next_steps?.fingerprint&&<p>Source or reviews changed. Use a new job above after reviewing the current data.</p>}</section>}<AgentWorkReport run={run} state={state} root={root} busy={busy} perform={perform} navigate={navigate} onReview={reviewPrerequisites}/></div>)}
  </>;
 }

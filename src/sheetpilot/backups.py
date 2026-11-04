@@ -176,6 +176,8 @@ def restore_backup(store, content):
                 if digest(path) != metadata["sha256"]:
                     raise Problem("Backup file hash verification failed; nothing was restored.")
             counts = _validate_database(staging / "sheetpilot.sqlite", files, manifest["schema_version"], temporary)
+            from .jobs import interrupt_restored_jobs
+            interrupt_restored_jobs(Store(staging))
             (staging / "originals").mkdir(exist_ok=True)
             (staging / "outputs").mkdir(exist_ok=True)
             restore_id = uid()

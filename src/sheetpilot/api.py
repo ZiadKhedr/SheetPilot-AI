@@ -1,4 +1,5 @@
 from pathlib import Path
+from contextlib import asynccontextmanager
 import secrets
 import sqlite3
 
@@ -107,6 +108,14 @@ def create_app(settings=None):
     # Further vertical slices register their own explicit routes here.
     from .routes import register
     register(app, store, settings, auth)
+    from .jobs import LocalWorker
+    app.state.worker=LocalWorker(store,lambda:app.state.provider_factory())
+    @asynccontextmanager
+    async def lifespan(application):
+        application.state.worker.start()
+        try:yield
+        finally:application.state.worker.stop()
+    app.router.lifespan_context=lifespan
     from .workspace_routes import register_workspace_routes
     register_workspace_routes(app, store, auth)
 

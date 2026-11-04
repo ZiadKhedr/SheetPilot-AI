@@ -8,6 +8,8 @@ Workbook activation requires genuinely unique reviewed identifier fields (includ
 
 Data repairs support explicitly selected numeric/date conventions and exact identifier reconciliation against a unique reviewed reference. They do not execute formulas, invent missing commercial terms or perform arbitrary text rewrites. The screen shows up to 500 issues and 100 affected-record examples; counts/totals cover the complete bounded workspace. Reversing a historical/remapped source correction requires returning to the appropriate source/version review.
 
+Durable jobs use a local worker thread and SQLite leases for the single-operator installation. Cancellation and the 180-second budget are checked between safe steps; an in-flight provider request may finish or time out first. A dead worker lease takes up to 30 seconds to expire. Interrupted or restored jobs require an explicit retry; changed sources require a new job. Legacy API callers can still request synchronous execution. This is not a distributed enterprise job scheduler.
+
 ## Verified scope
 Local upload/snapshot workflow, reviewed semantics and relationships, dashboard calculations, bounded logical agents, and approved additional Excel purchase-order outputs. Full results are in TEST_RESULTS.md.
 

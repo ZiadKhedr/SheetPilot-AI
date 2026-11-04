@@ -64,6 +64,8 @@ class AgentInput(Model):
     mode: Literal["meta", "guided"] = "meta"
     task: Literal["custom", "daily_review", "sales_review", "stock_review", "supplier_review", "replenishment"] = "custom"
     request_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    durable: bool = False
+    expected_fingerprint: str | None = Field(default=None,pattern=r'^[a-f0-9]{64}$')
 
 
 class EmptyArgs(Model):

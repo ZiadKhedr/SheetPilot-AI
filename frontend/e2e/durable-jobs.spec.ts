@@ -1,0 +1,20 @@
+import {expect,test} from '@playwright/test';
+test('reloading reconnects to the same persisted job and work report',async({page,request})=>{
+ const workspace=(await (await request.post('/api/workspaces',{data:{name:'Fictional durable browser'}})).json()).id;
+ const base='/api/workspaces/'+workspace;
+ await page.addInitScript(id=>localStorage.setItem('sheetpilot-workspace',id),workspace);
+ let submissions=0;page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/agents'))submissions++});
+ await page.goto('/agents');await page.getByLabel('Job execution mode').selectOption('guided');
+ const accepted=page.waitForResponse(r=>r.url().endsWith('/agents')&&r.request().method()==='POST');
+ await page.getByRole('article',{name:'Prioritize stock risks'}).getByRole('button',{name:'Start job'}).click();
+ const response=await accepted;expect(response.status()).toBe(202);const queued=await response.json();
+ expect(queued.job_id).toMatch(/^[a-f0-9]{32}$/);
+ await page.reload();
+ await expect(page.locator('#run-'+queued.id)).toContainText('Stock risk priorities');
+ await expect(page.locator('#run-'+queued.id)).toContainText('1 specialist check');
+ expect(submissions).toBe(1);
+ const state=await (await request.get(base+'/state')).json();
+ expect(state.runs).toHaveLength(1);expect(state.runs[0].id).toBe(queued.id);expect(state.runs[0].status).toBe('completed');
+ expect(state.actions).toEqual([]);
+ const report=await request.get(base+'/agent-runs/'+queued.id+'/report');expect(report.ok()).toBe(true);expect(await report.text()).toContain('Guided data tools; no AI used');
+});

@@ -20,3 +20,4 @@ export interface ProcurementBlocker{code:string;product_id:string;message:string
 export interface ProcurementReadiness{ready:boolean;low_stock_count:number;ready_count:number;blockers:ProcurementBlocker[]}
 export interface State{next_steps?:import('./NextSteps').StepChecklist}
 export interface WorkbookInfo{active?:boolean;logical_id?:string;version?:number;previous_workbook_id?:string|null;superseded_by?:string}
+export interface Run{job_id?:string;request_id?:string;cancel_requested?:boolean;input_fingerprint?:string;stale?:boolean;attempt?:number}

@@ -1,6 +1,6 @@
 import json
 from fastapi import Depends, Path
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, JSONResponse
 
 from .actions import propose, review_action, procurement_readiness
 from .agents import run_agents
@@ -50,7 +50,20 @@ def register_actions(app, store, auth):
     @app.post("/api/workspaces/{workspace}/agents", dependencies=[Depends(auth)])
     def agents(workspace: str, body: AgentInput):
         store.workspace(workspace)
+        if body.durable:
+            from .jobs import enqueue
+            result=enqueue(store,workspace,body)
+            app.state.worker.wake.set()
+            return JSONResponse(result,status_code=202)
         return run_agents(store, workspace, body.message, body.mode, app.state.provider_factory(), body.task, body.request_id)
+
+    from .jobs import JobRetry, cancel_job, retry_job
+    @app.post('/api/workspaces/{workspace}/jobs/{identifier}/cancel',dependencies=[Depends(auth)])
+    def cancel(workspace:str,identifier:str):return cancel_job(store,workspace,identifier)
+
+    @app.post('/api/workspaces/{workspace}/jobs/{identifier}/retry',dependencies=[Depends(auth)])
+    def retry(workspace:str,identifier:str,body:JobRetry):
+        result=retry_job(store,workspace,identifier,body);app.state.worker.wake.set();return result
 
     @app.get("/api/workspaces/{workspace}/agents/progress/{request_id}", dependencies=[Depends(auth)])
     def progress(workspace: str, request_id: str = Path(pattern=r"^[a-f0-9]{32}$")):
@@ -67,7 +80,7 @@ def register_actions(app, store, auth):
     def work_report(workspace: str, identifier: str):
         from .agent_work import report_text
         run = store.get(workspace,"run",identifier)
-        if run["status"] == "running":
+        if run["status"] in {'queued','running'}:
             raise Problem("Wait for this job to finish before downloading its report.",409)
         return Response(report_text(store,workspace,run),media_type="text/plain; charset=utf-8",
             headers={"Content-Disposition":f'attachment; filename="Agent-Work-{run["id"][:8]}.txt"'})

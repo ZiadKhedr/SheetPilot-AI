@@ -12,6 +12,7 @@ from .models import ComparisonArgs, DraftArgs, InventoryArgs, SalesSelection
 from .provider import MetaError, strict_schema
 from .store import Problem, now, uid
 from .lifecycle import active_workbooks
+from .job_control import StopJob
 
 TOOL_MODELS = {"sales_analysis": SalesSelection, "sales_comparison": ComparisonArgs,
                "inventory_analysis": InventoryArgs, "procurement_review": DraftArgs, "draft_purchase_orders": DraftArgs}
@@ -81,19 +82,21 @@ def tool_summary(step):
     return f"Purchase-order proposal {result['action_id'][:8]} is {result['status']}. Total: {amounts}."
 
 
-def run_agents(store, workspace, message, mode, provider, task="custom", request_id=None):
+def run_agents(store, workspace, message, mode, provider, task="custom", request_id=None, *, run_identifier=None, checkpoint=None):
     if task not in JOBS:
         raise Problem("Unknown agent job.")
     started = perf_counter()
     title, required = JOBS[task]
     allowed = set(TOOL_MODELS) if task == "custom" else set(required)
     snapshot = fingerprint(store, workspace)
-    run = store.put(workspace, "run", dict(id=uid(), title=title, task=task, request_id=request_id,
+    existing=store.get(workspace,'run',run_identifier) if run_identifier else {}
+    run = store.put(workspace, "run", existing | dict(id=run_identifier or uid(), title=title, task=task, request_id=request_id,
         message=message, origin="meta" if mode == "meta" else "guided-tools", status="running", steps=[],
         summary="", action_ids=[], blockers=[], input_fingerprint=snapshot,
         source_versions=[{"id":w["id"],"name":w["name"],"sha256":w["sha256"]} for w in active_workbooks(store,workspace)]))
 
     def execute(name, arguments):
+        if checkpoint:checkpoint()
         if name not in allowed:
             raise MetaError("The model requested a tool that is not permitted for this job.")
         try:
@@ -175,6 +178,7 @@ def run_agents(store, workspace, message, mode, provider, task="custom", request
         step["summary"] = tool_summary(step)
         store.put(workspace, "run", run)
         store.event(workspace, "agent.needs_review" if status=="needs_review" else "agent.tool", step["summary"], {"run_id":run["id"],"tool":name})
+        if checkpoint:checkpoint()
         return result
 
     def finish(status, summary):
@@ -183,6 +187,7 @@ def run_agents(store, workspace, message, mode, provider, task="custom", request
         store.put(workspace, "run", run)
 
     try:
+        if checkpoint:checkpoint()
         if mode == "guided":
             for name in required or ("sales_analysis", "inventory_analysis", "draft_purchase_orders"):
                 execute(name, '{"product_ids":[]}' if name in {"draft_purchase_orders","procurement_review"} else "{}")
@@ -199,7 +204,9 @@ def run_agents(store, workspace, message, mode, provider, task="custom", request
             messages = [{"role":"developer","content":instruction}, {"role":"user","content":message}]
             calls = 0
             for turn in range(5):
+                if checkpoint:checkpoint()
                 response = provider.completion(messages, tools=tools)
+                if checkpoint:checkpoint()
                 tool_calls = response.get("tool_calls") or []
                 if not tool_calls:
                     if not isinstance(response.get("content"), str):
@@ -230,6 +237,7 @@ def run_agents(store, workspace, message, mode, provider, task="custom", request
                     calls += 1
             else:
                 raise MetaError("Agent turn limit reached; pending proposals still require human review.")
+        if checkpoint:checkpoint()
         if snapshot != fingerprint(store, workspace):
             run["blockers"].append({"code":"source_changed","message":"Reviewed data changed during this job. Run it again before using the findings.","next_step":"review_data","product_id":"","inventory_table_id":""})
         summary = ("Guided check completed. No AI was used.\n" if mode=="guided" else "") + "\n".join(s["summary"] for s in run["steps"])
@@ -238,6 +246,10 @@ def run_agents(store, workspace, message, mode, provider, task="custom", request
             summary = reason + ("Existing proposals still require human approval. " if run["action_ids"] else "No purchase order was drafted. ") + " ".join(b["message"] for b in run["blockers"]) + "\n" + summary
         finish("needs_review" if run["blockers"] else "completed", summary)
         store.event(workspace,"agent.needs_review" if run["blockers"] else "agent.completed",f"{title} {run['status']}.",{"run_id":run["id"],"origin":run["origin"]})
+        return run
+    except StopJob as exc:
+        finish(exc.state,str(exc))
+        store.event(workspace,'agent.'+exc.state,str(exc),{'run_id':run['id']})
         return run
     except Problem as exc:
         finish("failed",str(exc))

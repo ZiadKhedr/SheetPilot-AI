@@ -32,6 +32,8 @@ class MetaProvider:
         self.model = model or os.getenv("META_MODEL") or values.get("META_MODEL") or "muse-spark-1.3"
         self.base = "https://api.meta.ai/v1"
         self.transport = transport
+        self.request_attempts = 3
+        self.allow_completion_retry = True
 
     def status(self):
         return {"configured": bool(self.key.strip()), "model": self.model, "base_url": self.base}
@@ -39,19 +41,19 @@ class MetaProvider:
     def request(self, method, path, payload=None):
         if not self.key.strip():
             raise MetaError("Meta is not configured. Add MODEL_API_KEY to the server's .env file.", 503)
-        for attempt in range(3):
+        for attempt in range(self.request_attempts):
             try:
                 with httpx.Client(timeout=60, transport=self.transport) as client:
                     response = client.request(method, self.base + path,
                         headers={"Authorization": f"Bearer {self.key}", "Content-Type": "application/json"}, json=payload)
             except httpx.TimeoutException:
-                if attempt < 2:
+                if attempt < self.request_attempts-1:
                     time.sleep(.3 * (2 ** attempt))
                     continue
                 raise MetaError("Meta request timed out. Please retry.")
             except httpx.HTTPError:
                 raise MetaError("Could not reach the official Meta API.")
-            if response.status_code in {429, 500, 502, 503} and attempt < 2:
+            if response.status_code in {429, 500, 502, 503} and attempt < self.request_attempts-1:
                 try:
                     delay = float(response.headers.get("retry-after", ".3"))
                 except ValueError:
@@ -81,7 +83,8 @@ class MetaProvider:
                 "name": schema.__name__, "schema": strict_schema(schema.model_json_schema()), "strict": True}}
         if tools:
             payload.update(tools=tools, tool_choice="auto", parallel_tool_calls=False)
-        for attempt, limit in enumerate(COMPLETION_TOKEN_LIMITS):
+        limits=COMPLETION_TOKEN_LIMITS if self.allow_completion_retry else COMPLETION_TOKEN_LIMITS[:1]
+        for attempt, limit in enumerate(limits):
             data = self.request("POST", "/chat/completions", payload | {"max_completion_tokens": limit})
             try:
                 choice = data["choices"][0]
@@ -89,12 +92,14 @@ class MetaProvider:
                     raise TypeError
                 reason = choice.get("finish_reason")
                 if reason == "length":
-                    if attempt == 0:
+                    if attempt == 0 and self.allow_completion_retry:
                         # Never log or replay a partial answer, tool call, or private reasoning.
                         logger.warning("Meta reached its %s-token response limit; retrying once with %s tokens.",
                                        limit, COMPLETION_TOKEN_LIMITS[1])
                         continue
-                    raise MetaError("Meta reached its response limit after one retry. Try a smaller selection or analyze one table at a time.")
+                    raise MetaError("Meta reached its response limit after one retry. Try a smaller selection or analyze one table at a time."
+                                    if self.allow_completion_retry else
+                                    "Meta reached its response limit. This job did not replay the provider call; use a smaller job or explicitly retry.")
                 if reason == "content_filter":
                     raise MetaError("Meta could not return this response because of a content restriction.")
                 if reason not in {"stop", "tool_calls"}:

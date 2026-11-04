@@ -1,5 +1,15 @@
 # Agent jobs and work reports
 
+## Durable local execution
+
+Agent Workspace now submits with `durable: true`. `POST .../agents` returns HTTP 202 with a persisted queued run, job ID and request ID; `GET .../agents/progress/{request_id}` reconnects to that same run. The same request ID deduplicates identical submissions and rejects different work. Legacy API callers may omit `durable` for the original synchronous interface.
+
+A local worker thread starts with FastAPI's lifespan and claims SQLite jobs under a write lock. No broker or external scheduler is required. A separate actual heartbeat maintains a 30-second lease during provider calls. A disconnected browser does not cancel the worker. Reloading reconnects to queued/running work; a connection error explicitly describes the browser disconnection. Expired running leases become **interrupted**, never automatically requeued. Backups restore queued/running jobs as interrupted because the original installation may have advanced.
+
+`POST .../jobs/{id}/cancel` cancels queued work immediately or requests cancellation between safe steps. Completed tool results and pending proposals remain saved. No agent tool can approve or generate an order output. `POST .../jobs/{id}/retry` requires a new request ID and current expected fingerprint; the old job must be failed/interrupted/cancelled and its original context must still match. The retry is a separate recorded attempt. Data changes require a new reviewed job. Each safe boundary checks cancellation, ownership, source file hashes, human-review fingerprint and the 180-second execution budget. Existing five-turn/eight-tool limits and task-specific permissions remain in force.
+
+The budget is cooperative between bounded operations; an in-flight HTTP call can take up to its provider timeout before cancellation/shutdown is observed. Durable provider work uses one request attempt and no automatic length-generation retry. An explicit retry may call Meta again; browser reconnect, worker restart and archive restoration never replay a running provider generation. Partial interrupted reports state their real status and contain only actual completed tool evidence.
+
 Agent Workspace turns reviewed spreadsheet data into explicit work products. The Orchestrator is a logical role backed by the official Meta API when Meta mode is selected; Sales, Inventory and Procurement are bounded specialist tools. The UI does not imply four independent LLM services or unrestricted autonomous workers.
 
 ## Jobs
