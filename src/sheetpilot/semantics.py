@@ -48,6 +48,7 @@ _FIELDS = [
  ("supplier_name", "Supplier", "Supplier/vendor name.", "supplier|vendor|vendor name|اسم المورد|المورد"),
  ("supplier_email", "Supplier", "Supplier email address.", "vendor email|supplier email|بريد المورد"),
  ("lead_time_days", "Supplier", "Quoted delivery lead time in days.", "lead time|lead days|delivery days|مدة التوريد"),
+ ("pack_size", "Supplier", "Base units per supplier pack. Requires commercial review before operational rounding.", "pack size|case quantity|units per pack|حجم العبوة|عدد الوحدات بالعبوة"),
  ("min_order_quantity", "Supplier", "Supplier minimum order quantity; not an inventory reorder threshold.", "moq|minimum order quantity|حد ادني للطلب"),
  ("customer_id", "Customer", "Customer/account identifier, not a product ID.", "customer code|client id|account id|customerid|كود العميل|رقم العميل"),
  ("customer_name", "Customer", "Customer/company name.", "customer|client name|company name|اسم العميل"),
@@ -88,7 +89,7 @@ ENTITIES = list(ENTITY_CATALOG)
 IDENTIFIER_FIELDS = {"product_id", "order_id", "supplier_id", "customer_id", "purchase_order_id", "warehouse_id", "payment_id", "barcode"}
 NUMERIC_FIELDS = {"quantity", "unit_price", "revenue", "unit_cost", "list_unit_price", "unit_discount", "discount_amount",
                   "discount_rate", "tax_amount", "tax_rate", "total_cost", "order_total", "payment_amount", "stock_quantity",
-                  "opening_stock", "units_sold", "stock_reserved", "stock_available", "reorder_point", "target_stock", "lead_time_days", "min_order_quantity"}
+                  "opening_stock", "units_sold", "stock_reserved", "stock_available", "reorder_point", "target_stock", "lead_time_days", "min_order_quantity", "pack_size"}
 
 
 def currency_hint(columns):

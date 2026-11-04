@@ -1,5 +1,7 @@
 # Known limitations
 
+Supplier planning requires explicit human-reviewed base units, per-base-unit pricing and matching currencies. No unit/currency conversion, supplier communication or external order sync is implemented. Horizon-eligible receipts may still arrive after depletion; delivery dates are reviewed estimates. Source/mapping/correction changes require incoming-order re-review. Legacy basic stock-target planning remains available when the optional supplier policy is disabled. See [supplier planning](SUPPLIER_PLANNING.md).
+
 ## Workspace recovery
 
 Backups are plaintext installation snapshots with limits of 64 MiB compressed, 256 MiB expanded and 2,048 entries. Restore publishes a separate local installation; configure its data folder and credentials in another server process. It does not merge into the running workspace. Only the current manifest/database schema is supported. See [workspace lifecycle](WORKSPACE_LIFECYCLE.md).
@@ -27,7 +29,7 @@ Local upload/snapshot workflow, reviewed semantics and relationships, dashboard 
 - Identifier overlap is evidence only. Relationships require confirmation, including strong proposals.
 - Each product needs a single validated inventory snapshot. Conflicting inventory identities are excluded.
 - Procurement requires a unique matching supplier quote, reviewed product relationship, matching supplier ID when provided, and explicit matching currency.
-- Currency conversion, demand forecasting, tax, supplier minimum-order quantities, lead times and multi-warehouse stock rules are outside this MVP.
+- Currency conversion, probabilistic demand forecasting, tax and multi-warehouse stock rules are outside this MVP. Reviewed supplier delivery/pack/minimum terms and separately recorded incoming orders are supported; see SUPPLIER_PLANNING.md.
 - Target stock defaults to twice the reorder threshold when no target field exists. Historical sales are not subtracted from current on-hand quantities.
 - New uploads are snapshots, not live synchronization. Mappings need review after schema changes. Workbooks are not replaced in place; use a separate workspace when testing a different version of the same dataset.
 
@@ -52,4 +54,4 @@ Local upload/snapshot workflow, reviewed semantics and relationships, dashboard 
 - Meta can analyze a selected reviewed table again, which deliberately requires fresh confirmation. All model confidence remains an estimate.
 
 ## Demand planning limits
-Trailing-average consumption is a scenario, not a guaranteed forecast. Historical cutoffs and stock-snapshot alignment are explicit. Sparse history, missing dates or mismatched units cannot drive replenishment. Incoming orders, returns, seasonality, promotional changes, pack sizes and supplier MOQ are not modeled. Policy review and supplier/action approvals remain required; no source facts are overwritten.
+Trailing-average consumption is a scenario, not a guaranteed forecast. Historical cutoffs and stock-snapshot alignment are explicit. Sparse history, missing dates or mismatched units cannot drive replenishment. The rate scenario does not model returns, seasonality or promotional changes. A separate reviewed supplier layer applies eligible incoming stock, pack sizes and MOQ to operational purchases. Policy review and supplier/action approvals remain required; no source facts are overwritten.

@@ -76,7 +76,7 @@ test('mobile navigation and layout',async({page})=>{
  await expect(page.getByRole('heading',{name:'A clear view of your business.',exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
  await page.getByRole('button',{name:'Toggle navigation',exact:true}).click();
- await page.getByRole('link',{name:'Excel files',exact:true}).click();
+ await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Excel files',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Excel file manager',exact:true})).toBeVisible();
  await page.screenshot({path:test.info().outputPath('browser-mobile.png'),fullPage:true});
 });

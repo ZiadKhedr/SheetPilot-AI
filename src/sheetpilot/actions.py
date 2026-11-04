@@ -24,6 +24,8 @@ def fingerprint(store, workspace, con=None):
                                 if {r['left_table'],r['right_table']} <= identifiers),
         "demand_policy": [(p["id"],p["revision"],p["enabled"]) for p in store.list(workspace,"demand_policy",con)],
         "corrections": [(p['id'],p['revision']) for p in store.list(workspace,'correction_state',con)],
+        "commercial_policy": [(p['id'],p['revision']) for p in store.list(workspace,'commercial_policy',con)],
+        "incoming_orders": sorted((p['id'],p['revision'],p['status']) for p in store.list(workspace,'incoming_order',con)),
     }
     return sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
@@ -35,10 +37,12 @@ class ProcurementBlocked(Problem):
         super().__init__("Cannot safely draft: " + " ".join(b["message"] for b in readiness["blockers"]))
 
 
-def procurement_readiness(store, workspace, product_ids=None):
+def procurement_readiness(store, workspace, product_ids=None, *, commercial_override=None):
+    from .commercial import context_for, reviewed_selection
     store.workspace(workspace)
-    inventory = inventory_tool(store, workspace)
-    stock = [r for r in inventory if r["low_stock"]]
+    inventory = inventory_tool(store, workspace,commercial_override=commercial_override)
+    commercial=context_for(store,workspace,override=commercial_override)
+    stock = [r for r in inventory if r["low_stock"] and (Decimal(r['suggested_quantity'])>0 or r.get('commercial_error'))]
     if product_ids:
         unknown = set(product_ids) - {r["product_id"] for r in stock}
         if unknown:
@@ -64,7 +68,7 @@ def procurement_readiness(store, workspace, product_ids=None):
         def block(code, message):
             blockers.append({"code": code, "product_id": item["product_id"],
                 "message": item["product_id"] + ": " + message,
-                "next_step": "review_relationships" if code == "relationship_review" else "review_data",
+                "next_step": "review_relationships" if code == "relationship_review" else "review_commercial" if code=='commercial_terms_review' else "review_data",
                 "inventory_table_id": item["source"]["table_id"]})
         candidates = []
         product_quotes = [r for r in suppliers if r["data"]["product_id"] == item["product_id"]]
@@ -86,10 +90,15 @@ def procurement_readiness(store, workspace, product_ids=None):
         if not candidates:
             block("relationship_review", "supplier quote exists, but the inventory-to-suppliers product relationship must be reviewed and confirmed.")
             continue
+        selected=reviewed_selection(commercial,item,candidates)
+        if selected:candidates=[selected]
         if len(candidates) != 1:
             block("ambiguous_supplier_quote", "multiple reviewed supplier quotes match. Resolve the ambiguous quotes before drafting.")
             continue
         record = candidates[0]
+        if item.get('commercial_error'):
+            block('commercial_terms_review',item['commercial_error'])
+            continue
         supplier = record["data"]
         source = record["source"]
         if not source.get("quote_precision_checked"):
@@ -121,7 +130,10 @@ def procurement_readiness(store, workspace, product_ids=None):
         if item.get("planning"):
             lines[-1]["planning"]=item["planning"]
             lines[-1]["sources"].extend(item["planning"]["evidence"]["sales_examples"])
+        if item.get('commercial'):lines[-1]['commercial']=item['commercial']
     return {"ready": bool(stock) and not blockers, "low_stock_count": len(stock),
+            "physical_low_stock_count":sum(r['low_stock'] for r in inventory),
+            "covered_by_incoming_count":sum(r['low_stock'] and r.get('commercial') is not None and Decimal(r['suggested_quantity'])==0 for r in inventory),
             "ready_count": len(lines), "blockers": blockers,
             "lines": sorted(lines, key=lambda l: (l["supplier_id"], l["product_id"]))}
 
@@ -176,9 +188,11 @@ def propose(store, workspace, product_ids=None):
             snapshot=snapshot, product_ids=product_ids or [], idempotency_key=key,
             validation=["Reviewed mappings", "Confirmed product relationships", "Unambiguous supplier quote",
                         "Matching explicit currency", "Deterministic quantities and Decimal money"] +
+                       (["Human-reviewed supplier terms, base-unit prices, pack/MOQ rounding and explicit incoming-order eligibility"] if any(l.get('commercial') for l in lines) else []) +
                        (["Human-reviewed sales-demand policy and stock snapshot assumptions"] if any(l.get("planning") for l in lines) else []),
             output=None, reviewed_at=None, modifications=[]), con)
-        store.event(workspace, "action.proposed", action["title"], {"action_id": action["id"], "totals": action["totals"]}, con)
+        store.event(workspace, "action.proposed", action["title"], {"action_id": action["id"], "totals": action["totals"],
+            'lines':action['lines'],'source_versions':action['source_versions'],'snapshot':snapshot}, con)
         return action
 
 
@@ -217,6 +231,9 @@ def write_purchase_order(store, action):
     for line in action["lines"]:
         corrections=[c for source in line['sources'] for c in source.get('corrections',[])]
         if corrections:meta.append([safe_cell('Correction basis: '+line['product_id']),json.dumps(corrections,ensure_ascii=False,sort_keys=True)])
+        if line.get('commercial'):
+            meta.append([safe_cell('Supplier/incoming basis: '+line['product_id']),json.dumps(line['commercial'],ensure_ascii=False,sort_keys=True)])
+            meta.append([safe_cell('Quantity calculation: '+line['product_id']),safe_cell(line['commercial']['calculation'])])
         if line.get("planning"):
             meta.append([safe_cell("Demand basis: "+line["product_id"]),json.dumps(line["planning"],ensure_ascii=False,sort_keys=True)])
     for ws in wb:
@@ -278,7 +295,9 @@ def review_action(store, workspace, identifier, decision, actor):
             else:
                 action.update(reviewed_at=now(), approved_by=actor)
                 store.event(workspace, "action.approved", "Operator approved the validated purchase-order proposal.",
-                            {"action_id": identifier, "actor": actor, "snapshot": action["snapshot"]}, con)
+                            {"action_id": identifier, "actor": actor, "snapshot": action["snapshot"],
+                             'line_basis_sha256':sha256(json.dumps(action['lines'],sort_keys=True).encode()).hexdigest(),
+                             'commercial_basis':[line['commercial'] for line in action['lines'] if line.get('commercial')]}, con)
                 path = write_purchase_order(store, action)
                 action.update(status="executed", output={"name": f"Purchase-Orders-{identifier[:8]}.xlsx", "sha256": digest(path)},
                     modifications=[{"operation": "create_workbook", "sheet": "Purchase Orders",

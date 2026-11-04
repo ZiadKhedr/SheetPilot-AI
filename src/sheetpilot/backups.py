@@ -113,7 +113,7 @@ def _validate_database(path, expected_files, schema_version, temporary):
                 for key, item in value.items():
                     if key in {"workbook_id", "parent_workbook_id", "previous_workbook_id"} and item is not None and (workspace, item) not in workbook_ids:
                         raise Problem("Backup contains a missing workbook reference.")
-                    if key in {"table_id", "left_table", "right_table", "inventory_table_id"} and item and (workspace, item) not in table_ids:
+                    if key in {"table_id", "left_table", "right_table", "inventory_table_id", "quote_table_id", "previous_table_id"} and item and (workspace, item) not in table_ids:
                         raise Problem("Backup contains a missing table reference.")
                     references(item, workspace)
             elif isinstance(value, list):

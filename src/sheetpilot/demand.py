@@ -145,7 +145,7 @@ def demand_analysis(store, workspace, parameters=None, all_records=None):
         if not sufficient: warnings.append("Provisional estimate only: at least 7 observed days, 3 dated sales rows and 2 sales days are required for replenishment use.")
     params_dict=params.model_dump() | {"as_of":anchor.isoformat() if anchor else None}
     warnings=["Trailing-average scenario, not a guaranteed forecast. Assumes representative sales, comparable units, and no unrecorded demand, returns or incoming orders.",
-              "Reorder and target quantities round up to whole base units; pack-size and supplier minimum-order rules are not modeled."]
+              "This sales-rate scenario rounds thresholds to whole base units. Reviewed supplier planning separately applies incoming stock, pack sizes and minimum quantities to purchase recommendations."]
     if anchor and anchor < today-timedelta(days=params.window_days):
         warnings.append(f"Historical scenario: sales history is evaluated as of {anchor.isoformat()}, not today. Verify that the stock snapshot matches this date.")
     if any(r["status"]=="relationship_review" for r in result): warnings.append("Some products need reviewed inventory-to-sales links before demand can be calculated.")

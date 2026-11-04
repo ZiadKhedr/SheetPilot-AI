@@ -228,11 +228,15 @@ def records(store, workspace):
                 if r["table_id"] not in excluded and r['table_id'] in live]
 
 
-def inventory_tool(store, workspace):
+def inventory_tool(store, workspace, *, commercial_override=None):
     from .demand import demand_analysis, policy_for
+    from .commercial import context_for, term_for, apply_rules
+    from .models import DemandParameters
     all_records=records(store,workspace)
     policy=policy_for(store,workspace)
     plans={r["inventory_table_id"]+":"+r["product_id"]:r for r in demand_analysis(store,workspace,all_records=all_records)["products"]} if policy and policy["enabled"] else {}
+    commercial=context_for(store,workspace,all_records,commercial_override)
+    supplier_plans={}
     result = []
     for record in all_records:
         if record["entity"] != "inventory":
@@ -240,11 +244,22 @@ def inventory_tool(store, workspace):
         row = dict(record["data"])
         threshold_source="source" if row.get("reorder_point") is not None else None
         plan=plans.get(record["source"]["table_id"]+":"+record["product_id"])
+        term,commercial_error=term_for(commercial,row|{'source':record['source']})
+        parameters=policy.get('parameters') if policy else None
+        if threshold_source is None and policy and policy['enabled'] and term:
+            if policy['parameters']['as_of']!=commercial['policy']['planning_date']:
+                commercial_error='Supplier planning date differs from the reviewed demand/stock snapshot date. Review both settings.'
+            else:
+                parameters=policy['parameters']|{'lead_time_days':term['lead_time_days']}
+                lead=term['lead_time_days']
+                if lead not in supplier_plans:
+                    supplier_plans[lead]={p['inventory_table_id']+':'+p['product_id']:p for p in demand_analysis(store,workspace,DemandParameters(**parameters),all_records)['products']}
+                plan=supplier_plans[lead].get(record['source']['table_id']+':'+record['product_id'])
         planning=None
         if threshold_source is None and plan and plan["eligible"]:
             row["reorder_point"],row["target_stock"]=plan["reorder_point"],plan["target_stock"]
             threshold_source="sales_policy"
-            planning={"origin":"reviewed sales-demand policy","policy_revision":policy["revision"],"parameters":policy["parameters"],
+            planning={"origin":"reviewed sales-demand policy","policy_revision":policy["revision"],"parameters":parameters,
                       "stock_snapshot_confirmed":policy["stock_snapshot_confirmed"],
                       "sales_units":plan["sales_units"],"observed_days":plan["observed_days"],"daily_sales":plan["daily_sales"],
                       "window_start":plan["window_start"],"window_end":plan["window_end"],"evidence":plan["evidence"]}
@@ -253,9 +268,14 @@ def inventory_tool(store, workspace):
         threshold, target = (Decimal(row[k]) for k in ["reorder_point", "target_stock"]) if configured else (None,None)
         low = configured and stock < threshold
         suggestion = plan["suggested_quantity"] if threshold_source=="sales_policy" else str(max(Decimal(0), target-stock)) if low else "0"
+        commercial_basis=None
+        if term and configured and not commercial_error:
+            try:suggestion,commercial_basis=apply_rules(commercial,row|{'threshold_source':threshold_source,'source':record['source']},term)
+            except Problem as exc:commercial_error=str(exc)
         result.append(row | {"low_stock": low, "suggested_quantity": suggestion,
                              "replenishment_configured": configured,
                              "threshold_source":threshold_source,"planning":planning,
+                             "commercial":commercial_basis,"commercial_error":commercial_error,
                              "source": record["source"]})
     return result
 

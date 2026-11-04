@@ -50,7 +50,7 @@ def next_steps(store, workspace):
          else 'No current row errors, missing commercial currencies or purchasing blockers were found.',
          [target('Review source issues', '/quality#issue-'+issue_id(issues[0]) if issues else '/quality')] +
          [target('Review currency', '/mapping#table-'+t) for t in sorted(currency_gaps)] +
-         [target(b['message'], '/mapping#table-'+b['inventory_table_id']) for b in readiness['blockers'][:20]])
+         [target(b['message'], '/purchasing' if b.get('next_step')=='review_commercial' else '/mapping#table-'+b['inventory_table_id']) for b in readiness['blockers'][:20]])
     can_analyze = bool(mirror) and not pending
     item('analysis', 'Run analysis', 'done' if runs else 'ready' if can_analyze else 'blocked',
          'A completed job matches the current source and review fingerprint.' if runs else

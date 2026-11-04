@@ -9,6 +9,34 @@ from .store import Problem, uid
 
 
 def register_workspace_routes(app, store, auth):
+    from .commercial import (CommercialInput, IncomingInput, context_for, policy_for as commercial_policy,
+                             preview_policy, save_policy as save_commercial, save_incoming)
+
+    @app.get('/api/workspaces/{workspace}/commercial',dependencies=[Depends(auth)])
+    def commercial_state(workspace:str):
+        from .actions import fingerprint, procurement_readiness
+        from .analytics import inventory_tool
+        store.workspace(workspace)
+        context=context_for(store,workspace)
+        return {'policy':context['policy'],'fingerprint':fingerprint(store,workspace),'stock':inventory_tool(store,workspace),
+                'quotes':[{'table_id':r['source']['table_id'],'row':r['source']['row'],'data':r['data'],'source':r['source']} for r in context['quotes']],
+                'incoming':context['incoming'],'readiness':procurement_readiness(store,workspace)}
+
+    @app.post('/api/workspaces/{workspace}/commercial/preview',dependencies=[Depends(auth)])
+    def commercial_preview(workspace:str,body:CommercialInput):return preview_policy(store,workspace,body)
+
+    @app.put('/api/workspaces/{workspace}/commercial/policy')
+    def commercial_review(workspace:str,body:CommercialInput,actor=Depends(auth)):
+        return save_commercial(store,workspace,body,actor)
+
+    @app.post('/api/workspaces/{workspace}/incoming-orders')
+    def incoming_create(workspace:str,body:IncomingInput,actor=Depends(auth)):
+        return save_incoming(store,workspace,body,actor)
+
+    @app.put('/api/workspaces/{workspace}/incoming-orders/{identifier}')
+    def incoming_update(workspace:str,identifier:str,body:IncomingInput,actor=Depends(auth)):
+        return save_incoming(store,workspace,body,actor,identifier)
+
     from .repairs import (RepairPreview, RepairApproval, RepairReversal, repair_workspace,
                           preview_repairs, approve_repairs, preview_reversal, reverse_correction)
 

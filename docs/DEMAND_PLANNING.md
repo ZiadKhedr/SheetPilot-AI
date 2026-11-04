@@ -21,7 +21,7 @@ The requested lookback is clipped to the first available sale in the related sou
 - Proposed target = ceil(units × (lead days + safety days + extra coverage days) / observed days).
 - If on-hand is below the proposed reorder point, suggested order = ceil(max(0, target − on-hand)); otherwise zero.
 
-Whole base-unit rounding is explicit. Pack sizes, supplier MOQ, incoming purchase orders and unit conversion are not implemented.
+Whole base-unit rounding is explicit in this rate scenario. The separate [reviewed supplier layer](SUPPLIER_PLANNING.md) applies supplier-specific delivery times, pack sizes, MOQ and eligible recorded incoming orders to operational purchase quantities. Unit conversion is not implemented.
 
 Example: 40 units over 10 calendar days = 4/day. Stock 8 gives 2 days of cover. Lead time 2 days + buffer 1 day gives reorder point 12; adding 4 coverage days gives target 28 and an order recommendation of 20 units.
 

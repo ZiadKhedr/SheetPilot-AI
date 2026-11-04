@@ -58,6 +58,7 @@ export function AgentWorkspace({state,provider,root,busy,perform,navigate}:Conte
   await perform('Saving an explicitly requested retry…',async()=>{try{setLive(await api<Run>(root+'/jobs/'+run.job_id+'/retry','POST',{request_id:tag,expected_fingerprint:state.next_steps!.fingerprint}))}catch(e){setJobError((e as Error).message);stopMonitoring();throw e}});
  }
  function reviewPrerequisites(){
+  if(readiness?.blockers.some(b=>b.next_step==='review_commercial')){navigate('/purchasing');return}
   if(readiness?.blockers.some(b=>b.next_step==='review_relationships'))void perform('Discovering supplier links for your review…',async()=>{await api(root+'/relationships/discover','POST');navigate('/mapping#relationships')});
   else if(readiness?.blockers.some(b=>b.code==='reorder_threshold_missing'))navigate('/analytics#demand-planner');
   else navigate('/mapping');

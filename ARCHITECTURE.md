@@ -1,5 +1,13 @@
 # SheetPilot AI architecture
 
+## Workspace lifecycle and recoverable operations
+
+[Workspace lifecycle](docs/WORKSPACE_LIFECYCLE.md) documents consistent allowlisted backups, isolated validated restoration, backend-derived guidance, exact stable-key version comparisons and explicit activation, and approved derived correction/reversal revisions. Active snapshots alone enter operational calculations. Historical original files, reports and executed outputs retain their lineage; review changes invalidate pending actions and current findings.
+
+[Agent work](docs/AGENT_WORK.md) describes the SQLite-persisted local worker, transactional claims/request deduplication, real step progress, heartbeat leases, safe-step cancellation and explicit retries. Browser reconnection does not start provider work. Restored active jobs become interrupted. The existing specialist tools, allowlists and human purchase-approval boundary remain in place.
+
+[Supplier planning](docs/SUPPLIER_PLANNING.md) adds a reviewed quote/terms policy and independently recorded supplier-order lines. Incoming stock requires current source lineage, explicit status/dates/units/currency and horizon eligibility. Source thresholds retain precedence; eligible demand fallbacks can use reviewed supplier delivery days. Pack/MOQ calculations use Decimal and the complete basis enters proposals, approval checks, audit records and Excel execution metadata. Workbook generation never records an incoming order or stock receipt.
+
 ## Local vertical slice
 
 ```text

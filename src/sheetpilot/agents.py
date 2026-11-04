@@ -158,7 +158,7 @@ def run_agents(store, workspace, message, mode, provider, task="custom", request
                 readiness = procurement_readiness(store, workspace, values.product_ids)
                 if not readiness["blockers"] and not readiness["low_stock_count"]:
                     result = {"status":"no_action", "draft_created":False, "approval_required":False,
-                        "message":"No reviewed products are below their reorder point. No purchase-order draft is needed." if inventory_tool(store,workspace) else "No reviewed inventory is available. Confirm an inventory mapping to assess replenishment."}
+                        "message":"Eligible, explicitly recorded incoming stock covers the reviewed reorder position. No additional purchase draft is needed." if readiness.get('covered_by_incoming_count') else "No reviewed products are below their reorder point. No purchase-order draft is needed." if inventory_tool(store,workspace) else "No reviewed inventory is available. Confirm an inventory mapping to assess replenishment."}
                 else:
                     action = propose(store, workspace, values.product_ids)
                     run["action_ids"].append(action["id"])

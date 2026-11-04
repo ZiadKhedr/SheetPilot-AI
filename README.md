@@ -15,6 +15,12 @@ Built for the Meta AI Hackathon with React, TypeScript, FastAPI and SQLite.
 - **Explore business performance:** view revenue, sales trends, inventory and stock-planning calculations from reviewed records, with links to source cells.
 - **Work with specialist agents:** ask Meta to select typed Sales, Inventory and Procurement tools and inspect their execution results.
 - **Approve an Excel output:** review a pending purchase proposal, approve or reject it, and download an additional workbook with Purchase Orders, Source Trace and Execution sheets.
+- **Recover and update workspaces:** download validated installation backups, restore into isolated storage, follow a backend-derived checklist, compare workbook versions using reviewed stable keys, and activate one snapshot at a time.
+- **Repair with review:** preview numeric/date interpretations and exact identifier reconciliation, approve a derived correction revision, or preview an audited reversal while preserving originals.
+- **Reconnect to saved agent work:** durable local jobs retain actual progress after reload, support safe cancellation and explicit context-checked retries, and never restart provider work on reconnect.
+- **Plan supplier purchases:** review delivery times, explicit base units, pack sizes and minimum quantities; separately record incoming supplier orders and inspect the full deterministic purchase calculation.
+
+See [workspace lifecycle](docs/WORKSPACE_LIFECYCLE.md), [supplier planning](docs/SUPPLIER_PLANNING.md) and [agent jobs](docs/AGENT_WORK.md) for workflows and boundaries.
 
 Original workbooks remain unchanged. Mapping and relationship review precede operational use; generating a purchase-order workbook requires human approval. Source hashes, deterministic calculations, idempotent execution and an audit timeline make the result traceable.
 
