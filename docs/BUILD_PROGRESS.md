@@ -1,5 +1,13 @@
 # SheetPilot AI build progress
 
+## Meta mapping validation recovery · November 4, 2026
+
+- Actual workspace recovery succeeded through the local API (200; four suggested tables). Reloaded the user's browser and observed the suggested Sales mapping with no error alerts. Original hashes and purchase actions were unchanged; human mapping/relationship review remains pending.
+
+- Replaced the generic invalid-column/repeated-field message with precise table/index/meaning diagnostics; included the rejected structured assignments in the bounded repair request; clarified absolute source indices, meaning uniqueness and mutually exclusive currency sources in the Meta instructions.
+- A redundant, explicitly header-backed table-currency hint no longer rejects a proposal that already maps a currency column. Invalid hints, duplicate meanings, unknown columns and manual dual-currency settings still fail safely. Proposals remain unconfirmed; originals and purchase approval are unchanged.
+- Validation: 231 Python tests passed with five documented skips; 34 mapping-focused tests passed; one real-backend Edge mapping workflow passed. Actual official Meta returned four valid unconfirmed table proposals for the verified synthetic demo core. Local server restarted on port 8000 with the fix.
+
 ## Reproducible recording data pack · November 4, 2026
 
 - Added a separate Nile Circuit Distribution pack: nine XLSX inputs, 6,000 core sales lines, 1,200 order headers, 40 stock SKUs, eight suppliers, offset headers, preserved custom columns and exact reviewed links. Existing application code, offline analyzer and regression fixtures remain unchanged.

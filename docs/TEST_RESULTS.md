@@ -1,5 +1,12 @@
 # SheetPilot AI — verification evidence
 
+## Meta mapping recovery · November 4, 2026
+
+- Retried the actual selected workspace operation through the restarted local API: HTTP 200, four Meta proposals saved as `suggested`. Original SHA256 values and purchase actions were unchanged. Reloaded the user's mapping tab and verified the proposed Sales table is visible with zero error alerts; no mapping/relationship was confirmed.
+
+- Full offline suite: **231 passed, 5 skipped**, one existing Starlette warning (61.68 seconds). Focused mapping validation/recovery subset: **34 passed**. Tests cover redundant header-backed currency plus a mapped currency column, exact duplicate-meaning diagnostics in the repair request, invalid source indices, unsupported currency, unchanged atomic rejection and manual confirmation boundaries.
+- Real-backend Edge mapping/currency/relationship workflow: **1 passed** (14.7 seconds). Actual official Meta verification on the generated synthetic Nile Circuit core files returned valid unconfirmed proposals for all four tables, with explicit currency columns and no redundant table constants. No fixture provider was used for that verification. Uploaded files were checked byte-for-byte against the synthetic pack before any live verification; unrelated user working files remain untouched.
+
 ## Workspace lifecycle validation · November 4, 2026
 
 - **Final browser rerun: 12 passed, 2 skipped** in 1.5 minutes. All six new milestone scenarios and original report, mapping, demand, supplier recovery, intake and mobile workflows passed against an isolated real FastAPI/SQLite backend in installed Edge. The two skipped scenarios are opt-in live Meta mapping-to-output browser tests; the new actual Meta durable-job test passed separately. The configured credential was absent from staged/tracked files and **451 historical Git blobs**; runtime paths remain excluded. `git diff --check`, TypeScript and Vite passed. `src/excel_intelligence` has no source changes relative to the baseline.

@@ -1,6 +1,12 @@
 # Semantic mapping and relationship review
 
-The catalog contains **53 meanings and nine business entities**, plus `unknown`.
+The catalog contains **54 meanings and nine business entities**, plus `unknown`.
+
+## Mapping validation recovery
+
+Meta must use absolute worksheet column indices and assign each canonical meaning at most once per table (except `ignore`). A mapped currency column supplies row currency. If Meta also returns a table-currency hint backed by explicit monetary headers, validation discards that redundant setting while retaining the proposed column. Unsupported currency hints still fail; manual review still rejects choosing both currency sources.
+
+Invalid-column and repeated-meaning errors name the table, offending indices and repeated meanings. The single bounded schema-repair request includes the rejected structured field assignments and precise diagnostic, rather than a generic rejection alone. No private reasoning is sent or exposed. Invalid proposals still fail atomically, and every accepted proposal remains unconfirmed until human review.
 
 | Entity | Grain / use |
 |---|---|

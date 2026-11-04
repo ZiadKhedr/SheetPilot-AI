@@ -19,11 +19,16 @@ def label_suggestions(table):
 def validate_fields(table, fields, entity, confirm, constants=None):
     if entity not in ENTITY_CATALOG or any(f not in {*FIELDS, "ignore"} for f in fields.values()):
         raise Problem("Unknown business entity or meaning.")
-    if any(str(c) not in {str(column["index"]) for column in table["columns"]} for c in fields):
-        raise Problem("Mapping references a column outside this table.")
+    allowed = {str(column['index']) for column in table['columns']}
+    outside = sorted(str(c) for c in fields if str(c) not in allowed)
+    if outside:
+        raise Problem('Mapping references a column outside this table: ' + ', '.join(outside) +
+                      '. Use the absolute worksheet column indices: ' + ', '.join(sorted(allowed,key=int)) + '.')
     used = [f for f in fields.values() if f != "ignore"]
     if len(used) != len(set(used)):
-        raise Problem("Each canonical field can map to only one source column.")
+        repeated = sorted({f for f in used if used.count(f)>1})
+        raise Problem('Each canonical field can map to only one source column. Repeated meanings: ' +
+                      '; '.join(f + ' in columns ' + ', '.join(c for c,v in fields.items() if v==f) for f in repeated) + '.')
     constants = constants or {}
     if set(constants) - {"currency"} or any(not re.fullmatch(r"[A-Z]{3}", v) for v in constants.values()):
         raise Problem("Table currency must be an explicit uppercase three-letter code.")
@@ -112,6 +117,9 @@ Prefer actual net sale price when observed row arithmetic supports it. Preserve 
 not ignore. Ignore only clearly irrelevant columns. Use unknown for uncertain tables, not as a substitute for a supported entity.
 Do not invent reorder thresholds, quantities, costs, or missing columns. Inventory can be mapped without reorder thresholds.
 Currency must be an explicit column or exactly the provided currency hint from headers; no country or symbol-based guesses.
+If you map a currency column, set the table-level currency to null. Each meaning may occur only once per table,
+except ignore. Preserve additional columns with the same meaning as custom fields by omitting their mappings.
+column_index is the absolute worksheet index supplied in columns.index, never the position within this table.
 header_row must be the current row or one of the supplied candidates. Use row-aligned evidence and column profiles, not labels alone.
 For uncertain columns provide alternatives and low confidence; explain the specific uncertainty in warnings. Confidence is a model
 estimate, not measured accuracy. Relationships are only candidate context; human review and source overlap decide actual joins.
@@ -147,10 +155,14 @@ def _validated_plan(plan, batch, profiles, store, workspace):
         if len(fields) != len(proposal.fields):
             raise ProposalError("Meta returned duplicate column mappings.")
         table["columns"] = columns
+        # A valid source currency column supplies row currency. A redundant,
+        # header-backed table hint adds no setting and must not reject the batch.
+        if 'currency' in fields.values() and constants:
+            constants = {}
         try:
             issues = validate_fields(table, fields, proposal.entity, False, constants)
-        except Problem:
-            raise ProposalError("Meta referenced invalid source columns or repeated fields; proposals were rejected.")
+        except Problem as exc:
+            raise ProposalError(f"Meta proposal for {table['sheet']} {table['ref']} failed validation: {exc}") from None
         label_fields, _, _ = infer_labels(columns)
         sensitive = {"unit_price", "list_unit_price", "revenue", "order_total", "stock_quantity", "opening_stock", "units_sold", "unit_cost"}
         semantic_warnings = [f"Column {col}: Meta proposed {field}, but the explicit header suggests {label_fields[col]}. Review this ambiguity."
@@ -205,6 +217,7 @@ def meta_mapping(store, workspace, provider, table_ids=None, include_confirmed=F
             raise Problem("Selected table summaries are too wide. Select a narrower source region or analyze fewer tables.")
         messages = [{"role": "developer", "content": MAPPING_INSTRUCTIONS}, {"role": "user", "content": summary}]
         for attempt in range(2):
+            plan = None
             try:
                 plan = provider.structured(messages, SemanticPlan)
                 checked = _validated_plan(plan, batch, profiles, store, workspace)
@@ -213,8 +226,14 @@ def meta_mapping(store, workspace, provider, table_ids=None, include_confirmed=F
                 # One bounded repair, never an automatic fallback to rules or fabricated results.
                 if attempt or not (isinstance(exc, ProposalError) or exc.output_error):
                     raise MetaError(str(exc) + " No mapping changes were applied.", status=exc.status) from None
+                if plan is not None:
+                    rejected = {'tables':[{'table_id':t.table_id,'currency':t.currency,
+                        'fields':[{'column_index':f.column_index,'field':f.field} for f in t.fields]} for t in plan.tables]}
+                    messages.append({'role':'assistant','content':json.dumps(rejected,ensure_ascii=False)})
                 messages.append({"role": "user", "content": "The previous proposal was rejected: " + str(exc) +
-                                 " Re-read the source summaries and return a complete valid proposal."})
+                                 " Correct the identified table, absolute column indices or repeated meanings. "
+                                 "Each meaning except ignore can occur once per table. Return every requested table exactly once. "
+                                 "A mapped currency column requires table currency null. Keep unresolved columns custom by omitting them."})
         updates.extend(checked)
         summaries.append(plan.summary)
     with store.connection(immediate=True) as con:
