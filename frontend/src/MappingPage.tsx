@@ -12,7 +12,7 @@ interface Preview{columns:Column[];row_count:number;header_candidates:{row:numbe
 export function MappingPage(context:Context){
  const {state,provider,root,busy,perform,fields,catalog}=context;
  const [filter,setFilter]=useState('all');
- const shown=state.tables.filter(t=>filter==='all'||(filter==='needs_review'?t.status!=='confirmed'&&t.status!=='ignored':t.status===filter));
+ const shown=state.tables.filter(t=>!state.workbooks.find(w=>w.id===t.workbook_id)?.superseded_by).filter(t=>filter==='all'||(filter==='needs_review'?t.status!=='confirmed'&&t.status!=='ignored':t.status===filter));
  return <>
   <SectionTitle eyebrow="UNDERSTANDING, WITH EVIDENCE" title="Make the right connections." description="Map each table at its real business grain. Review evidence before using its data."/>
   <div className="mapping-toolbar panel"><div><Sparkles size={21}/><div><strong>Business meaning, with context.</strong><p>{fields.length} meanings · orders, customers, products, inventory, suppliers, payments and more.</p><small>Meta uses profiles, aligned samples, price arithmetic, and the other tables. Confirmed mappings stay unchanged unless you reanalyze a specific table.</small></div></div>

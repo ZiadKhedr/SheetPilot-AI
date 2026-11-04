@@ -11,6 +11,7 @@ from .demand import demand_analysis
 from .models import ComparisonArgs, DraftArgs, InventoryArgs, SalesSelection
 from .provider import MetaError, strict_schema
 from .store import Problem, now, uid
+from .lifecycle import active_workbooks
 
 TOOL_MODELS = {"sales_analysis": SalesSelection, "sales_comparison": ComparisonArgs,
                "inventory_analysis": InventoryArgs, "procurement_review": DraftArgs, "draft_purchase_orders": DraftArgs}
@@ -90,7 +91,7 @@ def run_agents(store, workspace, message, mode, provider, task="custom", request
     run = store.put(workspace, "run", dict(id=uid(), title=title, task=task, request_id=request_id,
         message=message, origin="meta" if mode == "meta" else "guided-tools", status="running", steps=[],
         summary="", action_ids=[], blockers=[], input_fingerprint=snapshot,
-        source_versions=[{"id":w["id"],"name":w["name"],"sha256":w["sha256"]} for w in store.list(workspace,"workbook")]))
+        source_versions=[{"id":w["id"],"name":w["name"],"sha256":w["sha256"]} for w in active_workbooks(store,workspace)]))
 
     def execute(name, arguments):
         if name not in allowed:

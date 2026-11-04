@@ -1,0 +1,38 @@
+import {expect,test} from '@playwright/test';
+import {execFileSync} from 'node:child_process';
+import path from 'node:path';
+const python=process.env.SHEETPILOT_PYTHON||path.resolve('../.venv/Scripts/python.exe');
+function workbook(rows:string){return execFileSync(python,['-c',`from openpyxl import Workbook; from io import BytesIO; import sys; b=Workbook(); s=b.active; s.title='Stock'; s.append(['SKU','On hand','Reorder point','Target stock','Currency']); [s.append([k,q,3,10,'USD']) for k,q in ${rows}]; o=BytesIO(); b.save(o); sys.stdout.buffer.write(o.getvalue())`])}
+test('review and activation preserve old originals and count only one workbook snapshot',async({page,request})=>{
+ const workspace=(await (await request.post('/api/workspaces',{data:{name:'Fictional snapshot browser'}})).json()).id;
+ const base='/api/workspaces/'+workspace;
+ const original=workbook("[('P1',2),('P2',2),('P4',2)]");
+ const parent=await (await request.post(base+'/uploads',{multipart:{file:{name:'Stock.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:original}}})).json();
+ let state=await (await request.get(base+'/state')).json();const table=state.tables[0];
+ expect((await request.put(base+'/tables/'+table.id,{data:{entity:'inventory',fields:{'1':'product_id','2':'stock_quantity','3':'reorder_point','4':'target_stock','5':'currency'},header_row:1,expected_revision:0}})).ok()).toBe(true);
+ await page.addInitScript(id=>localStorage.setItem('sheetpilot-workspace',id),workspace);
+ await page.goto('/files');
+ await page.getByLabel('New snapshot for Stock.xlsx',{exact:true}).setInputFiles({name:'Stock-latest.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:workbook("[('P2',2),('P1',5),('P3',3)]")});
+ await expect(page).toHaveURL(/versions\?workbook=/);
+ await expect(page.getByText('Inactive candidate',{exact:false})).toBeVisible();
+ state=await (await request.get(base+'/state')).json();
+ const next=state.workbooks.find((w:any)=>w.previous_workbook_id===parent.id);const mapped=state.tables.find((t:any)=>t.workbook_id===next.id);
+ expect((await (await request.get(base+'/dashboard')).json()).inventory_units).toBe('6');
+ await page.locator('a[href="/mapping#table-'+mapped.id+'"]').click();
+ await page.locator('#table-'+mapped.id).getByRole('button',{name:'Confirm mapping',exact:true}).click();
+ await expect(page.locator('#table-'+mapped.id)).toHaveAttribute('data-status','confirmed');
+ await page.goto('/versions?workbook='+next.id);
+ await page.getByLabel('product_id',{exact:true}).check();
+ await page.getByRole('button',{name:'Preview version changes'}).click();
+ await expect(page.getByLabel('Snapshot comparison')).toContainText('1 added · 1 removed · 1 changed · 1 unchanged');
+ expect((await (await request.get(base+'/dashboard')).json()).inventory_units).toBe('6');
+ await page.getByLabel('I reviewed the differences and confirm these identifiers are stable record keys.').check();
+ await page.getByRole('button',{name:'Save version review'}).click();
+ await page.getByRole('button',{name:'Activate reviewed version'}).click();
+ await expect(page).toHaveURL(/\/files$/);
+ expect((await (await request.get(base+'/dashboard')).json()).inventory_units).toBe('10');
+ expect(await (await request.get(base+'/workbooks/'+parent.id+'/download')).body()).toEqual(original);
+ state=await (await request.get(base+'/state')).json();
+ expect(state.workbooks.filter((w:any)=>w.active)).toHaveLength(1);
+ expect(state.actions).toEqual([]);
+});

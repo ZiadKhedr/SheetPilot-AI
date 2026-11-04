@@ -11,13 +11,17 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from .analytics import inventory_tool, money, quoted_cost, records
 from .ingestion import digest
 from .store import Problem, now, uid
+from .lifecycle import active_workbooks, active_tables
 
 
 def fingerprint(store, workspace, con=None):
+    tables = active_tables(store,workspace,con)
+    identifiers = {t['id'] for t in tables}
     value = {
-        "workbooks": sorted((w["id"], w["sha256"]) for w in store.list(workspace, "workbook", con)),
-        "tables": sorted((t["id"], t["revision"], t["status"]) for t in store.list(workspace, "table", con)),
-        "relationships": sorted((r["id"], r["status"], r["revisions"]) for r in store.list(workspace, "relationship", con)),
+        "workbooks": sorted((w["id"], w["sha256"]) for w in active_workbooks(store, workspace, con)),
+        "tables": sorted((t["id"], t["revision"], t["status"]) for t in tables),
+        "relationships": sorted((r["id"], r["status"], r["revisions"]) for r in store.list(workspace, "relationship", con)
+                                if {r['left_table'],r['right_table']} <= identifiers),
         "demand_policy": [(p["id"],p["revision"],p["enabled"]) for p in store.list(workspace,"demand_policy",con)],
     }
     return sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
@@ -40,7 +44,7 @@ def procurement_readiness(store, workspace, product_ids=None):
             raise Problem("Requested products are not in the validated low-stock list.")
         stock = [r for r in stock if r["product_id"] in product_ids]
     suppliers = [r for r in records(store, workspace) if r["entity"] == "suppliers"]
-    tables = {t["id"]: t for t in store.list(workspace, "table")}
+    tables = {t["id"]: t for t in active_tables(store, workspace)}
     links = []
     for relation in store.list(workspace, "relationship"):
         left, right = tables.get(relation["left_table"]), tables.get(relation["right_table"])
@@ -167,7 +171,7 @@ def propose(store, workspace, product_ids=None):
             justification="Validated on-hand quantity is below the reviewed reorder threshold. Restore to target stock; purchase orders do not alter on-hand inventory.",
             lines=lines, totals=[{"currency": c, "amount": money(v)} for c,v in sorted(totals.items())],
             source_versions=[{"workbook_id": w["id"], "name": w["name"], "sha256": w["sha256"]}
-                             for w in store.list(workspace, "workbook", con)],
+                             for w in active_workbooks(store, workspace, con)],
             snapshot=snapshot, product_ids=product_ids or [], idempotency_key=key,
             validation=["Reviewed mappings", "Confirmed product relationships", "Unambiguous supplier quote",
                         "Matching explicit currency", "Deterministic quantities and Decimal money"] +

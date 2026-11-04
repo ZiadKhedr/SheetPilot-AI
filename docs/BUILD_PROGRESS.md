@@ -2,6 +2,8 @@
 
 ## Workspace lifecycle upgrade · November 4, 2026
 
+- Milestone 3 complete: immutable workbook families with inactive version candidates; compatible mapping proposals still require review; exact reviewed composite identifiers; schema/added/changed/removed previews; ambiguity blockers; separate revision-checked review and activation. Only active snapshots enter records, planning and action fingerprints. Activation conflicts pending actions and marks historical analyses stale while preserving executed outputs/reports and source hashes. Twenty-six version/demand/action tests, one frontend test and one real-backend Edge workflow passed; TypeScript/Vite built.
+
 - Milestone 2 complete: workspace-aware next steps returned by the state API and refreshed after mutations; exact mapping/relationship/run/action links; plain-language data and procurement blockers; current-fingerprint analysis recognition. Seven checklist/API tests, one frontend test and one real-backend Edge/mobile scenario passed; TypeScript/Vite built.
 
 - Baseline: clean working tree at `976be9b`; verified existing `ZiadKhedr/SheetPilot-AI` remote at the same main revision. 183 offline Python tests passed, four documented skips; 45 frontend tests passed. Restricted filesystem tests were rerun with normal permissions.

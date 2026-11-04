@@ -58,6 +58,8 @@ def review_mapping(store, workspace, identifier, body: MappingInput):
         if table["revision"] != body.expected_revision:
             raise Problem("Mapping changed since you opened it. Refresh before saving.", 409)
         workbook = store.get(workspace, "workbook", table["workbook_id"], con)
+        if workbook.get('superseded_by'):
+            raise Problem('This historical snapshot is immutable. Review the active version instead.', 409)
         table["columns"] = columns_for(workbook["report"], table["sheet"], table["ref"], body.header_row)
         issues = validate_fields(table, body.fields, body.entity, body.confirm and not body.ignore, body.constants)
         if body.confirm and not body.ignore:

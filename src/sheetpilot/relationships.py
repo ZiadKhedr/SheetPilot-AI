@@ -20,7 +20,8 @@ def _column_values(rows, column):
 
 
 def candidates(store, workspace):
-    tables = [t for t in store.list(workspace, "table") if t["status"] != "ignored"]
+    books={w['id']:w for w in store.list(workspace,'workbook')}
+    tables = [t for t in store.list(workspace, "table") if t["status"] != "ignored" and not books[t['workbook_id']].get('superseded_by')]
     if len(tables) > 100:
         raise Problem("Relationship discovery supports up to 100 active tables. Exclude unrelated regions first.")
     columns, notes = {}, []
@@ -35,6 +36,9 @@ def candidates(store, workspace):
             notes.append(f"{table['sheet']} {table['ref']}: no mapped or recognizable business identifier. Map an ID column first.")
     proposals, compared = [], 0
     for left, right in combinations(tables, 2):
+        first,second=books[left['workbook_id']],books[right['workbook_id']]
+        if first['id']!=second['id'] and first.get('logical_id',first['id'])==second.get('logical_id',second['id']):
+            continue  # Alternative snapshots are not independent operational tables.
         # Avoid proposing a self-join between overlapping regions on the same worksheet.
         if left["workbook_id"] == right["workbook_id"] and left["sheet"] == right["sheet"]:
             from openpyxl.utils import range_boundaries

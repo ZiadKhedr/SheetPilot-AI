@@ -8,6 +8,7 @@ from openpyxl.utils import get_column_letter
 from .mapping import identifier, overlapping_data, source_rows
 from .semantics import ENTITY_CATALOG, NUMERIC_FIELDS, currency_hint
 from .store import Problem, uid
+from .lifecycle import active_tables
 
 
 CENT = Decimal("0.01")
@@ -46,7 +47,7 @@ def materialize(store, workspace, con=None):
         with store.connection(immediate=True) as transaction:
             return materialize(store, workspace, transaction)
     records, issues = [], []
-    for table in store.list(workspace, "table", con):
+    for table in active_tables(store, workspace, con):
         if table["status"] != "confirmed":
             continue
         seen = set()
@@ -153,7 +154,7 @@ def materialize(store, workspace, con=None):
 
 def enrich_reviewed_records(store, workspace, rows, issues, con=None):
     """Only a unique master across all reviewed exact links may enrich missing context."""
-    tables = {t["id"]: t for t in store.list(workspace, "table", con)}
+    tables = {t["id"]: t for t in active_tables(store, workspace, con)}
     by_table, joins = defaultdict(list), defaultdict(list)
     for row in rows: by_table[row["source"]["table_id"]].append(row)
     for link in store.list(workspace, "relationship", con):
@@ -198,7 +199,7 @@ def enrich_reviewed_records(store, workspace, rows, issues, con=None):
 def legacy_overlaps(store, workspace, con=None):
     """Read older workspaces safely without rewriting their operator decisions."""
     groups, excluded = defaultdict(list), {}
-    for table in store.list(workspace, "table", con):
+    for table in active_tables(store, workspace, con):
         if table["status"] != "confirmed":
             continue
         siblings = groups[(table["workbook_id"], table["sheet"])]
@@ -217,10 +218,11 @@ def records(store, workspace):
     with store.connection() as con:
         con.execute("BEGIN")
         excluded = legacy_overlaps(store, workspace, con)
+        live = {t['id'] for t in active_tables(store,workspace,con)}
         return [{"id": r["id"], "entity": r["entity"], "product_id": r["product_id"],
                  "data": json.loads(r["data"]), "source": json.loads(r["source"])}
                 for r in con.execute("SELECT * FROM records WHERE workspace=? ORDER BY rowid", (workspace,))
-                if r["table_id"] not in excluded]
+                if r["table_id"] not in excluded and r['table_id'] in live]
 
 
 def inventory_tool(store, workspace):
@@ -344,6 +346,6 @@ def dashboard(store, workspace):
                              "header_hint": currency_hint(t["columns"])}
                             for t in store.list(workspace,"table") if t["id"] in currency_gaps],
         "available_entities": sorted(entities),
-        "confirmed_tables": sum(t["status"] == "confirmed" for t in store.list(workspace, "table")),
+        "confirmed_tables": sum(t["status"] == "confirmed" for t in active_tables(store, workspace)),
         "pending_actions": sum(a["status"] == "pending" for a in store.list(workspace, "action")),
     }

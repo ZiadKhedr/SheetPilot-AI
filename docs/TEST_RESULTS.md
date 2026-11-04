@@ -2,6 +2,8 @@
 
 ## Workspace lifecycle validation · November 4, 2026
 
+- Workbook versions: **26 passed** version/demand/action backend tests, **1 passed** frontend upload-state test; TypeScript/Vite build passed; **1 passed** real-backend Edge upload → mapping review → exact-key comparison → review → explicit activation workflow (7.3 seconds). Added/changed/removed records matched the independent fixture, reordered unchanged rows stayed unchanged, inactive snapshots did not change totals, activation counted one snapshot, and old original downloads remained byte-identical. Missing/duplicate keys, stale reviews and changed source hashes refused activation. Historical report/output bytes and executed action metadata stayed unchanged; pending actions conflicted.
+
 - Guided checklist: **7 passed** backend checklist/API workflow tests, **1 passed** component test, TypeScript/Vite build passed, **1 passed** real-backend Edge scenario (5.4 seconds). Verified empty workspace states, actual review transitions, stale analysis fingerprints, pending approval targets, workspace switching, exact table navigation and 390-pixel layout.
 
 - Baseline: **183 passed, 4 skipped** Python tests; **45 passed** frontend tests. Sandbox temporary-folder errors were environmental; the normal-permission baseline passed.

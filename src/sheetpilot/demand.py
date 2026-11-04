@@ -53,7 +53,8 @@ def demand_analysis(store, workspace, parameters=None, all_records=None):
         sales_by_product[(sale_table,sale["product_id"])].append(sale)
         d=_date(sale["data"].get("sale_date"))
         if d and date(1900,1,1)<=d<=today: dates_by_table[sale_table].append(d)
-    tables = {t["id"]: t for t in store.list(workspace,"table")}
+    from .lifecycle import active_tables
+    tables = {t["id"]: t for t in active_tables(store,workspace)}
     excluded = legacy_overlaps(store, workspace)
     links = defaultdict(list)
     for relation in store.list(workspace,"relationship"):

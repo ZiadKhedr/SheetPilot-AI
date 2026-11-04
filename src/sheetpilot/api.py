@@ -98,7 +98,11 @@ def create_app(settings=None):
     @app.get("/api/workspaces/{workspace}/workbooks/{identifier}/download", dependencies=[Depends(auth)])
     def original(workspace: str, identifier: str):
         workbook = store.get(workspace, "workbook", identifier)
-        return FileResponse(store.root / "originals" / f"{workbook['id']}.xlsx", filename=workbook["name"])
+        from .ingestion import digest
+        path=store.root / "originals" / f"{workbook['id']}.xlsx"
+        if not path.is_file() or digest(path)!=workbook['sha256']:
+            raise Problem('Original workbook is missing or changed; download refused.',409)
+        return FileResponse(path, filename=workbook["name"])
 
     # Further vertical slices register their own explicit routes here.
     from .routes import register

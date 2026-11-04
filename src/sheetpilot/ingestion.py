@@ -34,7 +34,7 @@ def columns_for(report, sheet_name, ref, header_row):
             for c in range(c1, c2 + 1)]
 
 
-def ingest(store, workspace, filename, content):
+def ingest(store, workspace, filename, content, previous_id=None):
     store.workspace(workspace)
     if not filename or not filename.lower().endswith(".xlsx"):
         raise Problem("Upload an .xlsx workbook.")
@@ -65,11 +65,28 @@ def ingest(store, workspace, filename, content):
                     origin="unmapped", revision=0, structure_warnings=region["warnings"],
                     ambiguous=region["ambiguous"]))
         with store.connection(immediate=True) as con:
+            previous = store.get(workspace, 'workbook', previous_id, con) if previous_id else None
+            if previous and not previous.get('active', True):
+                raise Problem('Upload a new snapshot of the currently active workbook version.', 409)
             if con.execute("""SELECT 1 FROM objects WHERE workspace=? AND kind='workbook'
                                AND json_extract(payload,'$.sha256')=? LIMIT 1""", (workspace, source_hash)).fetchone():
                 raise Problem("This exact workbook has already been uploaded to this workspace.", 409)
+            family = previous.get('logical_id', previous['id']) if previous else identifier
+            version = 1 + max((w.get('version',1) for w in store.list(workspace,'workbook',con)
+                               if w.get('logical_id',w['id']) == family), default=0)
             workbook = store.put(workspace, "workbook", dict(id=identifier, name=clean_name, sha256=source_hash,
-                report=report, size=len(content)), con)
+                report=report, size=len(content), active=not bool(previous), logical_id=family, version=version,
+                previous_workbook_id=previous_id), con)
+            if previous:
+                old_tables = [t for t in store.list(workspace,'table',con) if t['workbook_id']==previous_id]
+                for table in tables:
+                    matches = [t for t in old_tables if t['sheet']==table['sheet'] and
+                               [(c['index'],c['label']) for c in t['columns']] == [(c['index'],c['label']) for c in table['columns']]]
+                    if len(matches)==1 and matches[0]['status']=='confirmed':
+                        old = matches[0]
+                        table.update(entity=old['entity'],fields=old['fields'],constants=old.get('constants',{}),
+                                     origin='version-proposal',status='suggested',
+                                     evidence=['Compatible prior mapping proposed. Review this new snapshot explicitly.'])
             for table in tables:
                 store.put(workspace, "table", table, con)
             store.event(workspace, "workbook.uploaded", f"Inspected {clean_name}.",
