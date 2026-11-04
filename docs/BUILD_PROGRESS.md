@@ -1,5 +1,10 @@
 # SheetPilot AI build progress
 
+## Three-minute English recording script · November 4, 2026
+
+- Added an exact 284-word English narration with nine timed screen segments, a 2:55 edited runtime target, current sidebar/button labels, human mapping/link review and explicit purchase approval. Processing waits may be shortened transparently; no continuous three-minute provider runtime is promised.
+- Checked screen/control names against frontend source, distinguished the NC-001 line amount from the full proposal, and included the short guide in the downloadable ZIP. ZIP integrity and nine-input count passed. Existing user-extracted/open workbooks were excluded from packaging.
+
 ## Meta mapping validation recovery · November 4, 2026
 
 - Actual workspace recovery succeeded through the local API (200; four suggested tables). Reloaded the user's browser and observed the suggested Sales mapping with no error alerts. Original hashes and purchase actions were unchanged; human mapping/relationship review remains pending.
