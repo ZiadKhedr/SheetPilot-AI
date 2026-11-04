@@ -9,7 +9,8 @@ class BodyLimitMiddleware:
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http" or scope["method"] not in {"POST", "PUT", "PATCH"} or not scope["path"].startswith("/api/"):
             return await self.app(scope, receive, send)
-        limit = self.upload_limit if scope["path"].endswith("/uploads") else self.json_limit
+        limit = ((64 * 1024 * 1024 + 65536) if scope["path"] == "/api/backups/restore" else
+                 self.upload_limit if scope["path"].endswith(("/uploads", "/versions")) else self.json_limit)
         headers = dict(scope["headers"])
         try:
             declared = int(headers.get(b"content-length", b"0"))

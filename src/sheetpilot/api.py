@@ -101,6 +101,8 @@ def create_app(settings=None):
     # Further vertical slices register their own explicit routes here.
     from .routes import register
     register(app, store, settings, auth)
+    from .workspace_routes import register_workspace_routes
+    register_workspace_routes(app, store, auth)
 
     dist = ROOT / "frontend" / "dist"
     if (dist / "assets").is_dir() and (dist / "index.html").is_file():

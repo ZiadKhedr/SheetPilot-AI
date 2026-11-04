@@ -1,5 +1,11 @@
 # SheetPilot AI — verification evidence
 
+## Workspace lifecycle validation · November 4, 2026
+
+- Baseline: **183 passed, 4 skipped** Python tests; **45 passed** frontend tests. Sandbox temporary-folder errors were environmental; the normal-permission baseline passed.
+- Backup/restore: **8 passed** backend tests. A complete round trip preserved reviewed mappings, relationships, policy, normalized data, full audit history, originals and an executed output. Hostile paths, changed hashes, incompatible executable schema and missing references were rejected before publication. Authentication and existing-data preservation passed.
+- Recovery frontend: **2 passed** component tests; TypeScript/Vite production build passed. **1 passed** real-backend Edge browser scenario covering backup download, isolated restore, existing originals and invalid-archive feedback (4.7 seconds). Direct binary API export passed; Edge binary fetch stalled, so the browser uses bounded base64 JSON transport for the same ZIP bytes.
+
 ## Agent jobs and visible work products · November 4, 2026
 
 - Added five named jobs, equal-window sales comparisons, ranked inventory risks, a read-only supplier review, visible specialist deliverables and source-backed text work reports. Real persisted tool steps drive progress; counts/runtime are measured. Purchase preparation remains a separate allowlisted action with human approval.

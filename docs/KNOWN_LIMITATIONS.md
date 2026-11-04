@@ -1,5 +1,9 @@
 # Known limitations
 
+## Workspace recovery
+
+Backups are plaintext installation snapshots with limits of 64 MiB compressed, 256 MiB expanded and 2,048 entries. Restore publishes a separate local installation; configure its data folder and credentials in another server process. It does not merge into the running workspace. Only the current manifest/database schema is supported. See [workspace lifecycle](WORKSPACE_LIFECYCLE.md).
+
 ## Verified scope
 Local upload/snapshot workflow, reviewed semantics and relationships, dashboard calculations, bounded logical agents, and approved additional Excel purchase-order outputs. Full results are in TEST_RESULTS.md.
 

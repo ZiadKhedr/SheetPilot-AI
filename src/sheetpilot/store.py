@@ -6,6 +6,8 @@ from pathlib import Path
 import sqlite3
 from uuid import uuid4
 
+SCHEMA_VERSION = 1
+
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -44,6 +46,10 @@ class Store:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,workspace TEXT NOT NULL,
                 kind TEXT NOT NULL,message TEXT NOT NULL,details TEXT NOT NULL,created TEXT NOT NULL);
             """)
+            version = con.execute("PRAGMA user_version").fetchone()[0]
+            if version > SCHEMA_VERSION:
+                raise Problem("This installation needs a newer SheetPilot version to open its database.", 409)
+            con.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
 
     @contextmanager
     def connection(self, immediate=False, *, create=False):

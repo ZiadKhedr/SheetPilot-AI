@@ -13,11 +13,21 @@ export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
  }
  return response.json() as Promise<T>;
 }
-export async function download(path:string,name:string){
- const response=await fetch('/api'+path,{headers:token()?{Authorization:'Bearer '+token()}:{}});
+export async function download(path:string,name:string,method='GET'){
+ const headers:Record<string,string>=token()?{Authorization:'Bearer '+token()}:{};
+ if(method==='POST')headers['Content-Type']='application/json';
+ const response=await fetch('/api'+path,{method,headers,body:method==='POST'?'{}':undefined});
  if(!response.ok){const data=await response.json();throw new Error(data.detail||'Download failed')}
  const blob=await response.blob();const url=URL.createObjectURL(blob);
  const anchor=document.createElement('a');anchor.href=url;anchor.download=name;anchor.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+export async function downloadBackup(){
+ const archive=await api<{name:string;content:string}>('/backups/export?encoding=base64');
+ const decoded=atob(archive.content),bytes=new Uint8Array(decoded.length);
+ for(let i=0;i<decoded.length;i++)bytes[i]=decoded.charCodeAt(i);
+ const url=URL.createObjectURL(new Blob([bytes],{type:'application/zip'}));
+ const anchor=document.createElement('a');anchor.href=url;anchor.download='SheetPilot-Backup.zip';anchor.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 export function formatMoney(amount:string|number,currency='USD',precision=2){
