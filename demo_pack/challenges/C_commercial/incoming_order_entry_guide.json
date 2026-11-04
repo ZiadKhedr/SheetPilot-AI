@@ -1,0 +1,96 @@
+{
+  "note": "Human-entry values only. No application record exists until separately reviewed and saved.",
+  "planning_date": "2026-11-03",
+  "horizon_days": 14,
+  "supplier_rules": [
+    {
+      "product_id": "NC-001",
+      "supplier_id": "NCS-001",
+      "quote_sheet": "Supplier Quotes",
+      "quote_row": 8,
+      "lead_time_days": 7,
+      "pack_size": "12",
+      "min_order_quantity": "48",
+      "unit_of_measure": "each",
+      "currency": "EGP",
+      "price_basis": "per_base_unit"
+    },
+    {
+      "product_id": "NC-002",
+      "supplier_id": "NCS-002",
+      "quote_sheet": "Supplier Quotes",
+      "quote_row": 9,
+      "lead_time_days": 5,
+      "pack_size": "6",
+      "min_order_quantity": "12",
+      "unit_of_measure": "each",
+      "currency": "EGP",
+      "price_basis": "per_base_unit"
+    },
+    {
+      "product_id": "NC-003",
+      "supplier_id": "NCS-003",
+      "quote_sheet": "Supplier Quotes",
+      "quote_row": 10,
+      "lead_time_days": 5,
+      "pack_size": "6",
+      "min_order_quantity": "12",
+      "unit_of_measure": "each",
+      "currency": "EGP",
+      "price_basis": "per_base_unit"
+    }
+  ],
+  "confirmed_example": {
+    "order_reference": "EXT-NC-2026-0048",
+    "product_id": "NC-001",
+    "supplier_id": "NCS-001",
+    "ordered_quantity": "48",
+    "received_quantity": "0",
+    "unit_of_measure": "each",
+    "currency": "EGP",
+    "ordered_date": "2026-11-02",
+    "expected_date": "2026-11-06",
+    "status": "confirmed"
+  },
+  "optional_excluded_examples": [
+    {
+      "order_reference": "EXCLUDED-OVERDUE",
+      "product_id": "NC-001",
+      "supplier_id": "NCS-001",
+      "ordered_quantity": "48",
+      "received_quantity": "0",
+      "unit_of_measure": "each",
+      "currency": "EGP",
+      "ordered_date": "2026-10-29",
+      "expected_date": "2026-11-02",
+      "status": "confirmed",
+      "reason": "overdue at snapshot"
+    },
+    {
+      "order_reference": "EXCLUDED-CANCELLED",
+      "product_id": "NC-001",
+      "supplier_id": "NCS-001",
+      "ordered_quantity": "48",
+      "received_quantity": "0",
+      "unit_of_measure": "each",
+      "currency": "EGP",
+      "ordered_date": "2026-11-02",
+      "expected_date": "2026-11-06",
+      "status": "cancelled",
+      "reason": "cancelled status"
+    },
+    {
+      "order_reference": "EXCLUDED-LATE",
+      "product_id": "NC-001",
+      "supplier_id": "NCS-001",
+      "ordered_quantity": "48",
+      "received_quantity": "0",
+      "unit_of_measure": "each",
+      "currency": "EGP",
+      "ordered_date": "2026-11-02",
+      "expected_date": "2026-11-18",
+      "status": "confirmed",
+      "reason": "outside 14-day horizon"
+    }
+  ]
+}

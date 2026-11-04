@@ -1,0 +1,1771 @@
+{
+  "company": "Nile Circuit Distribution",
+  "as_of": "2026-11-03",
+  "seed": 42,
+  "tables": [
+    {
+      "entity": "sales",
+      "sheet": "Sales Lines",
+      "header_row": 4,
+      "first_column": 1,
+      "exact_keys": [
+        "order_id",
+        "notes"
+      ],
+      "workbook": "core/01_Commerce.xlsx",
+      "region": "A4:L6004",
+      "data_rows": 6000,
+      "currency": "EGP",
+      "row_grain": "one actual sales line",
+      "columns": [
+        {
+          "source_column_index": 1,
+          "source_label": "Invoice No",
+          "header_cell": "A4",
+          "canonical_field": "order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 2,
+          "source_label": "Item Code",
+          "header_cell": "B4",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Units Sold",
+          "header_cell": "C4",
+          "canonical_field": "quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "List Price (EGP)",
+          "header_cell": "D4",
+          "canonical_field": "list_unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Discount per Unit (EGP)",
+          "header_cell": "E4",
+          "canonical_field": "unit_discount",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Net Selling Price (EGP)",
+          "header_cell": "F4",
+          "canonical_field": "unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Net Line Amount (EGP)",
+          "header_cell": "G4",
+          "canonical_field": "revenue",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Currency",
+          "header_cell": "H4",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Base Unit",
+          "header_cell": "I4",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Sales Channel",
+          "header_cell": "J4",
+          "canonical_field": null,
+          "custom_name": "channel"
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Campaign Code",
+          "header_cell": "K4",
+          "canonical_field": null,
+          "custom_name": "campaign"
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Line Notes",
+          "header_cell": "L4",
+          "canonical_field": null,
+          "custom_name": "notes"
+        }
+      ],
+      "id": "core:sales"
+    },
+    {
+      "entity": "orders",
+      "sheet": "Orders",
+      "header_row": 6,
+      "first_column": 2,
+      "exact_keys": [
+        "order_id"
+      ],
+      "workbook": "core/01_Commerce.xlsx",
+      "region": "B6:G1206",
+      "data_rows": 1200,
+      "currency": "EGP",
+      "row_grain": "one unique sales order header",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "Invoice No",
+          "header_cell": "B6",
+          "canonical_field": "order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Invoice Date",
+          "header_cell": "C6",
+          "canonical_field": "sale_date",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Wholesale Account",
+          "header_cell": "D6",
+          "canonical_field": "customer_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Invoice Total (EGP)",
+          "header_cell": "E6",
+          "canonical_field": "order_total",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Currency",
+          "header_cell": "F6",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Order Status",
+          "header_cell": "G6",
+          "canonical_field": "order_status",
+          "custom_name": null
+        }
+      ],
+      "id": "core:orders"
+    },
+    {
+      "entity": "inventory",
+      "sheet": "Current Stock",
+      "header_row": 5,
+      "first_column": 3,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "core/02_Warehouse.xlsx",
+      "region": "C5:N45",
+      "data_rows": 40,
+      "currency": "EGP",
+      "row_grain": "one current physical stock row per SKU",
+      "columns": [
+        {
+          "source_column_index": 3,
+          "source_label": "Stock Code",
+          "header_cell": "C5",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Item Description",
+          "header_cell": "D5",
+          "canonical_field": "product_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Physical On Hand (each)",
+          "header_cell": "E5",
+          "canonical_field": "stock_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Reorder Level (each)",
+          "header_cell": "F5",
+          "canonical_field": "reorder_point",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Target Units (each)",
+          "header_cell": "G5",
+          "canonical_field": "target_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Vendor Code",
+          "header_cell": "H5",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Cost per Unit (EGP)",
+          "header_cell": "I5",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Currency",
+          "header_cell": "J5",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Base Unit",
+          "header_cell": "K5",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Opening Balance (each)",
+          "header_cell": "L5",
+          "canonical_field": "opening_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 13,
+          "source_label": "Reserved Units (each)",
+          "header_cell": "M5",
+          "canonical_field": "stock_reserved",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 14,
+          "source_label": "Warehouse Code",
+          "header_cell": "N5",
+          "canonical_field": "warehouse_id",
+          "custom_name": null
+        }
+      ],
+      "id": "core:inventory"
+    },
+    {
+      "entity": "suppliers",
+      "sheet": "Supplier Quotes",
+      "header_row": 7,
+      "first_column": 2,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "core/03_Supplier_Quotes.xlsx",
+      "region": "B7:M47",
+      "data_rows": 40,
+      "currency": "EGP",
+      "row_grain": "one current product-specific supplier quote",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "Vendor Code",
+          "header_cell": "B7",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Vendor Name",
+          "header_cell": "C7",
+          "canonical_field": "supplier_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Product Reference",
+          "header_cell": "D7",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Quoted Base Unit Cost (EGP)",
+          "header_cell": "E7",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Currency",
+          "header_cell": "F7",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Vendor Email",
+          "header_cell": "G7",
+          "canonical_field": "supplier_email",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Delivery Days",
+          "header_cell": "H7",
+          "canonical_field": "lead_time_days",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Units per Pack",
+          "header_cell": "I7",
+          "canonical_field": "pack_size",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "MOQ (base units)",
+          "header_cell": "J7",
+          "canonical_field": "min_order_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Base Unit",
+          "header_cell": "K7",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Quote Reference",
+          "header_cell": "L7",
+          "canonical_field": null,
+          "custom_name": "quote_reference"
+        },
+        {
+          "source_column_index": 13,
+          "source_label": "Quote Notes",
+          "header_cell": "M7",
+          "canonical_field": null,
+          "custom_name": "notes"
+        }
+      ],
+      "id": "core:suppliers"
+    },
+    {
+      "entity": "sales",
+      "sheet": "Sales",
+      "header_row": 4,
+      "first_column": 2,
+      "exact_keys": [],
+      "workbook": "challenges/A_quality/Quality_Repairs.xlsx",
+      "region": "B4:H12",
+      "data_rows": 8,
+      "currency": "EGP",
+      "row_grain": "one actual sales line",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "Invoice No",
+          "header_cell": "B4",
+          "canonical_field": "order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Item Code",
+          "header_cell": "C4",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Units",
+          "header_cell": "D4",
+          "canonical_field": "quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Net Unit Price",
+          "header_cell": "E4",
+          "canonical_field": "unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Sale Date",
+          "header_cell": "F4",
+          "canonical_field": "sale_date",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Currency",
+          "header_cell": "G4",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Base Unit",
+          "header_cell": "H4",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        }
+      ],
+      "id": "quality:sales"
+    },
+    {
+      "entity": "sales",
+      "sheet": "Sales",
+      "header_row": 3,
+      "first_column": 1,
+      "exact_keys": [
+        "order_id",
+        "notes"
+      ],
+      "workbook": "challenges/B_demand/Demand_Policy.xlsx",
+      "region": "A3:M93",
+      "data_rows": 90,
+      "currency": "EGP",
+      "row_grain": "one actual sales line",
+      "columns": [
+        {
+          "source_column_index": 1,
+          "source_label": "Invoice No",
+          "header_cell": "A3",
+          "canonical_field": "order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 2,
+          "source_label": "Item Code",
+          "header_cell": "B3",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Units Sold",
+          "header_cell": "C3",
+          "canonical_field": "quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "List Price (EGP)",
+          "header_cell": "D3",
+          "canonical_field": "list_unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Discount per Unit (EGP)",
+          "header_cell": "E3",
+          "canonical_field": "unit_discount",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Net Selling Price (EGP)",
+          "header_cell": "F3",
+          "canonical_field": "unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Net Line Amount (EGP)",
+          "header_cell": "G3",
+          "canonical_field": "revenue",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Currency",
+          "header_cell": "H3",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Base Unit",
+          "header_cell": "I3",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Sales Channel",
+          "header_cell": "J3",
+          "canonical_field": null,
+          "custom_name": "channel"
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Campaign Code",
+          "header_cell": "K3",
+          "canonical_field": null,
+          "custom_name": "campaign"
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Line Notes",
+          "header_cell": "L3",
+          "canonical_field": null,
+          "custom_name": "notes"
+        },
+        {
+          "source_column_index": 13,
+          "source_label": "Sale Date",
+          "header_cell": "M3",
+          "canonical_field": "sale_date",
+          "custom_name": null
+        }
+      ],
+      "id": "demand:sales"
+    },
+    {
+      "entity": "inventory",
+      "sheet": "Current Stock",
+      "header_row": 5,
+      "first_column": 2,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "challenges/B_demand/Demand_Policy.xlsx",
+      "region": "B5:K8",
+      "data_rows": 3,
+      "currency": "EGP",
+      "row_grain": "one current physical stock row per SKU",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "Stock Code",
+          "header_cell": "B5",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Item Description",
+          "header_cell": "C5",
+          "canonical_field": "product_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Physical On Hand (each)",
+          "header_cell": "D5",
+          "canonical_field": "stock_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Vendor Code",
+          "header_cell": "E5",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Cost per Unit (EGP)",
+          "header_cell": "F5",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Currency",
+          "header_cell": "G5",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Base Unit",
+          "header_cell": "H5",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Opening Balance (each)",
+          "header_cell": "I5",
+          "canonical_field": "opening_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Reserved Units (each)",
+          "header_cell": "J5",
+          "canonical_field": "stock_reserved",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Warehouse Code",
+          "header_cell": "K5",
+          "canonical_field": "warehouse_id",
+          "custom_name": null
+        }
+      ],
+      "id": "demand:inventory"
+    },
+    {
+      "entity": "suppliers",
+      "sheet": "Supplier Quotes",
+      "header_row": 7,
+      "first_column": 1,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "challenges/B_demand/Demand_Policy.xlsx",
+      "region": "A7:L10",
+      "data_rows": 3,
+      "currency": "EGP",
+      "row_grain": "one current product-specific supplier quote",
+      "columns": [
+        {
+          "source_column_index": 1,
+          "source_label": "Vendor Code",
+          "header_cell": "A7",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 2,
+          "source_label": "Vendor Name",
+          "header_cell": "B7",
+          "canonical_field": "supplier_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Product Reference",
+          "header_cell": "C7",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Quoted Base Unit Cost (EGP)",
+          "header_cell": "D7",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Currency",
+          "header_cell": "E7",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Vendor Email",
+          "header_cell": "F7",
+          "canonical_field": "supplier_email",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Delivery Days",
+          "header_cell": "G7",
+          "canonical_field": "lead_time_days",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Units per Pack",
+          "header_cell": "H7",
+          "canonical_field": "pack_size",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "MOQ (base units)",
+          "header_cell": "I7",
+          "canonical_field": "min_order_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Base Unit",
+          "header_cell": "J7",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Quote Reference",
+          "header_cell": "K7",
+          "canonical_field": null,
+          "custom_name": "quote_reference"
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Quote Notes",
+          "header_cell": "L7",
+          "canonical_field": null,
+          "custom_name": "notes"
+        }
+      ],
+      "id": "demand:suppliers"
+    },
+    {
+      "entity": "sales",
+      "sheet": "Sales",
+      "header_row": 4,
+      "first_column": 1,
+      "exact_keys": [
+        "order_id",
+        "notes"
+      ],
+      "workbook": "challenges/C_commercial/Supplier_Terms.xlsx",
+      "region": "A4:M274",
+      "data_rows": 270,
+      "currency": "EGP",
+      "row_grain": "one actual sales line",
+      "columns": [
+        {
+          "source_column_index": 1,
+          "source_label": "Invoice No",
+          "header_cell": "A4",
+          "canonical_field": "order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 2,
+          "source_label": "Item Code",
+          "header_cell": "B4",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Units Sold",
+          "header_cell": "C4",
+          "canonical_field": "quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "List Price (EGP)",
+          "header_cell": "D4",
+          "canonical_field": "list_unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Discount per Unit (EGP)",
+          "header_cell": "E4",
+          "canonical_field": "unit_discount",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Net Selling Price (EGP)",
+          "header_cell": "F4",
+          "canonical_field": "unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Net Line Amount (EGP)",
+          "header_cell": "G4",
+          "canonical_field": "revenue",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Currency",
+          "header_cell": "H4",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Base Unit",
+          "header_cell": "I4",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Sales Channel",
+          "header_cell": "J4",
+          "canonical_field": null,
+          "custom_name": "channel"
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Campaign Code",
+          "header_cell": "K4",
+          "canonical_field": null,
+          "custom_name": "campaign"
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Line Notes",
+          "header_cell": "L4",
+          "canonical_field": null,
+          "custom_name": "notes"
+        },
+        {
+          "source_column_index": 13,
+          "source_label": "Sale Date",
+          "header_cell": "M4",
+          "canonical_field": "sale_date",
+          "custom_name": null
+        }
+      ],
+      "id": "commercial:sales"
+    },
+    {
+      "entity": "inventory",
+      "sheet": "Current Stock",
+      "header_row": 5,
+      "first_column": 3,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "challenges/C_commercial/Supplier_Terms.xlsx",
+      "region": "C5:N8",
+      "data_rows": 3,
+      "currency": "EGP",
+      "row_grain": "one current physical stock row per SKU",
+      "columns": [
+        {
+          "source_column_index": 3,
+          "source_label": "Stock Code",
+          "header_cell": "C5",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Item Description",
+          "header_cell": "D5",
+          "canonical_field": "product_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Physical On Hand (each)",
+          "header_cell": "E5",
+          "canonical_field": "stock_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Reorder Level (each)",
+          "header_cell": "F5",
+          "canonical_field": "reorder_point",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Target Units (each)",
+          "header_cell": "G5",
+          "canonical_field": "target_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Vendor Code",
+          "header_cell": "H5",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Cost per Unit (EGP)",
+          "header_cell": "I5",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Currency",
+          "header_cell": "J5",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Base Unit",
+          "header_cell": "K5",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Opening Balance (each)",
+          "header_cell": "L5",
+          "canonical_field": "opening_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 13,
+          "source_label": "Reserved Units (each)",
+          "header_cell": "M5",
+          "canonical_field": "stock_reserved",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 14,
+          "source_label": "Warehouse Code",
+          "header_cell": "N5",
+          "canonical_field": "warehouse_id",
+          "custom_name": null
+        }
+      ],
+      "id": "commercial:inventory"
+    },
+    {
+      "entity": "suppliers",
+      "sheet": "Supplier Quotes",
+      "header_row": 7,
+      "first_column": 2,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "challenges/C_commercial/Supplier_Terms.xlsx",
+      "region": "B7:M10",
+      "data_rows": 3,
+      "currency": "EGP",
+      "row_grain": "one current product-specific supplier quote",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "Vendor Code",
+          "header_cell": "B7",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Vendor Name",
+          "header_cell": "C7",
+          "canonical_field": "supplier_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Product Reference",
+          "header_cell": "D7",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Quoted Base Unit Cost (EGP)",
+          "header_cell": "E7",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Currency",
+          "header_cell": "F7",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Vendor Email",
+          "header_cell": "G7",
+          "canonical_field": "supplier_email",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Delivery Days",
+          "header_cell": "H7",
+          "canonical_field": "lead_time_days",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Units per Pack",
+          "header_cell": "I7",
+          "canonical_field": "pack_size",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "MOQ (base units)",
+          "header_cell": "J7",
+          "canonical_field": "min_order_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Base Unit",
+          "header_cell": "K7",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Quote Reference",
+          "header_cell": "L7",
+          "canonical_field": null,
+          "custom_name": "quote_reference"
+        },
+        {
+          "source_column_index": 13,
+          "source_label": "Quote Notes",
+          "header_cell": "M7",
+          "canonical_field": null,
+          "custom_name": "notes"
+        }
+      ],
+      "id": "commercial:suppliers"
+    },
+    {
+      "entity": "inventory",
+      "sheet": "Current Stock",
+      "header_row": 5,
+      "first_column": 3,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "challenges/D_versions/02_Warehouse_v2.xlsx",
+      "region": "C5:N45",
+      "data_rows": 40,
+      "currency": "EGP",
+      "row_grain": "one current physical stock row per SKU",
+      "columns": [
+        {
+          "source_column_index": 3,
+          "source_label": "Stock Code",
+          "header_cell": "C5",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Item Description",
+          "header_cell": "D5",
+          "canonical_field": "product_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Physical On Hand (each)",
+          "header_cell": "E5",
+          "canonical_field": "stock_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Reorder Level (each)",
+          "header_cell": "F5",
+          "canonical_field": "reorder_point",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Target Units (each)",
+          "header_cell": "G5",
+          "canonical_field": "target_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Vendor Code",
+          "header_cell": "H5",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Cost per Unit (EGP)",
+          "header_cell": "I5",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "Currency",
+          "header_cell": "J5",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "Base Unit",
+          "header_cell": "K5",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 12,
+          "source_label": "Opening Balance (each)",
+          "header_cell": "L5",
+          "canonical_field": "opening_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 13,
+          "source_label": "Reserved Units (each)",
+          "header_cell": "M5",
+          "canonical_field": "stock_reserved",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 14,
+          "source_label": "Warehouse Code",
+          "header_cell": "N5",
+          "canonical_field": "warehouse_id",
+          "custom_name": null
+        }
+      ],
+      "id": "version:inventory"
+    },
+    {
+      "entity": "products",
+      "sheet": "products",
+      "header_row": 3,
+      "first_column": 1,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "optional/E_mapping/Broader_Entities.xlsx",
+      "region": "A3:D8",
+      "data_rows": 5,
+      "currency": "EGP",
+      "row_grain": "one products record",
+      "columns": [
+        {
+          "source_column_index": 1,
+          "source_label": "Item Code",
+          "header_cell": "A3",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 2,
+          "source_label": "Description",
+          "header_cell": "B3",
+          "canonical_field": "product_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Barcode",
+          "header_cell": "C3",
+          "canonical_field": "barcode",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Base Unit",
+          "header_cell": "D3",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        }
+      ],
+      "id": "broader:products"
+    },
+    {
+      "entity": "customers",
+      "sheet": "customers",
+      "header_row": 4,
+      "first_column": 2,
+      "exact_keys": [
+        "customer_id"
+      ],
+      "workbook": "optional/E_mapping/Broader_Entities.xlsx",
+      "region": "B4:F16",
+      "data_rows": 12,
+      "currency": "EGP",
+      "row_grain": "one customers record",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "Customer ID",
+          "header_cell": "B4",
+          "canonical_field": "customer_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Customer Name",
+          "header_cell": "C4",
+          "canonical_field": "customer_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Customer Email",
+          "header_cell": "D4",
+          "canonical_field": "customer_email",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Postal Code",
+          "header_cell": "E4",
+          "canonical_field": "postal_code",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Phone",
+          "header_cell": "F4",
+          "canonical_field": "phone",
+          "custom_name": null
+        }
+      ],
+      "id": "broader:customers"
+    },
+    {
+      "entity": "supplier_directory",
+      "sheet": "supplier_directory",
+      "header_row": 5,
+      "first_column": 3,
+      "exact_keys": [
+        "supplier_id"
+      ],
+      "workbook": "optional/E_mapping/Broader_Entities.xlsx",
+      "region": "C5:E13",
+      "data_rows": 8,
+      "currency": "EGP",
+      "row_grain": "one supplier_directory record",
+      "columns": [
+        {
+          "source_column_index": 3,
+          "source_label": "Supplier ID",
+          "header_cell": "C5",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Supplier Name",
+          "header_cell": "D5",
+          "canonical_field": "supplier_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Supplier Email",
+          "header_cell": "E5",
+          "canonical_field": "supplier_email",
+          "custom_name": null
+        }
+      ],
+      "id": "broader:supplier_directory"
+    },
+    {
+      "entity": "purchases",
+      "sheet": "purchases",
+      "header_row": 6,
+      "first_column": 1,
+      "exact_keys": [
+        "purchase_order_id"
+      ],
+      "workbook": "optional/E_mapping/Broader_Entities.xlsx",
+      "region": "A6:I7",
+      "data_rows": 1,
+      "currency": "EGP",
+      "row_grain": "one purchases record",
+      "columns": [
+        {
+          "source_column_index": 1,
+          "source_label": "Purchase Order ID",
+          "header_cell": "A6",
+          "canonical_field": "purchase_order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 2,
+          "source_label": "Product ID",
+          "header_cell": "B6",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Supplier ID",
+          "header_cell": "C6",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Quantity",
+          "header_cell": "D6",
+          "canonical_field": "quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Unit Cost",
+          "header_cell": "E6",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Total Cost",
+          "header_cell": "F6",
+          "canonical_field": "total_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "Currency",
+          "header_cell": "G6",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "Purchase Date",
+          "header_cell": "H6",
+          "canonical_field": "purchase_date",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "Expected Date",
+          "header_cell": "I6",
+          "canonical_field": "expected_date",
+          "custom_name": null
+        }
+      ],
+      "id": "broader:purchases"
+    },
+    {
+      "entity": "payments",
+      "sheet": "payments",
+      "header_row": 7,
+      "first_column": 2,
+      "exact_keys": [
+        "payment_id"
+      ],
+      "workbook": "optional/E_mapping/Broader_Entities.xlsx",
+      "region": "B7:F10",
+      "data_rows": 3,
+      "currency": "EGP",
+      "row_grain": "one payments record",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "Payment ID",
+          "header_cell": "B7",
+          "canonical_field": "payment_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "Order ID",
+          "header_cell": "C7",
+          "canonical_field": "order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "Customer ID",
+          "header_cell": "D7",
+          "canonical_field": "customer_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "Payment Amount",
+          "header_cell": "E7",
+          "canonical_field": "payment_amount",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "Currency",
+          "header_cell": "F7",
+          "canonical_field": "currency",
+          "custom_name": null
+        }
+      ],
+      "id": "broader:payments"
+    },
+    {
+      "entity": "sales",
+      "sheet": "المبيعات",
+      "header_row": 3,
+      "first_column": 3,
+      "exact_keys": [
+        "order_id"
+      ],
+      "workbook": "optional/F_arabic/Manara_Trading.xlsx",
+      "region": "C3:J13",
+      "data_rows": 10,
+      "currency": "EGP",
+      "row_grain": "one actual sales line",
+      "columns": [
+        {
+          "source_column_index": 3,
+          "source_label": "رقم الفاتورة",
+          "header_cell": "C3",
+          "canonical_field": "order_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "كود الصنف",
+          "header_cell": "D3",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "الكمية المباعة",
+          "header_cell": "E3",
+          "canonical_field": "quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "سعر البيع",
+          "header_cell": "F3",
+          "canonical_field": "unit_price",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "اجمالي",
+          "header_cell": "G3",
+          "canonical_field": "revenue",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "تاريخ البيع",
+          "header_cell": "H3",
+          "canonical_field": "sale_date",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "العملة",
+          "header_cell": "I3",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "وحدة القياس",
+          "header_cell": "J3",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        }
+      ],
+      "id": "arabic:sales"
+    },
+    {
+      "entity": "inventory",
+      "sheet": "المخزون",
+      "header_row": 5,
+      "first_column": 1,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "optional/F_arabic/Manara_Trading.xlsx",
+      "region": "A5:I8",
+      "data_rows": 3,
+      "currency": "EGP",
+      "row_grain": "one current physical stock row per SKU",
+      "columns": [
+        {
+          "source_column_index": 1,
+          "source_label": "كود الصنف",
+          "header_cell": "A5",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 2,
+          "source_label": "اسم الصنف",
+          "header_cell": "B5",
+          "canonical_field": "product_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "المخزون الحالي",
+          "header_cell": "C5",
+          "canonical_field": "stock_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "حد إعادة الطلب",
+          "header_cell": "D5",
+          "canonical_field": "reorder_point",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "الرصيد المستهدف",
+          "header_cell": "E5",
+          "canonical_field": "target_stock",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "كود المورد",
+          "header_cell": "F5",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "تكلفة الوحدة",
+          "header_cell": "G5",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "العملة",
+          "header_cell": "H5",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "وحدة القياس",
+          "header_cell": "I5",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        }
+      ],
+      "id": "arabic:inventory"
+    },
+    {
+      "entity": "suppliers",
+      "sheet": "عروض الموردين",
+      "header_row": 7,
+      "first_column": 2,
+      "exact_keys": [
+        "product_id"
+      ],
+      "workbook": "optional/F_arabic/Manara_Trading.xlsx",
+      "region": "B7:K10",
+      "data_rows": 3,
+      "currency": "EGP",
+      "row_grain": "one current product-specific supplier quote",
+      "columns": [
+        {
+          "source_column_index": 2,
+          "source_label": "كود المورد",
+          "header_cell": "B7",
+          "canonical_field": "supplier_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 3,
+          "source_label": "اسم المورد",
+          "header_cell": "C7",
+          "canonical_field": "supplier_name",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 4,
+          "source_label": "كود الصنف",
+          "header_cell": "D7",
+          "canonical_field": "product_id",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 5,
+          "source_label": "تكلفة الوحدة",
+          "header_cell": "E7",
+          "canonical_field": "unit_cost",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 6,
+          "source_label": "العملة",
+          "header_cell": "F7",
+          "canonical_field": "currency",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 7,
+          "source_label": "بريد المورد",
+          "header_cell": "G7",
+          "canonical_field": "supplier_email",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 8,
+          "source_label": "مدة التوريد",
+          "header_cell": "H7",
+          "canonical_field": "lead_time_days",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 9,
+          "source_label": "حجم العبوة",
+          "header_cell": "I7",
+          "canonical_field": "pack_size",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 10,
+          "source_label": "حد ادني للطلب",
+          "header_cell": "J7",
+          "canonical_field": "min_order_quantity",
+          "custom_name": null
+        },
+        {
+          "source_column_index": 11,
+          "source_label": "وحدة القياس",
+          "header_cell": "K7",
+          "canonical_field": "unit_of_measure",
+          "custom_name": null
+        }
+      ],
+      "id": "arabic:suppliers"
+    }
+  ],
+  "exclude_regions": [
+    {
+      "workbook": "core/01_Commerce.xlsx",
+      "sheet": "Internal Notes",
+      "region": "A1:A2",
+      "reason": "administrative notes"
+    }
+  ],
+  "required_relationships": [
+    {
+      "left": "core:sales",
+      "right": "core:orders",
+      "field": "order_id",
+      "cardinality": "many-to-one",
+      "purpose": "inherit sale dates without adding order totals to revenue"
+    },
+    {
+      "left": "core:sales",
+      "right": "core:inventory",
+      "field": "product_id",
+      "cardinality": "many-to-one",
+      "purpose": "reviewed product descriptions and dated demand"
+    },
+    {
+      "left": "core:inventory",
+      "right": "core:suppliers",
+      "field": "product_id",
+      "cardinality": "one-to-one",
+      "purpose": "product-specific procurement quote"
+    },
+    {
+      "left": "demand:sales",
+      "right": "demand:inventory",
+      "field": "product_id",
+      "cardinality": "many-to-one",
+      "purpose": "reviewed product descriptions and dated demand"
+    },
+    {
+      "left": "demand:inventory",
+      "right": "demand:suppliers",
+      "field": "product_id",
+      "cardinality": "one-to-one",
+      "purpose": "product-specific procurement quote"
+    },
+    {
+      "left": "commercial:sales",
+      "right": "commercial:inventory",
+      "field": "product_id",
+      "cardinality": "many-to-one",
+      "purpose": "reviewed product descriptions and dated demand"
+    },
+    {
+      "left": "commercial:inventory",
+      "right": "commercial:suppliers",
+      "field": "product_id",
+      "cardinality": "one-to-one",
+      "purpose": "product-specific procurement quote"
+    },
+    {
+      "left": "arabic:sales",
+      "right": "arabic:inventory",
+      "field": "product_id",
+      "cardinality": "many-to-one",
+      "purpose": "reviewed product descriptions and dated demand"
+    },
+    {
+      "left": "arabic:inventory",
+      "right": "arabic:suppliers",
+      "field": "product_id",
+      "cardinality": "one-to-one",
+      "purpose": "product-specific procurement quote"
+    }
+  ],
+  "note": "External human review/validation reference. Not an application import or approval record.",
+  "workbooks": [
+    {
+      "path": "core/01_Commerce.xlsx",
+      "sha256": "45f375bcceddfcf03e50656ef81f95c877225a736c0286883c0136772c064a29",
+      "size_bytes": 350390
+    },
+    {
+      "path": "core/02_Warehouse.xlsx",
+      "sha256": "3b1d0b4035d2c5fd8b4f5b9a971ad816dfd52f45ce79e5b6ae71e7d16b7b32fe",
+      "size_bytes": 8339
+    },
+    {
+      "path": "core/03_Supplier_Quotes.xlsx",
+      "sha256": "db40b951256531ce5eeb91633250f50b1eaff88fa4dbca3f1ca073a9a000a20f",
+      "size_bytes": 8352
+    },
+    {
+      "path": "challenges/A_quality/Quality_Repairs.xlsx",
+      "sha256": "6a22c9f8869b98eb77198b98b3054531c0a2146db75977ff0ce8ebd666a7f3f8",
+      "size_bytes": 5946
+    },
+    {
+      "path": "challenges/B_demand/Demand_Policy.xlsx",
+      "sha256": "9187fcaefdee7cacf3ac0e363b0dfad9bbc6a42d4891864f7487d1bf447f3191",
+      "size_bytes": 13057
+    },
+    {
+      "path": "challenges/C_commercial/Supplier_Terms.xlsx",
+      "sha256": "cddce09423e1efb562229b3884d3377f4eb806bf44279cc4900982f1e1b5b205",
+      "size_bytes": 23382
+    },
+    {
+      "path": "challenges/D_versions/02_Warehouse_v2.xlsx",
+      "sha256": "fd83a15f18ff7474ff46dc05a01c3b1e1b5ae914654e59ef83db4d541a7b4a5c",
+      "size_bytes": 8361
+    },
+    {
+      "path": "optional/E_mapping/Broader_Entities.xlsx",
+      "sha256": "f17cafad47f6139250c89a663acae55bdea800007081fb24bb580640ac488e76",
+      "size_bytes": 10219
+    },
+    {
+      "path": "optional/F_arabic/Manara_Trading.xlsx",
+      "sha256": "c9c73fa695ba092b944335eaf7811f6fc2de17e0d7a4630262c91820ed3e3f77",
+      "size_bytes": 8860
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "assertions": 176510,
+  "stats": {
+    "workbooks": 9,
+    "largest_sheet_grid": 72048
+  },
+  "generator_checks": "passed",
+  "application_integration": "passed",
+  "live_meta": "not run; no provider calls or credentials used",
+  "sections": [
+    {
+      "name": "Saved XLSX readability, bounded grids, styling, literal cells, source coordinates and exact keys",
+      "status": "passed"
+    },
+    {
+      "name": "Independent saved-row arithmetic, coverage, comparison windows, history eligibility, risks, draft totals and version diff",
+      "status": "passed"
+    },
+    {
+      "name": "Same date/seed regenerate byte-identical workbooks, manifests, expectations and guides",
+      "status": "passed"
+    },
+    {
+      "name": "Isolated SheetPilot core ingestion, mapping, required joins, analytics, real guided jobs, pending approval, actual Excel and idempotency",
+      "status": "passed"
+    },
+    {
+      "name": "Isolated SheetPilot thousands/decimal/DMY repair previews, approvals, reversals and original hashes",
+      "status": "passed"
+    },
+    {
+      "name": "Isolated SheetPilot demand preview and reviewed policy supplies exact 50/120/114 thresholds and quantity",
+      "status": "passed"
+    },
+    {
+      "name": "Isolated SheetPilot all-SKU supplier review, 162/168/120 quantities, incoming exclusions, stale proposal and Decimal output",
+      "status": "passed"
+    },
+    {
+      "name": "Isolated SheetPilot candidate mapping, explicit stable-key review, exact diff and snapshot activation",
+      "status": "passed"
+    },
+    {
+      "name": "Isolated SheetPilot broader entity preservation and distinct Arabic-company deterministic analytics",
+      "status": "passed"
+    }
+  ]
+}

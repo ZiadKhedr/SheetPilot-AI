@@ -1,0 +1,1288 @@
+{
+  "as_of": "2026-11-03",
+  "seed": 42,
+  "core": {
+    "counts": {
+      "sales_lines": 6000,
+      "orders": 1200,
+      "stock_skus": 40,
+      "suppliers": 8
+    },
+    "revenue": "16307447.00",
+    "units": "21462",
+    "currency": "EGP",
+    "top_products": [
+      {
+        "product_id": "NC-003",
+        "name": "Portable SSD 1TB",
+        "units": "3530",
+        "revenue": "8472000.00"
+      },
+      {
+        "product_id": "NC-004",
+        "name": "65W GaN Charger",
+        "units": "2250",
+        "revenue": "2025000.00"
+      },
+      {
+        "product_id": "NC-001",
+        "name": "Wireless Earbuds",
+        "units": "1800",
+        "revenue": "855000.00"
+      },
+      {
+        "product_id": "NC-002",
+        "name": "USB-C Docking Station",
+        "units": "1496",
+        "revenue": "2692800.00"
+      },
+      {
+        "product_id": "NC-005",
+        "name": "Wireless Keyboard",
+        "units": "900",
+        "revenue": "378000.00"
+      },
+      {
+        "product_id": "NC-007",
+        "name": "Legacy VGA Adapter",
+        "units": "600",
+        "revenue": "60000.00"
+      },
+      {
+        "product_id": "NC-014",
+        "name": "Laptop Stand",
+        "units": "379",
+        "revenue": "51923.00"
+      },
+      {
+        "product_id": "NC-039",
+        "name": "Dust Blower",
+        "units": "378",
+        "revenue": "80136.00"
+      },
+      {
+        "product_id": "NC-033",
+        "name": "Network Tester",
+        "units": "374",
+        "revenue": "72556.00"
+      },
+      {
+        "product_id": "NC-016",
+        "name": "Screen Cleaner",
+        "units": "372",
+        "revenue": "53196.00"
+      }
+    ],
+    "comparison": {
+      "current_from": "2026-10-28",
+      "current_to": "2026-11-03",
+      "previous_from": "2026-10-21",
+      "previous_to": "2026-10-27",
+      "current_revenue": "1111346.00",
+      "previous_revenue": "1362927.00",
+      "products": [
+        {
+          "product_id": "NC-003",
+          "current_revenue": "336000.00",
+          "previous_revenue": "840000.00",
+          "change": "-504000.00",
+          "percent_change": "-60.00"
+        },
+        {
+          "product_id": "NC-002",
+          "current_revenue": "378000.00",
+          "previous_revenue": "126000.00",
+          "change": "252000.00",
+          "percent_change": "200.00"
+        },
+        {
+          "product_id": "NC-037",
+          "current_revenue": "2884.00",
+          "previous_revenue": "7416.00",
+          "change": "-4532.00",
+          "percent_change": "-61.11"
+        },
+        {
+          "product_id": "NC-026",
+          "current_revenue": "1557.00",
+          "previous_revenue": "5709.00",
+          "change": "-4152.00",
+          "percent_change": "-72.73"
+        },
+        {
+          "product_id": "NC-032",
+          "current_revenue": "8213.00",
+          "previous_revenue": "4393.00",
+          "change": "3820.00",
+          "percent_change": "86.96"
+        },
+        {
+          "product_id": "NC-025",
+          "current_revenue": "3060.00",
+          "previous_revenue": "6120.00",
+          "change": "-3060.00",
+          "percent_change": "-50.00"
+        },
+        {
+          "product_id": "NC-029",
+          "current_revenue": "8918.00",
+          "previous_revenue": "6006.00",
+          "change": "2912.00",
+          "percent_change": "48.48"
+        },
+        {
+          "product_id": "NC-021",
+          "current_revenue": "7268.00",
+          "previous_revenue": "4740.00",
+          "change": "2528.00",
+          "percent_change": "53.33"
+        },
+        {
+          "product_id": "NC-027",
+          "current_revenue": "5104.00",
+          "previous_revenue": "2640.00",
+          "change": "2464.00",
+          "percent_change": "93.33"
+        },
+        {
+          "product_id": "NC-018",
+          "current_revenue": "5811.00",
+          "previous_revenue": "3427.00",
+          "change": "2384.00",
+          "percent_change": "69.57"
+        },
+        {
+          "product_id": "NC-022",
+          "current_revenue": "2093.00",
+          "previous_revenue": "4347.00",
+          "change": "-2254.00",
+          "percent_change": "-51.85"
+        },
+        {
+          "product_id": "NC-008",
+          "current_revenue": "1920.00",
+          "previous_revenue": "0.00",
+          "change": "1920.00",
+          "percent_change": null
+        },
+        {
+          "product_id": "NC-013",
+          "current_revenue": "2010.00",
+          "previous_revenue": "3752.00",
+          "change": "-1742.00",
+          "percent_change": "-46.43"
+        },
+        {
+          "product_id": "NC-033",
+          "current_revenue": "5044.00",
+          "previous_revenue": "6596.00",
+          "change": "-1552.00",
+          "percent_change": "-23.53"
+        },
+        {
+          "product_id": "NC-039",
+          "current_revenue": "5936.00",
+          "previous_revenue": "7420.00",
+          "change": "-1484.00",
+          "percent_change": "-20.00"
+        },
+        {
+          "product_id": "NC-030",
+          "current_revenue": "5365.00",
+          "previous_revenue": "3885.00",
+          "change": "1480.00",
+          "percent_change": "38.10"
+        },
+        {
+          "product_id": "NC-009",
+          "current_revenue": "2562.00",
+          "previous_revenue": "1098.00",
+          "change": "1464.00",
+          "percent_change": "133.33"
+        },
+        {
+          "product_id": "NC-011",
+          "current_revenue": "3840.00",
+          "previous_revenue": "2688.00",
+          "change": "1152.00",
+          "percent_change": "42.86"
+        },
+        {
+          "product_id": "NC-031",
+          "current_revenue": "4324.00",
+          "previous_revenue": "5452.00",
+          "change": "-1128.00",
+          "percent_change": "-20.69"
+        },
+        {
+          "product_id": "NC-010",
+          "current_revenue": "3250.00",
+          "previous_revenue": "4375.00",
+          "change": "-1125.00",
+          "percent_change": "-25.71"
+        },
+        {
+          "product_id": "NC-015",
+          "current_revenue": "3360.00",
+          "previous_revenue": "4480.00",
+          "change": "-1120.00",
+          "percent_change": "-25.00"
+        },
+        {
+          "product_id": "NC-023",
+          "current_revenue": "3936.00",
+          "previous_revenue": "4920.00",
+          "change": "-984.00",
+          "percent_change": "-20.00"
+        },
+        {
+          "product_id": "NC-019",
+          "current_revenue": "3952.00",
+          "previous_revenue": "3040.00",
+          "change": "912.00",
+          "percent_change": "30.00"
+        },
+        {
+          "product_id": "NC-040",
+          "current_revenue": "6020.00",
+          "previous_revenue": "6880.00",
+          "change": "-860.00",
+          "percent_change": "-12.50"
+        },
+        {
+          "product_id": "NC-038",
+          "current_revenue": "3553.00",
+          "previous_revenue": "2717.00",
+          "change": "836.00",
+          "percent_change": "30.77"
+        },
+        {
+          "product_id": "NC-036",
+          "current_revenue": "5075.00",
+          "previous_revenue": "4263.00",
+          "change": "812.00",
+          "percent_change": "19.05"
+        },
+        {
+          "product_id": "NC-012",
+          "current_revenue": "4585.00",
+          "previous_revenue": "3799.00",
+          "change": "786.00",
+          "percent_change": "20.69"
+        },
+        {
+          "product_id": "NC-034",
+          "current_revenue": "5713.00",
+          "previous_revenue": "5122.00",
+          "change": "591.00",
+          "percent_change": "11.54"
+        },
+        {
+          "product_id": "NC-035",
+          "current_revenue": "4800.00",
+          "previous_revenue": "5200.00",
+          "change": "-400.00",
+          "percent_change": "-7.69"
+        },
+        {
+          "product_id": "NC-028",
+          "current_revenue": "3759.00",
+          "previous_revenue": "3401.00",
+          "change": "358.00",
+          "percent_change": "10.53"
+        },
+        {
+          "product_id": "NC-024",
+          "current_revenue": "4008.00",
+          "previous_revenue": "4342.00",
+          "change": "-334.00",
+          "percent_change": "-7.69"
+        },
+        {
+          "product_id": "NC-017",
+          "current_revenue": "2482.00",
+          "previous_revenue": "2190.00",
+          "change": "292.00",
+          "percent_change": "13.33"
+        },
+        {
+          "product_id": "NC-020",
+          "current_revenue": "4960.00",
+          "previous_revenue": "4805.00",
+          "change": "155.00",
+          "percent_change": "3.23"
+        },
+        {
+          "product_id": "NC-016",
+          "current_revenue": "4433.00",
+          "previous_revenue": "4290.00",
+          "change": "143.00",
+          "percent_change": "3.33"
+        },
+        {
+          "product_id": "NC-014",
+          "current_revenue": "3836.00",
+          "previous_revenue": "3699.00",
+          "change": "137.00",
+          "percent_change": "3.70"
+        },
+        {
+          "product_id": "NC-001",
+          "current_revenue": "66500.00",
+          "previous_revenue": "66500.00",
+          "change": "0.00",
+          "percent_change": "0.00"
+        },
+        {
+          "product_id": "NC-004",
+          "current_revenue": "157500.00",
+          "previous_revenue": "157500.00",
+          "change": "0.00",
+          "percent_change": "0.00"
+        },
+        {
+          "product_id": "NC-005",
+          "current_revenue": "29400.00",
+          "previous_revenue": "29400.00",
+          "change": "0.00",
+          "percent_change": "0.00"
+        },
+        {
+          "product_id": "NC-006",
+          "current_revenue": "315.00",
+          "previous_revenue": "315.00",
+          "change": "0.00",
+          "percent_change": "0.00"
+        },
+        {
+          "product_id": "NC-007",
+          "current_revenue": "0.00",
+          "previous_revenue": "0.00",
+          "change": "0.00",
+          "percent_change": null
+        }
+      ]
+    },
+    "risk_cases": {
+      "NC-001": {
+        "product_name": "Wireless Earbuds",
+        "stock": 18,
+        "units_30d": "600",
+        "observed_days": 30,
+        "positive_records_30d": 30,
+        "positive_days_30d": 30,
+        "daily_demand": "20",
+        "days_cover": "0.9",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 90
+      },
+      "NC-002": {
+        "product_name": "USB-C Docking Station",
+        "stock": 60,
+        "units_30d": "536",
+        "observed_days": 30,
+        "positive_records_30d": 30,
+        "positive_days_30d": 30,
+        "daily_demand": "17.86666666666666666666666667",
+        "days_cover": "3.358208955223880597014925373",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 90
+      },
+      "NC-003": {
+        "product_name": "Portable SSD 1TB",
+        "stock": 1000,
+        "units_30d": "1130",
+        "observed_days": 30,
+        "positive_records_30d": 30,
+        "positive_days_30d": 30,
+        "daily_demand": "37.66666666666666666666666667",
+        "days_cover": "26.54867256637168141592920354",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 90
+      },
+      "NC-004": {
+        "product_name": "65W GaN Charger",
+        "stock": 0,
+        "units_30d": "750",
+        "observed_days": 30,
+        "positive_records_30d": 30,
+        "positive_days_30d": 30,
+        "daily_demand": "25",
+        "days_cover": "0",
+        "eligible": true,
+        "demand_status": "out_of_stock",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 90
+      },
+      "NC-005": {
+        "product_name": "Wireless Keyboard",
+        "stock": 600,
+        "units_30d": "300",
+        "observed_days": 30,
+        "positive_records_30d": 30,
+        "positive_days_30d": 30,
+        "daily_demand": "10",
+        "days_cover": "60",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 90
+      },
+      "NC-006": {
+        "product_name": "Micro USB Cable",
+        "stock": 1000,
+        "units_30d": "30",
+        "observed_days": 30,
+        "positive_records_30d": 30,
+        "positive_days_30d": 30,
+        "daily_demand": "1",
+        "days_cover": "1000",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 90
+      },
+      "NC-007": {
+        "product_name": "Legacy VGA Adapter",
+        "stock": 150,
+        "units_30d": "0",
+        "observed_days": 30,
+        "positive_records_30d": 0,
+        "positive_days_30d": 0,
+        "daily_demand": null,
+        "days_cover": null,
+        "eligible": false,
+        "demand_status": "no_recent_sales",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-10-04",
+        "total_positive_records": 60
+      },
+      "NC-008": {
+        "product_name": "Smart Travel Hub",
+        "stock": 80,
+        "units_30d": "4",
+        "observed_days": 30,
+        "positive_records_30d": 2,
+        "positive_days_30d": 2,
+        "daily_demand": "0.1333333333333333333333333333",
+        "days_cover": "600.0000000000000000000000002",
+        "eligible": false,
+        "demand_status": "limited_history",
+        "threshold_origin": "source",
+        "first_sale": "2026-11-02",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 2
+      },
+      "NC-009": {
+        "product_name": "USB-C Cable 1m",
+        "stock": 1000,
+        "units_30d": "91",
+        "observed_days": 30,
+        "positive_records_30d": 49,
+        "positive_days_30d": 24,
+        "daily_demand": "3.033333333333333333333333333",
+        "days_cover": "329.6703296703296703296703297",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-07",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 143
+      },
+      "NC-010": {
+        "product_name": "HDMI Cable 2m",
+        "stock": 1000,
+        "units_30d": "113",
+        "observed_days": 30,
+        "positive_records_30d": 55,
+        "positive_days_30d": 24,
+        "daily_demand": "3.766666666666666666666666667",
+        "days_cover": "265.4867256637168141592920354",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-02",
+        "total_positive_records": 154
+      },
+      "NC-011": {
+        "product_name": "Ethernet Cable 3m",
+        "stock": 1000,
+        "units_30d": "98",
+        "observed_days": 30,
+        "positive_records_30d": 50,
+        "positive_days_30d": 23,
+        "daily_demand": "3.266666666666666666666666667",
+        "days_cover": "306.1224489795918367346938775",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-07",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 161
+      },
+      "NC-012": {
+        "product_name": "Wireless Mouse",
+        "stock": 1000,
+        "units_30d": "108",
+        "observed_days": 30,
+        "positive_records_30d": 49,
+        "positive_days_30d": 26,
+        "daily_demand": "3.6",
+        "days_cover": "277.7777777777777777777777778",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 162
+      },
+      "NC-013": {
+        "product_name": "Mouse Pad",
+        "stock": 1000,
+        "units_30d": "86",
+        "observed_days": 30,
+        "positive_records_30d": 46,
+        "positive_days_30d": 24,
+        "daily_demand": "2.866666666666666666666666667",
+        "days_cover": "348.8372093023255813953488372",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 152
+      },
+      "NC-014": {
+        "product_name": "Laptop Stand",
+        "stock": 1000,
+        "units_30d": "128",
+        "observed_days": 30,
+        "positive_records_30d": 62,
+        "positive_days_30d": 26,
+        "daily_demand": "4.266666666666666666666666667",
+        "days_cover": "234.3750000000000000000000000",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-02",
+        "total_positive_records": 188
+      },
+      "NC-015": {
+        "product_name": "Webcam Cover",
+        "stock": 1000,
+        "units_30d": "113",
+        "observed_days": 30,
+        "positive_records_30d": 57,
+        "positive_days_30d": 26,
+        "daily_demand": "3.766666666666666666666666667",
+        "days_cover": "265.4867256637168141592920354",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 182
+      },
+      "NC-016": {
+        "product_name": "Screen Cleaner",
+        "stock": 1000,
+        "units_30d": "121",
+        "observed_days": 30,
+        "positive_records_30d": 58,
+        "positive_days_30d": 27,
+        "daily_demand": "4.033333333333333333333333333",
+        "days_cover": "247.9338842975206611570247934",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 185
+      },
+      "NC-017": {
+        "product_name": "USB Flash Drive 64GB",
+        "stock": 1000,
+        "units_30d": "97",
+        "observed_days": 30,
+        "positive_records_30d": 46,
+        "positive_days_30d": 23,
+        "daily_demand": "3.233333333333333333333333333",
+        "days_cover": "309.2783505154639175257731959",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-07",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 175
+      },
+      "NC-018": {
+        "product_name": "SD Card Reader",
+        "stock": 1000,
+        "units_30d": "137",
+        "observed_days": 30,
+        "positive_records_30d": 66,
+        "positive_days_30d": 27,
+        "daily_demand": "4.566666666666666666666666667",
+        "days_cover": "218.9781021897810218978102190",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 186
+      },
+      "NC-019": {
+        "product_name": "DisplayPort Cable",
+        "stock": 1000,
+        "units_30d": "102",
+        "observed_days": 30,
+        "positive_records_30d": 52,
+        "positive_days_30d": 28,
+        "daily_demand": "3.4",
+        "days_cover": "294.1176470588235294117647059",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 167
+      },
+      "NC-020": {
+        "product_name": "Audio Splitter",
+        "stock": 1000,
+        "units_30d": "128",
+        "observed_days": 30,
+        "positive_records_30d": 63,
+        "positive_days_30d": 25,
+        "daily_demand": "4.266666666666666666666666667",
+        "days_cover": "234.3750000000000000000000000",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-08",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 173
+      },
+      "NC-021": {
+        "product_name": "USB Extension Cable",
+        "stock": 1000,
+        "units_30d": "136",
+        "observed_days": 30,
+        "positive_records_30d": 66,
+        "positive_days_30d": 26,
+        "daily_demand": "4.533333333333333333333333333",
+        "days_cover": "220.5882352941176470588235294",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-02",
+        "total_positive_records": 174
+      },
+      "NC-022": {
+        "product_name": "Phone Stand",
+        "stock": 1000,
+        "units_30d": "112",
+        "observed_days": 30,
+        "positive_records_30d": 54,
+        "positive_days_30d": 26,
+        "daily_demand": "3.733333333333333333333333333",
+        "days_cover": "267.8571428571428571428571429",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 167
+      },
+      "NC-023": {
+        "product_name": "Cable Organizer",
+        "stock": 1000,
+        "units_30d": "100",
+        "observed_days": 30,
+        "positive_records_30d": 53,
+        "positive_days_30d": 25,
+        "daily_demand": "3.333333333333333333333333333",
+        "days_cover": "300.0000000000000000000000000",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 168
+      },
+      "NC-024": {
+        "product_name": "HDMI Adapter",
+        "stock": 1000,
+        "units_30d": "107",
+        "observed_days": 30,
+        "positive_records_30d": 53,
+        "positive_days_30d": 25,
+        "daily_demand": "3.566666666666666666666666667",
+        "days_cover": "280.3738317757009345794392523",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 176
+      },
+      "NC-025": {
+        "product_name": "USB-A Hub",
+        "stock": 1000,
+        "units_30d": "107",
+        "observed_days": 30,
+        "positive_records_30d": 53,
+        "positive_days_30d": 27,
+        "daily_demand": "3.566666666666666666666666667",
+        "days_cover": "280.3738317757009345794392523",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 147
+      },
+      "NC-026": {
+        "product_name": "Bluetooth Receiver",
+        "stock": 1000,
+        "units_30d": "103",
+        "observed_days": 30,
+        "positive_records_30d": 51,
+        "positive_days_30d": 22,
+        "daily_demand": "3.433333333333333333333333333",
+        "days_cover": "291.2621359223300970873786408",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 159
+      },
+      "NC-027": {
+        "product_name": "Laptop Sleeve",
+        "stock": 1000,
+        "units_30d": "107",
+        "observed_days": 30,
+        "positive_records_30d": 49,
+        "positive_days_30d": 25,
+        "daily_demand": "3.566666666666666666666666667",
+        "days_cover": "280.3738317757009345794392523",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 167
+      },
+      "NC-028": {
+        "product_name": "RJ45 Coupler",
+        "stock": 1000,
+        "units_30d": "97",
+        "observed_days": 30,
+        "positive_records_30d": 51,
+        "positive_days_30d": 23,
+        "daily_demand": "3.233333333333333333333333333",
+        "days_cover": "309.2783505154639175257731959",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-07",
+        "last_sale": "2026-11-02",
+        "total_positive_records": 173
+      },
+      "NC-029": {
+        "product_name": "Headset Adapter",
+        "stock": 1000,
+        "units_30d": "140",
+        "observed_days": 30,
+        "positive_records_30d": 71,
+        "positive_days_30d": 25,
+        "daily_demand": "4.666666666666666666666666667",
+        "days_cover": "214.2857142857142857142857143",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-02",
+        "total_positive_records": 183
+      },
+      "NC-030": {
+        "product_name": "Power Cable",
+        "stock": 1000,
+        "units_30d": "103",
+        "observed_days": 30,
+        "positive_records_30d": 53,
+        "positive_days_30d": 28,
+        "daily_demand": "3.433333333333333333333333333",
+        "days_cover": "291.2621359223300970873786408",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-07",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 177
+      },
+      "NC-031": {
+        "product_name": "Keyboard Cover",
+        "stock": 1000,
+        "units_30d": "106",
+        "observed_days": 30,
+        "positive_records_30d": 53,
+        "positive_days_30d": 24,
+        "daily_demand": "3.533333333333333333333333333",
+        "days_cover": "283.0188679245283018867924529",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 142
+      },
+      "NC-032": {
+        "product_name": "USB-C Connector",
+        "stock": 1000,
+        "units_30d": "102",
+        "observed_days": 30,
+        "positive_records_30d": 51,
+        "positive_days_30d": 24,
+        "daily_demand": "3.4",
+        "days_cover": "294.1176470588235294117647059",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 158
+      },
+      "NC-033": {
+        "product_name": "Network Tester",
+        "stock": 1000,
+        "units_30d": "135",
+        "observed_days": 30,
+        "positive_records_30d": 66,
+        "positive_days_30d": 26,
+        "daily_demand": "4.5",
+        "days_cover": "222.2222222222222222222222222",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 186
+      },
+      "NC-034": {
+        "product_name": "Travel Plug",
+        "stock": 1000,
+        "units_30d": "117",
+        "observed_days": 30,
+        "positive_records_30d": 60,
+        "positive_days_30d": 25,
+        "daily_demand": "3.9",
+        "days_cover": "256.4102564102564102564102564",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 170
+      },
+      "NC-035": {
+        "product_name": "Stylus Pen",
+        "stock": 1000,
+        "units_30d": "106",
+        "observed_days": 30,
+        "positive_records_30d": 52,
+        "positive_days_30d": 24,
+        "daily_demand": "3.533333333333333333333333333",
+        "days_cover": "283.0188679245283018867924529",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 174
+      },
+      "NC-036": {
+        "product_name": "Phone Grip",
+        "stock": 1000,
+        "units_30d": "116",
+        "observed_days": 30,
+        "positive_records_30d": 58,
+        "positive_days_30d": 26,
+        "daily_demand": "3.866666666666666666666666667",
+        "days_cover": "258.6206896551724137931034483",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 181
+      },
+      "NC-037": {
+        "product_name": "Camera Mount",
+        "stock": 1000,
+        "units_30d": "103",
+        "observed_days": 30,
+        "positive_records_30d": 52,
+        "positive_days_30d": 27,
+        "daily_demand": "3.433333333333333333333333333",
+        "days_cover": "291.2621359223300970873786408",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 162
+      },
+      "NC-038": {
+        "product_name": "Microphone Clip",
+        "stock": 1000,
+        "units_30d": "87",
+        "observed_days": 30,
+        "positive_records_30d": 46,
+        "positive_days_30d": 23,
+        "daily_demand": "2.9",
+        "days_cover": "344.8275862068965517241379310",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 156
+      },
+      "NC-039": {
+        "product_name": "Dust Blower",
+        "stock": 1000,
+        "units_30d": "132",
+        "observed_days": 30,
+        "positive_records_30d": 66,
+        "positive_days_30d": 26,
+        "daily_demand": "4.4",
+        "days_cover": "227.2727272727272727272727273",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-07",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 186
+      },
+      "NC-040": {
+        "product_name": "Cable Ties Pack",
+        "stock": 1000,
+        "units_30d": "113",
+        "observed_days": 30,
+        "positive_records_30d": 57,
+        "positive_days_30d": 26,
+        "daily_demand": "3.766666666666666666666666667",
+        "days_cover": "265.4867256637168141592920354",
+        "eligible": true,
+        "demand_status": "eligible",
+        "threshold_origin": "source",
+        "first_sale": "2026-08-06",
+        "last_sale": "2026-11-03",
+        "total_positive_records": 164
+      }
+    },
+    "draft_lines": [
+      {
+        "product_id": "NC-001",
+        "supplier_id": "NCS-001",
+        "quantity": "162",
+        "unit_cost": "275.00",
+        "line_total": "44550.00",
+        "currency": "EGP",
+        "threshold_origin": "source"
+      },
+      {
+        "product_id": "NC-002",
+        "supplier_id": "NCS-002",
+        "quantity": "640",
+        "unit_cost": "1150.00",
+        "line_total": "736000.00",
+        "currency": "EGP",
+        "threshold_origin": "source"
+      },
+      {
+        "product_id": "NC-004",
+        "supplier_id": "NCS-004",
+        "quantity": "300",
+        "unit_cost": "420.00",
+        "line_total": "126000.00",
+        "currency": "EGP",
+        "threshold_origin": "source"
+      }
+    ],
+    "draft_total": "906550.00",
+    "draft_by_supplier": [
+      {
+        "supplier_id": "NCS-001",
+        "currency": "EGP",
+        "amount": "44550.00"
+      },
+      {
+        "supplier_id": "NCS-002",
+        "currency": "EGP",
+        "amount": "736000.00"
+      },
+      {
+        "supplier_id": "NCS-004",
+        "currency": "EGP",
+        "amount": "126000.00"
+      }
+    ],
+    "review_stages": {
+      "mappings_confirmed_before_links": {
+        "revenue": "16307447.00",
+        "sales_lines": 6000,
+        "trend_days": 0,
+        "dated_demand_eligible": false
+      },
+      "required_links_confirmed": {
+        "revenue": "16307447.00",
+        "trend_days": 90,
+        "stock_skus": 40,
+        "hero_daily_units": "20",
+        "hero_days_cover": "0.9"
+      },
+      "business_review": {
+        "required_tools": [
+          "sales_analysis",
+          "sales_comparison",
+          "inventory_analysis",
+          "procurement_review"
+        ],
+        "completed_checks": 4,
+        "purchase_proposals_created": 0
+      },
+      "purchase_preparation": {
+        "required_tools": [
+          "inventory_analysis",
+          "draft_purchase_orders"
+        ],
+        "status": "pending",
+        "line_count": 3,
+        "total": "906550.00",
+        "output_workbooks": 0
+      },
+      "after_human_approval": {
+        "status": "executed",
+        "output_workbooks": 1,
+        "sheets": [
+          "Purchase Orders",
+          "Source Trace",
+          "Execution"
+        ],
+        "original_hero_stock": 18,
+        "repeat_approval_additional_outputs": 0
+      }
+    }
+  },
+  "quality": {
+    "raw_rows": 8,
+    "exact_duplicates": 1,
+    "missing_identifier_rows": 1,
+    "stages": {
+      "before": {
+        "valid_sales": 4,
+        "revenue": "1750.00",
+        "dated_revenue": "1700.00"
+      },
+      "after_thousands": {
+        "valid_sales": 5,
+        "revenue": "4150.00",
+        "dated_revenue": "4100.00"
+      },
+      "after_decimal": {
+        "valid_sales": 6,
+        "revenue": "4201.00",
+        "dated_revenue": "4151.00"
+      },
+      "after_date": {
+        "valid_sales": 6,
+        "revenue": "4201.00",
+        "dated_revenue": "4201.00"
+      },
+      "reversed_all": {
+        "valid_sales": 4,
+        "revenue": "1750.00",
+        "dated_revenue": "1700.00"
+      }
+    },
+    "repairs": [
+      {
+        "cell": "D9",
+        "row": 9,
+        "column": 4,
+        "interpretation": "thousands_comma",
+        "before": "1,200",
+        "after": "1200"
+      },
+      {
+        "cell": "E10",
+        "row": 10,
+        "column": 5,
+        "interpretation": "decimal_comma",
+        "before": "25,50",
+        "after": "25.50"
+      },
+      {
+        "cell": "F11",
+        "row": 11,
+        "column": 6,
+        "interpretation": "date_dmy",
+        "before": "03/11/2026",
+        "after": "2026-11-03"
+      }
+    ],
+    "duplicate_rows": [
+      5,
+      6
+    ],
+    "missing_identifier_cell": "C8",
+    "accepted_numeric_text_cell": "D12"
+  },
+  "demand": {
+    "hero": "DP-001",
+    "units_30d": 150,
+    "observed_days": 30,
+    "daily_demand": "5",
+    "reorder_point": 50,
+    "target_stock": 120,
+    "days_cover": "1.2",
+    "suggested_quantity": 114,
+    "policy": {
+      "window_days": 30,
+      "lead_time_days": 7,
+      "safety_days": 3,
+      "review_period_days": 14,
+      "as_of": "2026-11-03",
+      "stock_snapshot_confirmed": true
+    },
+    "stages": {
+      "before_policy": "thresholds missing; no purchase",
+      "preview": "read-only; no policy or proposal",
+      "saved": "sales_policy thresholds operational; purchase approval separate"
+    }
+  },
+  "commercial": {
+    "rules": [
+      {
+        "product_id": "NC-001",
+        "supplier_id": "NCS-001",
+        "quote_sheet": "Supplier Quotes",
+        "quote_row": 8,
+        "lead_time_days": 7,
+        "pack_size": "12",
+        "min_order_quantity": "48",
+        "unit_of_measure": "each",
+        "currency": "EGP",
+        "price_basis": "per_base_unit"
+      },
+      {
+        "product_id": "NC-002",
+        "supplier_id": "NCS-002",
+        "quote_sheet": "Supplier Quotes",
+        "quote_row": 9,
+        "lead_time_days": 5,
+        "pack_size": "6",
+        "min_order_quantity": "12",
+        "unit_of_measure": "each",
+        "currency": "EGP",
+        "price_basis": "per_base_unit"
+      },
+      {
+        "product_id": "NC-003",
+        "supplier_id": "NCS-003",
+        "quote_sheet": "Supplier Quotes",
+        "quote_row": 10,
+        "lead_time_days": 5,
+        "pack_size": "6",
+        "min_order_quantity": "12",
+        "unit_of_measure": "each",
+        "currency": "EGP",
+        "price_basis": "per_base_unit"
+      }
+    ],
+    "stages": {
+      "no_policy": {
+        "quantity": 162,
+        "cost": "44550.00"
+      },
+      "terms_saved": {
+        "quantity": 168,
+        "cost": "46200.00"
+      },
+      "incoming_saved": {
+        "physical_stock": 18,
+        "eligible_incoming": 48,
+        "inventory_position": 66,
+        "net_requirement": 114,
+        "quantity": 120,
+        "cost": "33000.00"
+      }
+    }
+  },
+  "version": {
+    "key_fields": [
+      "product_id"
+    ],
+    "added": [
+      "NC-041"
+    ],
+    "removed": [
+      "NC-040"
+    ],
+    "changed": [
+      "NC-001",
+      "NC-002",
+      "NC-003"
+    ],
+    "counts": {
+      "added": 1,
+      "removed": 1,
+      "changed": 3,
+      "unchanged": 36
+    }
+  },
+  "broader": {
+    "entity_counts": {
+      "products": 5,
+      "customers": 12,
+      "supplier_directory": 8,
+      "purchases": 1,
+      "payments": 3
+    },
+    "sales_revenue": "0.00",
+    "incoming_orders": 0,
+    "relationship_selection": "Use core inventory-to-sales enrichment only. Do not confirm an additional products-to-sales enrichment link."
+  },
+  "arabic": {
+    "company": "Manara Electronics Trading",
+    "sales_lines": 10,
+    "stock_skus": 3,
+    "currency": "EGP",
+    "revenue": "31500.00"
+  }
+}

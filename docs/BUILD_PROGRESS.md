@@ -1,5 +1,12 @@
 # SheetPilot AI build progress
 
+## Reproducible recording data pack · November 4, 2026
+
+- Added a separate Nile Circuit Distribution pack: nine XLSX inputs, 6,000 core sales lines, 1,200 order headers, 40 stock SKUs, eight suppliers, offset headers, preserved custom columns and exact reviewed links. Existing application code, offline analyzer and regression fixtures remain unchanged.
+- Added deterministic date/seed-parameterized Python generation, workbook source hashes, independent saved-row validation, byte reproducibility checks, exact stage expectations, scenario cards and a 6½-minute recording guide. Challenge packs cover repairs/reversal, demand policy, all-SKU commercial rules/incoming exclusions, stable-key snapshots, broader entities and a distinct Arabic company.
+- Isolated service validation passed the actual guided business/purchase jobs, 162/168/120 hero quantities, human approval, three-sheet Excel output, original-file hashes, repeat-approval idempotency, repairs/reversal, policy review and exact 1/1/3/36 version activation. An alternate 2026-10-01/seed-73 pack also passed isolated application validation. A deliberate expected-revenue corruption was rejected by the validator.
+- The existing offline Python suite passed 227 tests, with one Windows symlink skip and one existing dependency deprecation warning. Normal filesystem permissions were needed for hard-link coverage. Rendered and inspected all 20 operational sheet previews. No live Meta calls or frontend/native Excel UI test is claimed for this data-pack milestone.
+
 ## Workspace lifecycle upgrade · November 4, 2026
 
 - All six milestones complete. Final browser rerun: 12 passed, two opt-in live-provider scenarios skipped (1.5 minutes), including every new vertical slice and the original mapping, demand, supplier recovery, report, intake and mobile workflows. Credential scan passed for staged/tracked files and 451 historical Git blobs; runtime/secret paths remain excluded. The offline analyzer source is unchanged. All milestone commits are pushed to the existing authorized repository.

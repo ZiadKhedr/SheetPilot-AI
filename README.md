@@ -117,6 +117,8 @@ For a scoped sales example with the Electronics dataset, ask: “What is the rev
 
 Both datasets include duplicate rows, missing identifiers, numeric text, unrelated tables, hidden sheets and formulas. These figures are independent fixture expectations; the application calculates its results from reviewed source data. See the [dataset guide](docs/DEMO_DATA.md).
 
+For a larger EGP recording, the separate [Nile Circuit demo pack](demo_pack/README.md) contains 6,000 sales lines, 1,200 orders, 40 SKUs and eight suppliers, plus focused challenge workbooks. [Download the complete ZIP](demo_pack/SheetPilot_Demo_Pack.zip), then follow its [recording guide](demo_pack/RECORDING_GUIDE.md) in a fresh workspace. Its generator, exact expectations and isolated validation are included.
+
 ## Development and tests
 
 For frontend development, keep the backend running on port 8000 and run `pnpm --dir frontend dev` in a second terminal. Vite serves the frontend on port 5173 and proxies `/api` to FastAPI.
