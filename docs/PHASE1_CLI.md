@@ -1,6 +1,6 @@
 # Excel Intelligence — Phase 1
 
-Read-only structural analysis for unfamiliar `.xlsx` files. The project vision, architecture, roadmap, and Codex instructions live in `PROJECT_BRIEF.md`, `ARCHITECTURE.md`, `ROADMAP.md`, and `AGENTS.md`.
+Read-only structural analysis for unfamiliar `.xlsx` files. See the [application overview](../README.md) and [architecture](../ARCHITECTURE.md).
 
 ## Installation
 
@@ -75,7 +75,7 @@ python examples\generate_example.py --output-dir examples
 excel-analyze examples\synthetic.xlsx -o examples\example-report.json
 ```
 
-The generator creates only synthetic data. Committed example JSON and JSON Schema can be regenerated with that script. See `docs/PHASE_1_ACCEPTANCE.md` for verified cases and remaining acceptance work.
+The generator creates only synthetic data. Committed example JSON and JSON Schema can be regenerated with that script. See [verification results](TEST_RESULTS.md) for tested behavior and limitations.
 
 If the operating system's temporary directory is restricted, use a new directory inside `work/` with pytest's `--basetemp` option.
 

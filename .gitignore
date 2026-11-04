@@ -18,3 +18,14 @@ frontend/test-results/
 outputs/hackathon-test-results/
 
 *.tsbuildinfo
+
+# Local development history and generated review artifacts
+/outputs/
+/AGENTS.md
+/PROJECT_BRIEF.md
+/ROADMAP.md
+/AUDIT_REPORT.md
+/IMPROVEMENTS.md
+/docs/HACKATHON_REQUIREMENTS.md
+/docs/BUILD_PROGRESS.md
+/docs/PHASE_1_ACCEPTANCE.md

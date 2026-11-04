@@ -3,28 +3,9 @@
 
 A working local hackathon application that connects unfamiliar Excel workbooks to a reviewed operational mirror, business dashboards, Meta-powered specialist tools, human approvals, and downloadable purchase-order workbooks.
 
-Read the [independent audit](AUDIT_REPORT.md), [changes and scenario results](IMPROVEMENTS.md) and [four-minute demo](docs/DEMO_SCRIPT.md).
+For reviewers: [project description](docs/JUDGE_DESCRIPTION.md), [architecture](ARCHITECTURE.md), [demo script](docs/DEMO_SCRIPT.md), [test results](docs/TEST_RESULTS.md) and [known limitations](docs/KNOWN_LIMITATIONS.md).
 
 **No migration away from Excel. No invented KPIs. No automatic source edits.**
-
-## Start this prepared workspace (Windows)
-
-The local environment and frontend have already been installed and built:
-
-```powershell
-cd D:\Codex\referenced-chatgpt-conversation-this-is-an-2
-.\scripts\start.ps1
-```
-
-Open **http://127.0.0.1:8000**. Stop with Ctrl+C. If your Windows script policy blocks .ps1, run the equivalent directly without changing security settings:
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn sheetpilot.api:app --host 127.0.0.1 --port 8000
-```
-
-Your real Meta key belongs in ignored `.env` as `MODEL_API_KEY`. Never commit it or paste it into the UI. In Connections, verify the provider; a successful model-catalog request and an actual structured generation are required for “Meta connected.”
-
-Workspace data and uploaded originals live in ignored `.data/` (or `SHEETPILOT_DATA_DIR`). Keep this folder between runs and back up the whole folder with the server stopped. Git does not back it up. If storage becomes unavailable, restore the folder/access and click **Retry connection**. Restore any backup before restarting a server whose data folder was deleted; a fresh start with no data folder initializes an empty database.
 
 ## Clean setup
 
@@ -52,7 +33,11 @@ pnpm --dir frontend build
 sh scripts/start.sh
 ```
 
-Edit .env locally to set the Meta key. Keep this MVP on localhost. Optional `SHEETPILOT_ACCESS_TOKEN` enables owner authentication and `SHEETPILOT_READ_TOKEN` grants GET-only access. Enter those workspace tokens (not the Meta key) in Connections when configured. This is a local single-operator MVP, not a production identity/tenant system.
+Edit .env locally to set `MODEL_API_KEY`. The key stays on the server. In Connections, verify the provider; both a model-catalog request and an actual structured generation must succeed for Meta to show as connected.
+
+Workspace data and immutable uploaded originals live in ignored `.data/` (or `SHEETPILOT_DATA_DIR`). Back up this folder with the server stopped; Git does not back it up. If storage becomes unavailable, restore the folder and click **Retry connection**.
+
+Keep this MVP on localhost. Optional `SHEETPILOT_ACCESS_TOKEN` enables owner authentication and `SHEETPILOT_READ_TOKEN` grants GET-only access. Enter those workspace tokens (not the Meta key) in Connections when configured. This is a local single-operator MVP, not a production identity/tenant system.
 
 For frontend development, run the backend on 8000 and `pnpm --dir frontend dev` on 5173. Vite proxies /api to FastAPI.
 
@@ -108,7 +93,7 @@ For Playwright's bundled Chromium instead of installed Edge, omit PLAYWRIGHT_CHA
 
 The browser suite starts a fresh backend on 8010 with a unique database under `work/e2e/`. With the live flag it uploads both datasets through the UI, performs real Meta mapping and agent calls, confirms mappings/relationships, approves, downloads Excel and checks the timeline. An independent guided browser test exercises approval and download without an API key. Screenshots and live downloads are under `frontend/test-results/`. After a live browser run, use `.\.venv\Scripts\python.exe scripts/validate_downloads.py` to compare both downloads with the fictional company oracles.
 
-In this managed Windows environment, filesystem link tests and browser launches require normal execution permissions. A new `--basetemp=work/your-test-run` directory avoids a restricted system temp location. A real symlink test is skipped if the OS account cannot create symlinks.
+On Windows, the symlink test is skipped if the OS account lacks symlink privileges.
 
 Actual results and verification limits are in [TEST_RESULTS.md](docs/TEST_RESULTS.md).
 

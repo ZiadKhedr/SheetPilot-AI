@@ -20,7 +20,7 @@
 | Download inspection | Both Excel files reopened. All three order lines per business matched the independent product/quantity/amount oracle. Electronics totaled USD 1,809.00 and restaurant totaled EGP 12,630.00. Each of the six trace rows per file matched an original workbook hash, sheet, range and product cell. Both downloads contained an execution sheet and no formulas. |
 | Packaging | `docker compose config --quiet` passed. Docker Desktop's Linux engine pipe was absent, so container build/start was not executed. The browser tests started the native production app. |
 
-The first live workflow failed because the model encoded unused filters as the string `"null"`. The final schema accepts an explicit array of filters. No fake fallback was introduced. One new frontend test required cleanup between dialogs and one quote test needed an explicit header review. Earlier sandboxed test attempts and the pnpm store mismatch are documented in [IMPROVEMENTS.md](../IMPROVEMENTS.md). All product verification used fictional inputs.
+The first live workflow failed because the model encoded unused filters as the string `"null"`. The final schema accepts an explicit array of filters. No fake fallback was introduced. One new frontend test required cleanup between dialogs and one quote test needed an explicit header review. All product verification used fictional inputs.
 
 The following is historical evidence from the initial build.
 
@@ -30,7 +30,7 @@ Date: 2026-11-02. Local Windows host. Python 3.12.14, pytest 8.4.2, OpenPyXL 3.1
 57 passed, 1 skipped before app changes. The skipped case requires symlink creation privileges. A restricted first attempt also failed the hard-link case; it passed when rerun with normal filesystem permissions.
 
 ## Current Python suite
-**95 passed, 2 skipped, 1 dependency warning** in 13.52 seconds. The output is saved in outputs/python-test-results.txt and outputs/verification-summary.json.
+**95 passed, 2 skipped, 1 dependency warning** in 13.52 seconds. Raw logs are retained locally under ignored `outputs/`; they are not included in a clean clone.
 
 Coverage includes structure, hidden sheets, formulas, merged titles, offset/Arabic headers, pre-load resource limits, upload errors, strict Meta output validation, invalid/unknown AI tools, source-column checks, reviewed relationships, accurate calculations for both companies, API access control, cross-workspace lookup protection, rejected/changed-source approvals, repeated/concurrent execution, original preservation, actual Excel output, body limits and numeric ambiguity.
 
@@ -62,7 +62,7 @@ Fresh backend on port 8010, built frontend, real Meta API, no mocked application
 
 Both flows created a workspace, uploaded three real files through the UI, requested Meta mappings, confirmed three business tables, discovered/reviewed relationships, checked actual KPIs, ran Meta specialist orchestration, inspected action details, approved, downloaded Excel, and checked the execution timeline. Browser page-error assertions passed.
 
-Screenshots and downloaded workbooks are in outputs/. They show actual execution data, not a designed mockup. A first browser attempt failed to launch due to restricted temporary-folder permissions; a first test-server attempt had an invalid Windows relative command path. Both were corrected before the successful run.
+Historical screenshots and downloaded workbooks are retained locally under ignored `outputs/`; rerun the browser suite to produce fresh artifacts under `frontend/test-results/`. They show actual execution data, not a designed mockup. A first browser attempt failed to launch due to restricted temporary-folder permissions; a first test-server attempt had an invalid Windows relative command path. Both were corrected before the successful run.
 
 ## Downloaded workbook inspection
 scripts/validate_downloads.py opened each browser download with OpenPyXL:
@@ -81,7 +81,7 @@ scripts/validate_downloads.py opened each browser download with OpenPyXL:
 - GitHub Actions passed for release commit 2ae59c6 on a fresh Ubuntu runner: clean dependency installation, backend tests, frontend tests/build, and mobile browser validation all succeeded. Evidence: https://github.com/ZiadKhedr/SheetPilot-AI/actions/runs/41484828970. Live Meta remains opt-in and was verified locally for both businesses; no key was added to CI.
 
 ## Credential hygiene
-scripts/check_secrets.py confirms the configured Meta key is absent from tracked working files and historical Git blobs. .env, .data, work/, .venv and node_modules are ignored. Screenshots and committed demo artifacts contain fictional data only.
+scripts/check_secrets.py confirms the configured Meta key is absent from tracked working files and historical Git blobs. .env, .data, work/, .venv and node_modules are ignored. The committed demo datasets and sanitized validation evidence contain fictional data only. Generated screenshots, downloads and raw logs are ignored.
 
 ## Remaining non-MVP validation
 Authorized real-company workbook benchmarks, hard ingestion worker isolation, OS-enforced runtime/memory quotas, production identity/tenant controls, cloud synchronization and container-engine execution remain outside verified scope. See KNOWN_LIMITATIONS.md.

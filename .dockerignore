@@ -11,3 +11,12 @@ frontend/playwright-report
 frontend/test-results
 **/__pycache__
 .pytest_cache
+# Internal planning and local development notes
+AGENTS.md
+PROJECT_BRIEF.md
+ROADMAP.md
+AUDIT_REPORT.md
+IMPROVEMENTS.md
+docs/HACKATHON_REQUIREMENTS.md
+docs/BUILD_PROGRESS.md
+docs/PHASE_1_ACCEPTANCE.md
