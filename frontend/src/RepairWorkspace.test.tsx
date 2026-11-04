@@ -1,0 +1,27 @@
+import {afterEach,expect,test,vi} from 'vitest';
+import {cleanup,fireEvent,render,screen,within} from '@testing-library/react';
+import {RepairWorkspace} from './RepairWorkspace';
+import {api} from './api';
+import type {Context} from './types';
+vi.mock('./api',()=>({api:vi.fn()}));
+afterEach(()=>{cleanup();vi.clearAllMocks()});
+const data={revision:0,fingerprint:'current',issues:[{id:'issue',message:'Ambiguous quantity',table_id:'table',workbook_name:'Original.xlsx',sheet:'Sales',row:2,source_hash:'hash',cells:[{column:3,field:'quantity',cell:'C2',original_value:'1,200',interpretations:['thousands_comma','decimal_comma']}]}],issue_count:1,issues_truncated:false,corrections:[]};
+const preview={preview_hash:'preview',proposals:[{cell:'C2',sheet:'Sales',field:'quantity',before:'1,200',after:'1200',source_hash:'hash'}],before:{revenue:'14.00'},after:{revenue:'2414.00'},issues_before:1,issues_after:0,affected_count:1,affected_records:[],relationships_need_review:false};
+const context={root:'/workspaces/test',busy:'',state:{tables:[],workbooks:[]},navigate:vi.fn(),perform:async(_m:string,task:()=>Promise<unknown>)=>{await task()}} as unknown as Context;
+test('shows original cell evidence and requires explicit interpretation and preview approval',async()=>{
+ vi.mocked(api).mockResolvedValueOnce(data).mockResolvedValueOnce(preview).mockResolvedValueOnce({revision:1}).mockResolvedValueOnce({...data,revision:1,issues:[],issue_count:0});
+ render(<RepairWorkspace {...context}/>);
+ expect(await screen.findByText('1,200')).toBeVisible();
+ expect(screen.getByText('C2')).toBeVisible();
+ expect(screen.getByRole('button',{name:'Preview correction'})).toBeDisabled();
+ fireEvent.change(screen.getByLabelText('Source cell for issue'),{target:{value:'3'}});
+ fireEvent.change(screen.getByLabelText('Interpretation for issue'),{target:{value:'thousands_comma'}});
+ fireEvent.click(screen.getByRole('button',{name:'Preview correction'}));
+ const review=await screen.findByRole('region',{name:'Correction preview'});
+ expect(review).toHaveTextContent('2414.00');
+ expect(within(review).getByRole('button',{name:'Approve correction'})).toBeDisabled();
+ expect(vi.mocked(api).mock.calls.some(call=>call[0].endsWith('/approve'))).toBe(false);
+ fireEvent.click(within(review).getByRole('checkbox'));
+ fireEvent.click(within(review).getByRole('button',{name:'Approve correction'}));
+ await vi.waitFor(()=>expect(api).toHaveBeenCalledWith('/workspaces/test/quality/repairs/approve','POST',expect.objectContaining({approved:true,preview_hash:'preview',expected_revision:0})));
+});

@@ -1,5 +1,17 @@
 # Workspace backup, review and version lifecycle
 
+## Data quality repair workspace
+
+Open **Data quality repairs** from navigation or a checklist issue link. Each issue shows workbook, sheet, row, original cell values, reviewed meanings and source SHA256. Formatting-only relationship mismatches also surface as identifier review issues. Up to 500 issues are shown at a time; resolve and refresh to continue.
+
+Choose a repairable cell and explicitly select its source convention: decimal point, decimal comma, grouped comma thousands, ISO date, day/month/year or month/day/year. Identifier reconciliation requires an exact replacement found uniquely in another active, confirmed reference table with the same identifier meaning. No fuzzy identifier is silently chosen. Formula/error values are not evaluated or invented, and missing meanings/currencies go back to mapping review.
+
+**Preview correction** recalculates records under a rolled-back savepoint and shows the proposed before/after values, affected records, row counts, inventory quantities and Decimal sales totals per currency. It persists no correction, records or audit events. Only the separate acknowledgement and **Approve correction** apply a revision. Approval repeats the calculation and checks the current source hashes, mapping/review fingerprint, correction revision and preview hash under a write lock. Up to 20 cells may be submitted through the typed API; the screen reviews one at a time.
+
+Corrections form an append-only derived cell layer. Original reports/uploads remain untouched; record lineage and purchase output execution metadata retain correction IDs/revisions and source hashes. Identifier changes stale affected relationships; all approved/reversed corrections stale analyses and conflict pending proposals. Executed workbooks and historical agent reports remain unchanged. A **Preview reversal** operation recomputes the effect and requires separate approval to append an audited reversal. A later patch on the same cell, changed source, or incompatible remapping prevents blindly undoing an older patch. Identifier reconciliation that creates inventory collisions does not make those records operational.
+
+API: `GET .../quality/repairs`, `POST .../quality/repairs/preview`, `POST .../quality/repairs/approve`, `POST .../quality/repairs/{id}/reverse/preview`, and `POST .../quality/repairs/{id}/reverse`. Revisions, actor, before/after values, preview basis and source hashes are retained in SQLite and included in backups.
+
 ## Guided next steps
 
 Overview displays six steps from the backend state API: upload, mapping review, relationship review, data blockers, analysis and purchase review. Status is computed from active workbook metadata, actual mapping/relationship revisions, excluded row errors, missing currency, procurement prerequisites and persisted runs/actions. A historical completed job counts as current only when its input fingerprint still matches. Each item links to its exact table, relationship, run or purchase action when available. All changes reload the checklist with the workspace state. Opening a checklist link never approves anything.

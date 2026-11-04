@@ -23,6 +23,7 @@ def fingerprint(store, workspace, con=None):
         "relationships": sorted((r["id"], r["status"], r["revisions"]) for r in store.list(workspace, "relationship", con)
                                 if {r['left_table'],r['right_table']} <= identifiers),
         "demand_policy": [(p["id"],p["revision"],p["enabled"]) for p in store.list(workspace,"demand_policy",con)],
+        "corrections": [(p['id'],p['revision']) for p in store.list(workspace,'correction_state',con)],
     }
     return sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
@@ -214,6 +215,8 @@ def write_purchase_order(store, action):
                 ("Idempotency key", action["idempotency_key"])]:
         meta.append(row)
     for line in action["lines"]:
+        corrections=[c for source in line['sources'] for c in source.get('corrections',[])]
+        if corrections:meta.append([safe_cell('Correction basis: '+line['product_id']),json.dumps(corrections,ensure_ascii=False,sort_keys=True)])
         if line.get("planning"):
             meta.append([safe_cell("Demand basis: "+line["product_id"]),json.dumps(line["planning"],ensure_ascii=False,sort_keys=True)])
     for ws in wb:

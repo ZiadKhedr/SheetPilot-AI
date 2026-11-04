@@ -2,6 +2,8 @@
 
 ## Workspace lifecycle upgrade · November 4, 2026
 
+- Milestone 4 complete: source-cell quality workspace, explicit numeric/date interpretations and unique reviewed identifier reconciliation, before/after derived record and Decimal total previews, separate approval, append-only correction revisions, source hashes/actor audit, relationship/proposal/report invalidation and separately previewed audited reversals. Eighteen repair/version/backup tests, eight repair/normalization tests, one frontend test and one real-backend Edge/mobile scenario passed. Original bytes and historical reports stayed unchanged; correction backup round trip passed.
+
 - Milestone 3 complete: immutable workbook families with inactive version candidates; compatible mapping proposals still require review; exact reviewed composite identifiers; schema/added/changed/removed previews; ambiguity blockers; separate revision-checked review and activation. Only active snapshots enter records, planning and action fingerprints. Activation conflicts pending actions and marks historical analyses stale while preserving executed outputs/reports and source hashes. Twenty-six version/demand/action tests, one frontend test and one real-backend Edge workflow passed; TypeScript/Vite built.
 
 - Milestone 2 complete: workspace-aware next steps returned by the state API and refreshed after mutations; exact mapping/relationship/run/action links; plain-language data and procurement blockers; current-fingerprint analysis recognition. Seven checklist/API tests, one frontend test and one real-backend Edge/mobile scenario passed; TypeScript/Vite built.

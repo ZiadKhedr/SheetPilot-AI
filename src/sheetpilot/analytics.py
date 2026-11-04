@@ -50,18 +50,21 @@ def materialize(store, workspace, con=None):
     for table in active_tables(store, workspace, con):
         if table["status"] != "confirmed":
             continue
-        seen = set()
+        seen = {}
         for raw in source_rows(store, workspace, table, con):
             source = {"workbook_id": table["workbook_id"], "table_id": table["id"],
                       "sheet": table["sheet"], "row": raw["row"], "ref": table["ref"],
                       "cells": {field: get_column_letter(int(col)) + str(raw["row"])
                                 for col, field in table["fields"].items() if field != "ignore"}}
+            corrections=[cell['correction'] for cell in raw['values'].values() if 'correction' in cell]
+            if corrections:source['corrections']=corrections
             signature = json.dumps([(c, v["data_type"], v["value"]) for c, v in raw["values"].items()],
                                    ensure_ascii=False, sort_keys=True)
-            if signature in seen:
+            corrected_inventory = table['entity']=='inventory' and (bool(corrections) or seen.get(signature,False))
+            if signature in seen and not corrected_inventory:
                 issues.append(source | {"severity": "warning", "code": "duplicate", "message": "Exact duplicate excluded from derived totals."})
                 continue
-            seen.add(signature)
+            seen[signature] = bool(corrections) or seen.get(signature,False)
             row, formula_fields = {}, []
             for col, field in table["fields"].items():
                 if field == "ignore":

@@ -9,6 +9,27 @@ from .store import Problem, uid
 
 
 def register_workspace_routes(app, store, auth):
+    from .repairs import (RepairPreview, RepairApproval, RepairReversal, repair_workspace,
+                          preview_repairs, approve_repairs, preview_reversal, reverse_correction)
+
+    @app.get('/api/workspaces/{workspace}/quality/repairs',dependencies=[Depends(auth)])
+    def repair_state(workspace:str):return repair_workspace(store,workspace)
+
+    @app.post('/api/workspaces/{workspace}/quality/repairs/preview',dependencies=[Depends(auth)])
+    def repair_preview(workspace:str,body:RepairPreview):return preview_repairs(store,workspace,body)
+
+    @app.post('/api/workspaces/{workspace}/quality/repairs/approve')
+    def repair_approve(workspace:str,body:RepairApproval,actor=Depends(auth)):
+        return approve_repairs(store,workspace,body,actor)
+
+    @app.post('/api/workspaces/{workspace}/quality/repairs/{identifier}/reverse')
+    def repair_reverse(workspace:str,identifier:str,body:RepairReversal,actor=Depends(auth)):
+        return reverse_correction(store,workspace,identifier,body,actor)
+
+    @app.post('/api/workspaces/{workspace}/quality/repairs/{identifier}/reverse/preview',dependencies=[Depends(auth)])
+    def repair_reverse_preview(workspace:str,identifier:str,body:RepairReversal):
+        return preview_reversal(store,workspace,identifier,body)
+
     from .ingestion import UPLOAD_LIMIT, ingest
     from .versions import (VersionPreview, VersionReview, VersionActivation, version_context,
                            preview_version, review_version, activate_version)

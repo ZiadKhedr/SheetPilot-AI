@@ -1,6 +1,7 @@
 """Navigation hints computed from current reviewed backend state."""
 from .actions import fingerprint, procurement_readiness
 from .analytics import records
+from .repairs import issue_id
 
 
 def next_steps(store, workspace):
@@ -47,7 +48,7 @@ def next_steps(store, workspace):
          'Confirm a mapping to run data checks.' if not confirmed else
          f'{len(issues)} excluded/error rows, {len(currency_gaps)} tables needing currency, {len(readiness["blockers"])} purchasing prerequisites.' if blockers
          else 'No current row errors, missing commercial currencies or purchasing blockers were found.',
-         [target('Review source issues', '/analytics#quality')] +
+         [target('Review source issues', '/quality#issue-'+issue_id(issues[0]) if issues else '/quality')] +
          [target('Review currency', '/mapping#table-'+t) for t in sorted(currency_gaps)] +
          [target(b['message'], '/mapping#table-'+b['inventory_table_id']) for b in readiness['blockers'][:20]])
     can_analyze = bool(mirror) and not pending

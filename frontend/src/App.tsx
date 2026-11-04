@@ -10,6 +10,7 @@ import type { Context, Dashboard, Provider, SemanticCatalog, State, Workspace } 
 import { WorkspaceRecovery } from './WorkspaceRecovery';
 import { NextSteps } from './NextSteps';
 import { VersionUploads, WorkbookVersionReview } from './WorkbookVersions';
+import { RepairWorkspace } from './RepairWorkspace';
 
 const pages=[
  {path:'/',name:'Overview',icon:LayoutDashboard,section:'workspace'},
@@ -22,6 +23,7 @@ const pages=[
  {path:'/activity',name:'Activity timeline',icon:Activity},
  {path:'/recovery',name:'Backup and restore',icon:ShieldCheck},
  {path:'/versions',name:'Version review',icon:GitBranch},
+ {path:'/quality',name:'Data quality repairs',icon:ShieldCheck},
 ];
 const emptyDashboard:Dashboard={revenue:[],units_sold:null,inventory_units:null,inventory_products:0,low_stock_count:0,stock:[],low_stock:[],sales_records:0,sales_trend:[],top_products:[],quality_issues:[],warnings:[],available_entities:[],confirmed_tables:0,pending_actions:0};
 export default function App(){return <BrowserRouter><WorkspaceApp/></BrowserRouter>}
@@ -116,6 +118,7 @@ function WorkspaceApp(){
     {page.path==='/recovery'&&<WorkspaceRecovery {...context}/>}
     {page.path==='/files'&&!!state.workbooks.length&&<VersionUploads {...context}/>}
     {page.path==='/versions'&&<WorkbookVersionReview {...context}/>}
+    {page.path==='/quality'&&<RepairWorkspace {...context}/>}
     </>}
     <footer className="page-footer"><span>SheetPilot AI · Your Spreadsheets. Your AI Workforce.</span><span>Built around your Excel. Controlled by you.</span></footer>
    </main>

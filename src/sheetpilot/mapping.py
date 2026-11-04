@@ -232,12 +232,19 @@ def meta_mapping(store, workspace, provider, table_ids=None, include_confirmed=F
     return {"tables": [t["id"] for t in updates], "summary": " ".join(summaries)}
 
 
-def source_rows(store, workspace, table, con=None):
+def source_rows(store, workspace, table, con=None, *, original=False):
     workbook = store.get(workspace, "workbook", table["workbook_id"], con)
     sheet = next(s for s in workbook["report"]["worksheets"] if s["title"] == table["sheet"])
     from openpyxl.utils import get_column_letter, range_boundaries
     c1, _, c2, r2 = range_boundaries(table["ref"])
     cells = {c["coordinate"]: c for c in sheet["populated_cells"]}
+    if not original:
+        from .repairs import overlays
+        for patch in overlays(store,workspace,table,con):
+            coordinate=get_column_letter(patch['column'])+str(patch['row'])
+            cells[coordinate]=dict(cells.get(coordinate,{}),value=patch['after'],data_type='s',
+                correction={'id':patch['id'],'revision':patch['revision'],'cell':coordinate,'before':patch['before'],
+                            'after':patch['after'],'source_hash':patch['source_hash']})
     rows = []
     for r in range(table["header_row"] + 1, r2 + 1):
         values = {str(c): cells.get(f"{get_column_letter(c)}{r}", {"value": None, "data_type": "n"})

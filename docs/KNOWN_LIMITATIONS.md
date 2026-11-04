@@ -6,6 +6,8 @@ Backups are plaintext installation snapshots with limits of 64 MiB compressed, 2
 
 Workbook activation requires genuinely unique reviewed identifier fields (including composite keys). Tables without stable identifiers cannot be matched by row position. The comparison returns complete counts and bounded examples, rather than an unbounded cell diff. Candidate mappings must be reviewed and affected product links reconfirmed before purchasing; there is no automatic fuzzy migration or live cloud sync.
 
+Data repairs support explicitly selected numeric/date conventions and exact identifier reconciliation against a unique reviewed reference. They do not execute formulas, invent missing commercial terms or perform arbitrary text rewrites. The screen shows up to 500 issues and 100 affected-record examples; counts/totals cover the complete bounded workspace. Reversing a historical/remapped source correction requires returning to the appropriate source/version review.
+
 ## Verified scope
 Local upload/snapshot workflow, reviewed semantics and relationships, dashboard calculations, bounded logical agents, and approved additional Excel purchase-order outputs. Full results are in TEST_RESULTS.md.
 
