@@ -29,6 +29,8 @@ No positive recent sales produces no depletion date or purchase recommendation. 
 
 ## Preview versus reviewed policy
 
+The panel includes a purpose/how-to guide, a description for every input, and a worked stock-cover example calculated from the reviewed product rows. Each report row includes `source_reorder_point` so the UI can identify products whose Excel rules still govern purchasing. A notice and per-row label distinguish scenario order quantities from purchase quantities based on existing source targets. If every product already has an Excel reorder point, the UI explains that no additional policy confirmation is needed for those products.
+
 Default assumptions (30-day lookback, 7-day lead, 3-day buffer, 14 extra coverage days) are labeled as editable scenarios, not Excel values. GET and preview do not save settings, approve relationships or create orders.
 
 To enable a policy, the user must explicitly confirm a scenario date, acknowledge alignment with the stock snapshot/comparable units, and submit the expected policy revision. The owner can disable it. Read-only tokens cannot change policy. The policy and actor are audited.

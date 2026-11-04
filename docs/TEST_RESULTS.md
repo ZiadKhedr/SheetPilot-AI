@@ -1,5 +1,12 @@
 # SheetPilot AI — verification evidence
 
+## Planner explanations and source-rule distinction · November 4, 2026
+
+- Independently recalculated all six eligible products from the active workspace's reviewed sales records using Decimal: observed units/days, daily rate, stock cover, depletion date, reorder point, target and suggested quantity matched. A second unsaved scenario with a longer delivery time also matched. Same-input preview returned identical product results. Logical workspace state, saved policy and original-file hashes stayed unchanged.
+- Added plain-language purpose/how-to guidance, input descriptions, a worked example derived from reviewed rows and source-rule priority notices. The API exposes the existing source reorder point; calculation and policy precedence are unchanged.
+- Planner backend regressions: **15 passed**, one existing Starlette warning. All frontend tests: **38 passed**. TypeScript and Vite build passed. Real-backend Edge planner workflow: **1 passed** (17.7 seconds), covering preview, human policy confirmation and a separate pending proposal with isolated synthetic data.
+- The actual in-app browser preview responded to a longer delivery assumption and displayed changed scenario quantities while operational source rules stayed unchanged. Reload restored the saved inputs, and the explanation guide was left open. No policy was approved or disabled and no purchase action was created in the user's workspace.
+
 ## Guided-check feedback · November 4, 2026
 
 - Diagnosed repeated successful checks returning an already approved purchase-order action. Guided checks now report sales/inventory findings and explicitly explain existing outputs without claiming a new execution. Empty reviewed inventory returns mapping advice instead of failing the run.

@@ -105,9 +105,11 @@ def test_policy_change_invalidates_pending_purchase_proposal(tmp_path):
 
 def test_source_thresholds_take_precedence_and_fractional_stock_rounds_safely(tmp_path):
     store,workspace,_,_=prepared(tmp_path,source_thresholds=True);enable(store,workspace)
+    assert demand_analysis(store,workspace)["products"][0]["source_reorder_point"]=="2"
     a=next(r for r in inventory_tool(store,workspace) if r["product_id"]=="A")
     assert a["threshold_source"]=="source" and a["reorder_point"]=="2" and not a["low_stock"]
     other,other_ws,_,_=prepared(tmp_path/"fractional",stock="8.5");enable(other,other_ws)
+    assert demand_analysis(other,other_ws)["products"][0]["source_reorder_point"] is None
     a=next(r for r in inventory_tool(other,other_ws) if r["product_id"]=="A")
     assert a["suggested_quantity"]=="20"
 

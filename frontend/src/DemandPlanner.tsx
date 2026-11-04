@@ -5,7 +5,7 @@ import { Badge, Button, SectionTitle } from './components';
 import type { Context } from './types';
 
 interface Parameters{window_days:number;lead_time_days:number;safety_days:number;review_period_days:number;as_of:string|null}
-interface ProductPlan{product_id:string;product_name:string;stock_quantity:string;observed_days:number;sales_units:string|null;daily_sales:string|null;days_remaining:string|null;estimated_stockout_date:string|null;reorder_point:string|null;target_stock:string|null;suggested_quantity:string|null;eligible:boolean;needs_reorder:boolean;status:string;warnings:string[];window_start:string|null;window_end:string|null;sales_records:number;active_days:number}
+interface ProductPlan{product_id:string;product_name:string;stock_quantity:string;source_reorder_point?:string|null;observed_days:number;sales_units:string|null;daily_sales:string|null;days_remaining:string|null;estimated_stockout_date:string|null;reorder_point:string|null;target_stock:string|null;suggested_quantity:string|null;eligible:boolean;needs_reorder:boolean;status:string;warnings:string[];window_start:string|null;window_end:string|null;sales_records:number;active_days:number}
 interface Report{parameters:Parameters;policy:{enabled:boolean;revision:number;reviewed_at:string|null};preview:boolean;as_of:string|null;basis:string;formula:string;products:ProductPlan[];warnings:string[]}
 const format=(value:string|null)=>value===null?'—':new Intl.NumberFormat('en-US',{maximumFractionDigits:3,minimumSignificantDigits:1,maximumSignificantDigits:6}).format(Number(value));
 
@@ -42,32 +42,42 @@ export function DemandPlanner({root,state,busy,perform,navigate}:Pick<Context,'r
  const fresh=!!report&&!!params&&Object.keys(report.parameters).every(key=>report.parameters[key as keyof Parameters]===params[key as keyof Parameters]);
  const working=!!busy||loading;
  const eligible=report?.products.filter(p=>p.eligible).length||0;
+ const sourceRules=report?.products.filter(p=>p.source_reorder_point!=null).length||0;
+ const allSourceRules=!!report?.products.length&&sourceRules===report.products.length;
+ const example=report?.products.find(p=>p.eligible&&p.days_remaining!==null&&p.needs_reorder);
  const needsLinks=report?.products.some(p=>p.status==='relationship_review'||p.status==='insufficient_history');
  return <section className="panel demand-planner" id="demand-planner" aria-label="Sales-based stock planning">
-  <SectionTitle title="How long will your stock last?" description="Per-product sales velocity, days of cover, and calculated replenishment scenarios." action={<TrendingDown size={22}/>}/>
+  <SectionTitle title="How long will your stock last?" description="Estimate when stock may run out and compare how much you might need to reorder." action={<TrendingDown size={22}/>}/>
+  <details className="evidence"><summary>What is this for, and how do I use it?</summary>
+   <p>This planner turns past sales into a daily selling rate, then estimates how long your current stock could last if that rate continues.</p>
+   <ol><li>Enter the stock snapshot date and planning assumptions below.</li><li>Click Preview calculations, then View product results to compare stock cover and suggested quantities.</li><li>If Excel has no reorder point, you can review and confirm a policy to use the calculated rule. Then run an agent check to prepare a draft; purchase approval is still separate.</li></ol>
+   <p>Preview is for trying scenarios. It does not change your saved policy, order stock, or edit Excel.</p>
+  </details>
   {error&&<p role="alert" className="mapping-warning">{error}</p>}
   {loading&&!report&&<p role="status">Analyzing reviewed sales history…</p>}
   {params&&report&&<>
    <div className="demand-basis"><Badge tone={report.policy.enabled&&!report.preview&&fresh?'green':'amber'}>{report.preview||!fresh?'Unsaved scenario · active policy unchanged':report.policy.enabled?'Reviewed policy enabled':'Scenario only · not an active policy'}</Badge><p>Scenario date: <strong>{report.as_of||'No dated sales available'}</strong>. Daily rate uses calendar days, including zero-sale days. This is a historical scenario when the date is in the past.</p><small>Defaults are editable planning assumptions, not values discovered in your Excel. Stock and sales must represent the same units and date.</small></div>
    <div className="demand-controls">{([
-    ['window_days','Sales lookback (days)',7,365],['lead_time_days','Delivery lead time (days)',1,365],
-    ['safety_days','Safety buffer (days)',0,365],['review_period_days','Extra coverage after delivery (days)',1,365],
-   ] as const).map(([key,title,min,max])=><label key={key}>{title}<input type="number" min={min} max={max} value={params[key]} onChange={e=>edit({...params,[key]:Number(e.target.value)})}/></label>)}
-    <label>Stock snapshot / scenario date<input type="date" value={params.as_of||''} onChange={e=>edit({...params,as_of:e.target.value||null})}/></label>
+    ['window_days','Sales lookback (days)',7,365,'Past sales history used to calculate the daily average.'],['lead_time_days','Delivery lead time (days)',1,365,'How long a new order takes to arrive.'],
+    ['safety_days','Safety buffer (days)',0,365,'Extra days of stock to allow for delays.'],['review_period_days','Extra coverage after delivery (days)',1,365,'Additional selling days included in the target stock level.'],
+   ] as const).map(([key,title,min,max,hint])=><label key={key}>{title}<input type="number" aria-label={title} aria-describedby={'demand-hint-'+key} min={min} max={max} value={params[key]} onChange={e=>edit({...params,[key]:Number(e.target.value)})}/><small id={'demand-hint-'+key}>{hint}</small></label>)}
+    <label>Stock snapshot / scenario date<input type="date" aria-label="Stock snapshot / scenario date" aria-describedby="demand-date-hint" value={params.as_of||''} onChange={e=>edit({...params,as_of:e.target.value||null})}/><small id="demand-date-hint">The date the on-hand quantities represent; estimates start from this date.</small></label>
    </div>
    <Button variant="secondary" disabled={working} onClick={()=>void preview()}>{loading?'Calculating…':'Preview calculations'}</Button>
    <div className="source-checks" aria-label="Planning next step">
     <p>Preview recalculates the product table below. It does not activate the policy or create a purchase order.</p>
     {previewMessage&&<p role="status" aria-live="polite">{previewMessage}</p>}
-    {eligible>0?<p>Next: review the results, then confirm the planning policy after checking its date and units.</p>:<p>No products can use this policy yet. {needsLinks?'Review sales dates and product relationships first.':'Check the product evidence for insufficient history, missing dates, or incompatible units.'}</p>}
+    {allSourceRules?<p>No policy confirmation is needed for these products: Excel already supplies their reorder rules. Use Preview to compare assumptions.</p>:eligible>0?<p>Next: review the results, then confirm the planning policy after checking its date and units.</p>:<p>No products can use this policy yet. {needsLinks?'Review sales dates and product relationships first.':'Check the product evidence for insufficient history, missing dates, or incompatible units.'}</p>}
     <Button variant="ghost" onClick={()=>resultsRef.current?.scrollIntoView({behavior:'smooth',block:'start'})}>View product results<ArrowRight size={14}/></Button>
     {eligible>0?<Button variant="ghost" onClick={()=>policyRef.current?.scrollIntoView({behavior:'smooth',block:'center'})}>Review policy confirmation<ArrowRight size={14}/></Button>:
      <Button variant="ghost" onClick={()=>navigate('/mapping#relationships')}>Review sales data and links<ArrowRight size={14}/></Button>}
    </div>
+   {sourceRules>0&&<div className="source-checks" role="note" aria-label="Excel reorder rules take priority"><p><strong>{sourceRules} of {report.products.length} products already have reorder points in Excel.</strong> Their purchase quantities keep using the reviewed Excel reorder points and targets. The scenario quantities below are for comparison; an enabled planning policy only fills missing reorder points.</p></div>}
+   {example&&<p className="demand-formula" aria-label="Example from your data">For {example.product_name}: {format(example.sales_units)} units sold over {example.observed_days} days = {format(example.daily_sales)} per day. {format(example.stock_quantity)} on hand ÷ {format(example.daily_sales)} per day = about {format(example.days_remaining)} days of stock as of {report.as_of}.</p>}
    {!fresh&&<p className="mapping-warning">Assumptions changed. Preview again before confirming this policy.</p>}
    <p className="demand-formula">Daily sales = units sold ÷ observed days · Days left = stock ÷ daily sales · Reorder point = daily sales × (lead time + buffer) · Target adds the extra coverage period. Order quantities round up to whole base units.</p>
    <div ref={resultsRef} className="table-wrap demand-results"><table><thead><tr><th>Product</th><th>On hand</th><th>Sales / day</th><th>Days left</th><th>Estimated depletion</th><th>Scenario order</th><th>Evidence / status</th></tr></thead><tbody>{report.products.map(p=><tr key={p.product_id}>
-    <td><strong dir="auto">{p.product_name}</strong><small>{p.product_id}</small></td><td>{format(p.stock_quantity)}</td><td>{format(p.daily_sales)}</td><td>{format(p.days_remaining)}</td><td>{p.estimated_stockout_date||'Not estimated'}</td><td>{p.suggested_quantity===null?'—':format(p.suggested_quantity)}<small>Reorder at {format(p.reorder_point)} · target {format(p.target_stock)}</small></td>
+    <td><strong dir="auto">{p.product_name}</strong><small>{p.product_id}</small></td><td>{format(p.stock_quantity)}</td><td>{format(p.daily_sales)}</td><td>{format(p.days_remaining)}</td><td>{p.estimated_stockout_date||'Not estimated'}</td><td>{p.suggested_quantity===null?'—':format(p.suggested_quantity)}<small>Reorder at {format(p.reorder_point)} · target {format(p.target_stock)}</small>{p.source_reorder_point!=null&&<small>Excel rule takes priority for purchasing</small>}</td>
     <td><Badge tone={!p.eligible||p.needs_reorder?'amber':'green'}>{label(p.status)}</Badge><details><summary>{p.sales_units===null?'Review needed':`${format(p.sales_units)} units / ${p.observed_days} calendar days`}</summary><p>{p.window_start} – {p.window_end}; {p.sales_records} sales rows on {p.active_days} positive sales days.</p>{p.warnings.map((w,i)=><p key={i}>{w}</p>)}{!p.eligible&&<p>Provisional or unavailable; cannot set a replenishment threshold.</p>}</details></td>
    </tr>)}</tbody></table></div>
    {!report.products.length&&<p>Confirm inventory mappings to see a plan for each product.</p>}

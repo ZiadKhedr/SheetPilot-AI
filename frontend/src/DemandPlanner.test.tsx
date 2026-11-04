@@ -98,3 +98,22 @@ test('changing the scenario clears an earlier snapshot acknowledgement',async()=
  expect(screen.getByRole('checkbox')).not.toBeChecked();
  expect(screen.getByRole('button',{name:'Confirm sales-based planning policy'})).toBeDisabled();
 });
+
+test('source reorder rules are distinguished from scenario quantities',async()=>{
+ vi.mocked(api).mockResolvedValue({...report,policy:{enabled:true,revision:1,reviewed_at:'2026-01-10'},products:[{...report.products[0],source_reorder_point:'2'}]});
+ render(<DemandPlanner root="/workspaces/test" state={state} busy="" perform={vi.fn()} navigate={vi.fn()}/>);
+ await screen.findByText('Fast widget');
+ expect(screen.getByRole('note',{name:'Excel reorder rules take priority'})).toHaveTextContent('1 of 1 products already have reorder points in Excel');
+ expect(screen.getByText(/No policy confirmation is needed for these products/)).toBeVisible();
+ expect(screen.getByText('Excel rule takes priority for purchasing')).toBeVisible();
+ expect(api).toHaveBeenCalledTimes(1);
+});
+
+test('planner explains its purpose and uses reviewed data for its example',async()=>{
+ setup();await screen.findByText('Fast widget');
+ fireEvent.click(screen.getByText('What is this for, and how do I use it?'));
+ expect(screen.getByText(/Preview is for trying scenarios/)).toBeVisible();
+ expect(screen.getByRole('spinbutton',{name:'Delivery lead time (days)'})).toHaveAccessibleDescription('How long a new order takes to arrive.');
+ expect(screen.getByLabelText('Example from your data')).toHaveTextContent('40 units sold over 10 days = 4 per day');
+ expect(screen.getByLabelText('Example from your data')).toHaveTextContent('8 on hand ÷ 4 per day = about 2 days');
+});

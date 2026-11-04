@@ -94,6 +94,7 @@ def demand_analysis(store, workspace, parameters=None, all_records=None):
         warnings=[]
         row={"product_id":stock["product_id"],"product_name":stock["data"].get("product_name") or stock["product_id"],
             "stock_quantity":stock["data"]["stock_quantity"],"inventory_table_id":table_id,
+            "source_reorder_point":stock["data"].get("reorder_point"),
             "window_start":observed_start.isoformat() if observed_start else None,"window_end":anchor.isoformat() if anchor else None,
             "observed_days":days,"sales_records":len(recent),"active_days":len({d for _,d in recent}),"undated_sales_records":undated,
             "sales_units":None,"daily_sales":None,"days_remaining":None,"estimated_stockout_date":None,
