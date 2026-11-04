@@ -29,7 +29,7 @@ export function MappingPage(context:Context){
     const left=state.tables.find(t=>t.id===r.left_table),right=state.tables.find(t=>t.id===r.right_table);
     const {ready,needsRefresh,reasons}=relationshipReview(r,left,right);
     const source=(t:TableInfo|undefined)=>{const w=state.workbooks.find(w=>w.id===t?.workbook_id);return `${w?.name||'Workbook'} / ${t?.sheet||'Table'} · ${t?.ref||''}`};
-    return <div className="relationship" key={r.id}>
+    return <div className="relationship" id={'relationship-'+r.id} key={r.id}>
      <div className="relationship-join"><Badge>{label(left?.entity||'table')}</Badge><Link2 size={16}/><Badge>{label(right?.entity||'table')}</Badge><strong>{label(r.field)}</strong><Badge tone={r.status==='confirmed'?'green':r.strength==='weak'?'amber':''}>{r.status==='proposed'?r.strength+' evidence':r.status}</Badge>{r.cardinality&&<Badge tone="outline">{r.cardinality}</Badge>}</div>
      <div className="relationship-sources"><span>{source(left)}<small>Column {r.left_column}: {left?.columns.find(c=>String(c.index)===r.left_column)?.label}</small></span><span>{source(right)}<small>Column {r.right_column}: {right?.columns.find(c=>String(c.index)===r.right_column)?.label}</small></span></div>
      <p>{r.evidence}</p><small>Matching values: {r.matching_examples.join(', ')||'none'}</small>

@@ -8,6 +8,7 @@ import { ActivityPage, FilesPage, MappingPage, Structure } from './DataPages';
 import { AgentWorkspace, ApprovalCenter } from './AgentPages';
 import type { Context, Dashboard, Provider, SemanticCatalog, State, Workspace } from './types';
 import { WorkspaceRecovery } from './WorkspaceRecovery';
+import { NextSteps } from './NextSteps';
 
 const pages=[
  {path:'/',name:'Overview',icon:LayoutDashboard,section:'workspace'},
@@ -101,6 +102,7 @@ function WorkspaceApp(){
     {busy&&<div className="progress-banner"><Busy message={busy}/></div>}
     {loading?<div className="skeleton"><div/><div/><div/></div>:!state?<Empty icon={<Database/>} title="Connect to your workspace">Check that the backend is running. If an access token is configured, enter it in Connection settings.<Button onClick={()=>void initialize()}>Retry connection</Button><Button onClick={()=>setSettingsOpen(true)}>Connection settings</Button></Empty>:
     <>
+    {page.path==='/'&&<NextSteps steps={state.next_steps}/>}
     {page.path==='/'&&<Overview {...context}>{!state.workbooks.length&&<Welcome loadDemo={loadDemo} upload={()=>fileInput.current?.click()} busy={!!busy}/>}</Overview>}
     {page.path==='/files'&&<FilesPage {...context} upload={upload} loadDemo={loadDemo} browse={()=>fileInput.current?.click()}/>}
     {page.path==='/structure'&&<Structure {...context}/>}

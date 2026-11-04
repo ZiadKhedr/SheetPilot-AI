@@ -1,5 +1,9 @@
 # Workspace backup, review and version lifecycle
 
+## Guided next steps
+
+Overview displays six steps from the backend state API: upload, mapping review, relationship review, data blockers, analysis and purchase review. Status is computed from active workbook metadata, actual mapping/relationship revisions, excluded row errors, missing currency, procurement prerequisites and persisted runs/actions. A historical completed job counts as current only when its input fingerprint still matches. Each item links to its exact table, relationship, run or purchase action when available. All changes reload the checklist with the workspace state. Opening a checklist link never approves anything.
+
 ## Backup and restore
 
 Open **Backup and restore** to download an installation ZIP. A SQLite write reservation spans a consistent SQLite backup and the collection of database-referenced original/output workbooks. The ZIP contains a versioned manifest, file sizes and SHA256 hashes, the database (all workspaces, mappings, relationships, policies and audit events), and referenced Excel files. Credentials, `.env`, provider verification, local dependencies and unrelated files are excluded. Backup fails if referenced originals or executed outputs are missing or changed.

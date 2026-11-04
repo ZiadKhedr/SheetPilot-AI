@@ -2,6 +2,8 @@
 
 ## Workspace lifecycle validation · November 4, 2026
 
+- Guided checklist: **7 passed** backend checklist/API workflow tests, **1 passed** component test, TypeScript/Vite build passed, **1 passed** real-backend Edge scenario (5.4 seconds). Verified empty workspace states, actual review transitions, stale analysis fingerprints, pending approval targets, workspace switching, exact table navigation and 390-pixel layout.
+
 - Baseline: **183 passed, 4 skipped** Python tests; **45 passed** frontend tests. Sandbox temporary-folder errors were environmental; the normal-permission baseline passed.
 - Backup/restore: **8 passed** backend tests. A complete round trip preserved reviewed mappings, relationships, policy, normalized data, full audit history, originals and an executed output. Hostile paths, changed hashes, incompatible executable schema and missing references were rejected before publication. Authentication and existing-data preservation passed.
 - Recovery frontend: **2 passed** component tests; TypeScript/Vite production build passed. **1 passed** real-backend Edge browser scenario covering backup download, isolated restore, existing originals and invalid-archive feedback (4.7 seconds). Direct binary API export passed; Edge binary fetch stalled, so the browser uses bounded base64 JSON transport for the same ZIP bytes.

@@ -2,6 +2,8 @@
 
 ## Workspace lifecycle upgrade · November 4, 2026
 
+- Milestone 2 complete: workspace-aware next steps returned by the state API and refreshed after mutations; exact mapping/relationship/run/action links; plain-language data and procurement blockers; current-fingerprint analysis recognition. Seven checklist/API tests, one frontend test and one real-backend Edge/mobile scenario passed; TypeScript/Vite built.
+
 - Baseline: clean working tree at `976be9b`; verified existing `ZiadKhedr/SheetPilot-AI` remote at the same main revision. 183 offline Python tests passed, four documented skips; 45 frontend tests passed. Restricted filesystem tests were rerun with normal permissions.
 - Milestone 1 complete: consistent database and referenced-workbook backup; versioned manifest; path/size/schema/reference/hash validation; restore into a new isolated installation; owner-only export and mutation-protected restore; connected recovery screen. Eight new backend tests and two frontend tests passed. TypeScript/production build passed. One real-backend Edge round-trip and invalid-archive scenario passed. Binary fetch stalled in this browser; the bounded base64 JSON transport passed, preserving the exact ZIP bytes. Direct binary API export passed separately.
 

@@ -1,0 +1,20 @@
+import {test,expect} from '@playwright/test';
+test('workspace checklist refreshes from backend and links to an exact table',async({page,request})=>{
+ const empty=await (await request.post('/api/workspaces',{data:{name:'Checklist empty'}})).json();
+ await page.addInitScript(id=>localStorage.setItem('sheetpilot-workspace',id),empty.id);
+ await page.goto('/');
+ await expect(page.locator('[data-step="upload"]')).toContainText('Upload sales');
+ await expect(page.locator('[data-step="analysis"]')).toContainText('Waiting');
+ const demo=await (await request.post('/api/demo/company_b')).json();
+ await page.reload();
+ await page.getByLabel('Select workspace').selectOption(demo.id);
+ await expect(page.locator('[data-step="mappings"]')).toContainText('explicit mapping review');
+ const link=page.locator('[data-step="mappings"] a').first();
+ const href=await link.getAttribute('href');
+ await link.click();
+ await expect(page).toHaveURL(new RegExp(href!.replace('#','.*#')));
+ await expect(page.locator(href!.slice(href!.indexOf('#')))).toBeVisible();
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

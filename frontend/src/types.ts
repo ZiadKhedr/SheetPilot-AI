@@ -18,3 +18,4 @@ export interface Context{state:State;stats:Dashboard;provider:Provider;fields:st
 
 export interface ProcurementBlocker{code:string;product_id:string;message:string;next_step:string;inventory_table_id:string}
 export interface ProcurementReadiness{ready:boolean;low_stock_count:number;ready_count:number;blockers:ProcurementBlocker[]}
+export interface State{next_steps?:import('./NextSteps').StepChecklist}

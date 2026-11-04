@@ -79,10 +79,12 @@ def create_app(settings=None):
 
     @app.get("/api/workspaces/{workspace}/state", dependencies=[Depends(auth)])
     def state(workspace: str):
+        from .checklist import next_steps
         return {"workspace": store.workspace(workspace), "workbooks": store.list(workspace, "workbook"),
                 "tables": store.list(workspace, "table"), "relationships": store.list(workspace, "relationship"),
                 "actions": store.list(workspace, "action"), "runs": store.list(workspace, "run"),
                 "events": store.events(workspace),
+                "next_steps": next_steps(store, workspace),
                 "relationship_report": next(iter(store.list(workspace, "relationship_report")), None)}
 
     @app.post("/api/workspaces/{workspace}/uploads", dependencies=[Depends(auth)])
