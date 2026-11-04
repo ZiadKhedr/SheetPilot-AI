@@ -29,7 +29,11 @@ No positive recent sales produces no depletion date or purchase recommendation. 
 
 ## Preview versus reviewed policy
 
-The panel includes a purpose/how-to guide, a description for every input, and a worked stock-cover example calculated from the reviewed product rows. Each report row includes `source_reorder_point` so the UI can identify products whose Excel rules still govern purchasing. A notice and per-row label distinguish scenario order quantities from purchase quantities based on existing source targets. If every product already has an Excel reorder point, the UI explains that no additional policy confirmation is needed for those products.
+The panel starts with “Will your stock last until delivery?” and a plain-language attention summary. Products are ordered by urgency, with cards showing on-hand stock, sales per day, estimated stock cover and a possible run-out date. A reviewed operational top-up, when available, comes from the dashboard's existing Excel/saved-rule calculation and names its source. “Review restocking” opens Agent Workspace; it does not create or approve an action.
+
+“Change settings” reveals the stock count date and supplier delivery days. “More settings” contains the sales-history window, delay buffer and extra stock days. “Update estimate” sends an unsaved preview; “Reset to saved settings” reloads settings with a read request. “Why these numbers?” shows each product's arithmetic, evidence and separate test top-up. Excel targets stay in control of actual purchase suggestions. These defaults keep inputs, technical detail and policy review out of the initial result view.
+
+The optional ordering section uses a separate date/unit acknowledgement and “Save ordering settings” action for products with eligible history and missing source reorder points. When every product already has an Excel rule, no extra save control is offered. An existing sales-based fallback can still be explicitly turned off. The API's `source_reorder_point` distinguishes source rules from test estimates.
 
 Default assumptions (30-day lookback, 7-day lead, 3-day buffer, 14 extra coverage days) are labeled as editable scenarios, not Excel values. GET and preview do not save settings, approve relationships or create orders.
 

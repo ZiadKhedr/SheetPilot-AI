@@ -1,5 +1,12 @@
 # SheetPilot AI — verification evidence
 
+## Stock outlook usability redesign · November 4, 2026
+
+- Replaced the initial planning form/table with an attention summary and product cards ordered by urgency. Everyday labels show stock, typical daily sales, estimated days of stock and the current top-up source. Delivery-time tests, arithmetic and ordering-rule review are revealed separately. Original backend arithmetic, source-rule precedence and approval requirements are unchanged.
+- Frontend: **41 passed** across nine files, including 13 stock-outlook regressions. Covers results before inputs, urgency ordering, operational versus test quantities, explicit save acknowledgement, reset with GET only, stale/failed previews, invalid inputs, data-review recovery and small positive rates. TypeScript and production build passed.
+- Real-backend Edge browser suite: **5 passed, 2 live Meta cases skipped**, 42.0 seconds. The planner flow tests simplified controls, calculation details, explicit policy saving, a separate pending draft and a 390-pixel layout with no page overflow. No live provider calls were used.
+- Verified the new controls in the actual local workspace, tested a longer delivery time, and reset the experiment to saved inputs. Operational Excel quantities stayed separate from test quantities. The independent six-product arithmetic check passed again; logical workspace state, saved policy and original hashes were unchanged by preview.
+
 ## Planner explanations and source-rule distinction · November 4, 2026
 
 - Independently recalculated all six eligible products from the active workspace's reviewed sales records using Decimal: observed units/days, daily rate, stock cover, depletion date, reorder point, target and suggested quantity matched. A second unsaved scenario with a longer delivery time also matched. Same-input preview returned identical product results. Logical workspace state, saved policy and original-file hashes stayed unchanged.
