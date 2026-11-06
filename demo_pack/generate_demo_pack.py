@@ -419,113 +419,66 @@ def generate(root, as_of=DEFAULT_DATE, seed=42):
     source=Path(__file__).resolve().parent
     for name in ['generate_demo_pack.py','validate_demo_pack.py']:
         if (source/name).exists() and (source/name).resolve() != (root/name).resolve():shutil.copyfile(source/name,root/name)
-    print(f'Generated 9 XLSX workbooks in {root}; run validate_demo_pack.py --app to validate and package.')
+    print(f'Generated 9 XLSX workbooks in {root}; run validate_demo_pack.py --app to validate.')
     return manifest,expected
 
 
 def write_docs(root,manifest,e):
-    c=e['core']; a=e['as_of']; lookup={s['id']:s for s in manifest['tables']}
-    def refs(pid):
-        lines,orders,stock,_=core_records(date.fromisoformat(a),e['seed'])
-        index=next(i for i,p in enumerate(stock) if p['product_id']==pid)
-        row=index+6
-        first=[(i,r) for i,r in enumerate(lines) if r['product_id']==pid][:3]
-        samples=[f"'Sales Lines'!A{i+5}:L{i+5}" for i,r in first]
-        order_indices={o['order_id']:i for i,o in enumerate(orders)}
-        order_cells=[f"'Orders'!B{order_indices[r['order_id']]+7}:D{order_indices[r['order_id']]+7}" for i,r in first]
-        return f"02_Warehouse.xlsx 'Current Stock'!C{row}:N{row}; 01_Commerce.xlsx " + ', '.join(samples+order_cells) + f"; 03_Supplier_Quotes.xlsx 'Supplier Quotes'!B{index+8}:M{index+8}"
-    stories={'NC-001':'Urgent fast mover: 600 units / 30 days = 20 per day. Stock 18 gives 0.9 days. Core top-up 162 at EGP 275 = 44,550.00.',
-             'NC-002':'Dock campaign growth: current seven-day quantity is three times previous, fixed EGP 1,800 net price. Revenue +200%.',
-             'NC-003':'SSD decline: current seven-day quantity is 40% of previous, fixed EGP 2,400 net price. Revenue -60%.',
-             'NC-004':'Out of stock with 25 units per day of dated historical demand. Source top-up 300.',
-             'NC-005':'Healthy stock: 600 physical units against 10 units per day. No source-rule purchase.',
-             'NC-006':'Overstocked slow seller: 1,000 physical units against one unit per day. No source-rule purchase.',
-             'NC-007':'Older sales history, no last-30-day sales. No recent demand estimate or confirmed zero-demand claim.',
-             'NC-008':'New SKU: exactly two positive records on two days. Insufficient history cannot supply demand thresholds.'}
-    cards=['# Scenario cards','',f'Company: {COMPANY}. Historical snapshot: {a}. All quantities are base units (`each`).','']
-    for pid,story in stories.items():
-        tool='Sales Agent / sales_comparison' if pid in {'NC-002','NC-003'} else 'Inventory Agent / inventory_analysis'
-        cards += [f'## {pid} — {c["risk_cases"][pid]["product_name"]}','',story,'',f'Sources: {refs(pid)}.', '',f'Responsible specialist/tool: {tool}. Human step: confirm mappings and exact links. Procurement Agent / draft_purchase_orders creates a pending proposal only. Review quantities and supplier evidence before approving any output.','']
-    cards += ['## Challenge source coordinates','', 'A_quality / Quality_Repairs.xlsx, Sales: duplicate B5:H5 copied exactly to B6:H6. C8 is missing product ID. D9 requires thousands-comma interpretation. E10 requires decimal-comma interpretation. F11 requires DMY interpretation. D12 contains accepted numeric text `1200`.', '',
-              'B_demand / Demand_Policy.xlsx: DP-001 Sales A4:M33; Current Stock B6:K6; Supplier Quotes A8:L8. Inventory Agent uses reviewed 30-day history; save the explicit demand policy to make calculated thresholds operational.', '',
-              'C_commercial / Supplier_Terms.xlsx: NC-001 Current Stock C6:N6; Supplier Quotes B8:M8. Procurement Agent uses only saved supplier rules and separately saved incoming records. See incoming_order_entry_guide.json for every SKU rule.', '',
-              'D_versions / 02_Warehouse_v2.xlsx: use product_id, not row number. One added, one removed, three changed and 36 unchanged. The manifest and expected_results.json list keys.','']
-    (root/'SCENARIO_CARDS.md').write_text('\n'.join(cards),encoding='utf-8')
-    quality=e['quality']['stages']
-    guide=f'''# Recording guide
+    c=e['core']
+    readme=f"""# Nile Circuit sample workbooks
 
-Use a new workspace named Nile Circuit Distribution. Upload only core/01_Commerce.xlsx, core/02_Warehouse.xlsx and core/03_Supplier_Quotes.xlsx. Default as-of date: {a}. These are historical snapshot facts. Set the demand estimate stock date to {a} if needed. Use an already configured real Meta provider for Meta footage. Generation and validation do not configure or call Meta. Guided tools are labeled no AI.
+Synthetic EGP business data for evaluating SheetPilot. Historical snapshot: {e['as_of']}.
 
-## Main story (6 minutes 30 seconds)
+## Try the core workflow
 
-| Time | Screen and action | Evidence and concise narration |
-|---|---|---|
-| 0:00–0:40 | Excel File Manager: upload the three core files. Structure Explorer: open Sales Lines, Orders, Current Stock and Supplier Quotes. | Show offset headers and source coordinates. Exclude the hidden Internal Notes sheet, and exclude title/subtitle rows above each manifest header. No administrative table belongs in analytics. |
-| 0:40–2:00 | Mapping Review: request actual Meta proposals, then inspect each mapping. | Net Selling Price is unit_price, List Price is list_unit_price, Discount per Unit is unit_discount, Net Line Amount is revenue. Physical On Hand is stock_quantity; opening and reserved quantities are separate. Orders is order-header grain; Invoice Total maps to order_total. Leave Sales Channel, Campaign Code, Line Notes, Quote Reference and Quote Notes as preserved custom columns. Confirm the four operational mappings. |
-| 2:00–2:30 | Mapping Review: discover relationships; review three exact links. | Sales Lines–Orders on order_id (many-to-one), Sales Lines–Current Stock on product_id (many-to-one), Current Stock–Supplier Quotes on product_id (one-to-one). Check entity, field, exact overlap, cardinality and unmatched IDs. Do not accept every candidate. Dates and descriptions now flow through reviewed joins. |
-| 2:30–3:20 | Overview, then Business Analytics. | Revenue EGP {c['revenue']}, {c['units']} units, 6,000 sales lines, 1,200 headers and 40 stock SKUs. Order totals do not double revenue. Show seven-day comparison anchored to latest reviewed sale: {c['comparison']['current_from']}–{c['comparison']['current_to']} versus {c['comparison']['previous_from']}–{c['comparison']['previous_to']}. NC-002 +200%, NC-003 -60%. Show NC-001 at 20/day and 0.9 days cover, plus NC-004 out of stock. |
-| 3:20–4:25 | Agent Workspace: select Meta mode and Review the business. | Wait for the real run. Show Sales Agent sales_analysis and sales_comparison, Inventory Agent inventory_analysis, Procurement Agent procurement_review: four sequential tool checks, actual status/runtime/work counts/source evidence. Download the text work report. This review creates no purchase proposal. Narration: Meta selects typed tools; Python calculates the numbers. |
-| 4:25–5:25 | Agent Workspace: Prepare purchase drafts in Meta mode. Open Approval Center. | Show actual inventory_analysis and draft_purchase_orders steps. Inspect the pending proposal, supplier IDs, currency, quantity and sources. With commercial policy disabled NC-001 is 162 units, EGP 44,550.00. Quoted packs/MOQ alone do not round it. Full core proposal is EGP {c['draft_total']}; exact lines and supplier subtotals are in expected_results.json. |
-| 5:25–6:30 | Approval Center: approve once; download. Inspect Purchase Orders, Source Trace and Execution sheets. Activity Timeline: show real execution. | The approved output is an additional workbook. Reopen the same completed proposal: the same output is returned, with no second execution. Download/open the original warehouse file: NC-001 remains 18. Narration: the human approves workbook generation; no supplier order is sent and no receipt is recorded. |
+1. Create a fresh workspace and upload the three workbooks in `core/`.
+2. Review the Sales Lines, Orders, Current Stock and Supplier Quotes mappings. Exclude Internal Notes and title rows above the headers.
+3. Review exact relationships: Sales Lines to Orders on `order_id`, Sales Lines to Current Stock on `product_id`, and Current Stock to Supplier Quotes on `product_id`.
+4. Inspect analytics, run an agent task, then review a pending purchase proposal before approving an additional Excel output.
 
-Do not promise a fixed provider response time. Cut quiet waiting in editing without fabricating progress or logs. Only describe reconnection/recoverability if actually observed in a real run. A worker interruption requires explicit review/retry; no promise of automatic replay.
+| Fixture expectation | Result |
+| --- | ---: |
+| Sales lines | 6,000 |
+| Order headers | 1,200 |
+| Stock SKUs | 40 |
+| Suppliers | 8 |
+| Reviewed revenue | EGP {c['revenue']} |
+| Purchase draft with source thresholds and no commercial policy | EGP {c['draft_total']} |
 
-## Three paste-ready custom requests (Meta mode)
+These are independent fixture expectations. The application calculates results from reviewed workbooks. `mapping_manifest.json` records source coordinates and required links; `expected_results.json` contains exact calculations and stages. Neither file grants application approval.
 
-1. Compare NC-002 and NC-003 separately over the latest seven calendar days versus the preceding seven. Use sales_comparison with exact product IDs and show source evidence.
-2. Use inventory_analysis for NC-001. Explain its dated demand, stock cover, source thresholds and quantity basis.
-3. Use inventory_analysis and draft_purchase_orders for NC-001 only. Prepare a pending purchase draft with quantity, supplier, EGP total and sources for my review.
+## Additional evaluation files
 
-The comparison tool accepts one product scope per call. The first request requires separate scoped calls. If a provider request fails, show its actual error, review the connection and explicitly retry. Guided/no-AI results must never be presented as Meta results.
+| Folder | Purpose | Workspace |
+| --- | --- | --- |
+| `challenges/A_quality/` | Numeric/date repair, duplicates and missing identifiers | Fresh |
+| `challenges/B_demand/` | Reviewed demand-based ordering settings | Fresh |
+| `challenges/C_commercial/` | Supplier terms and separately entered incoming orders | Fresh |
+| `challenges/D_versions/` | Stable-key stock snapshot comparison | Core workspace: use New snapshot on the original warehouse workbook |
+| `optional/E_mapping/` | Products, customers, supplier directory, purchases and payments | Fresh |
+| `optional/F_arabic/` | Independent Arabic company | Fresh |
 
-## Optional A: data quality and reversible repair (fresh workspace)
+For demand and supplier planning, use the historical snapshot date above. Supplier-order entry values are in `challenges/C_commercial/incoming_order_entry_guide.json`. Review and save them separately in the app. Imported purchase rows and generated workbooks do not record incoming stock.
 
-Upload only challenges/A_quality/Quality_Repairs.xlsx. Map Sales with explicit sale_date. B5:H5 and B6:H6 are exact duplicates, including invoice ID. Another DQ-A order is a valid independent sale. C8 has no product ID and remains excluded. D12 `1200` is already usable numeric text.
+## Reproduce and validate
 
-Data quality repairs: preview D9 as thousands_comma (`1,200` to 1200), approve. Preview E10 as decimal_comma (`25,50` to 25.50), approve. Preview F11 as date_dmy ({date.fromisoformat(a).strftime('%d/%m/%Y')} to {a}), approve. Revenue stages: EGP {quality['before']['revenue']} → {quality['after_thousands']['revenue']} → {quality['after_decimal']['revenue']} → {quality['after_date']['revenue']}. Dated trend revenue stages: {quality['before']['dated_revenue']} → {quality['after_thousands']['dated_revenue']} → {quality['after_decimal']['dated_revenue']} → {quality['after_date']['dated_revenue']}. An invalid date retains revenue but omits it from trends. Reverse the three corrections in reverse order using preview and human approval; revenue returns to {quality['reversed_all']['revenue']}, with original files preserved. No formula repair or unsupported identifier guess is involved.
+Requires Python 3.10+ and openpyxl 3.1+. From this folder:
 
-## Optional B: demand ordering policy (fresh workspace)
-
-Upload only challenges/B_demand/Demand_Policy.xlsx, confirm Sales, Current Stock and Supplier Quotes, then confirm the two exact product links in the manifest. Business Analytics: Change settings, stock date {a}; More settings: 30-day lookback, 7 delivery days, 3 safety days, 14 extra stock days. Update estimate previews only. DP-001 has 150 units / 30 days = 5/day, stock 6, cover 1.2 days, reorder 50, target 120 and top-up 114. Explicitly acknowledge comparable base units and alignment with the physical stock snapshot, then Save ordering settings. Only then prepare purchase drafts and separately approve output. Source thresholds take precedence wherever present. Call this a trailing-average scenario, never an ML forecast or a guaranteed stockout date.
-
-## Optional C: supplier terms and incoming orders (fresh workspace)
-
-Upload only challenges/C_commercial/Supplier_Terms.xlsx. Confirm its three mappings and two exact product links. Open Supplier planning. Set planning date {a} and horizon 14. Review and enter ALL three SKU rules from incoming_order_entry_guide.json; select the matching quote, per-base-unit prices, units and EGP. Preview, acknowledge and save. NC-001 changes from 162 to 168 units (14 packs of 12), EGP 46,200.00.
-
-Incoming orders: explicitly enter and confirm the 48-unit unreceived external order in the JSON guide, expected {date.fromisoformat(a)+timedelta(days=3)}. Position becomes 18 + 48 = 66, below reorder 70. Net requirement 180 - 66 = 114; ten packs produce 120 units, EGP 33,000.00. Optional overdue, cancelled and day-15 examples do not count. A generated workbook or imported purchases table does not record incoming stock. Save all rule/receipt changes before preparing a fresh proposal; data changes can invalidate a pending one. Use an NC-001-scoped custom request to isolate the hero line if desired.
-
-## Optional D: new stock snapshot (after purchase footage or fresh core workspace)
-
-File Manager: select the original warehouse file, choose New snapshot and upload challenges/D_versions/02_Warehouse_v2.xlsx. Do not upload it as an independent active inventory file. Confirm the candidate mapping. Preview changes with product_id as the stable key, explicitly save the identifier/key review, then activate the candidate. Expected: 1 added (NC-041), 1 removed (NC-040), 3 changed (NC-001/002/003), 36 unchanged. Row movement alone is unchanged. Only the active snapshot contributes; old originals remain downloadable. Review links against the new mapping. Previous findings/pending proposals may become stale. The added SKU intentionally lacks a quote until separately reviewed; do not continue core procurement claims after this update.
-
-## Optional E/F: broader entities and Arabic mapping
-
-E_mapping/Broader_Entities.xlsx is a small entity-preservation showcase in a separate workspace. Map products, customers, supplier_directory, purchases and payments to their own entities. Standalone sales revenue is zero, and no incoming order is created. It does not implement CRM, receivables or automatic purchase ingestion. A supplier directory cannot replace product-specific quotes. If showing this alongside a deliberately extended core workspace, retain inventory-to-sales enrichment and do not also confirm product-master-to-sales enrichment, which can create ambiguous inherited context.
-
-F_arabic/Manara_Trading.xlsx belongs to a separate company/workspace, Manara Electronics Trading, with MN-/MNV- IDs and EGP. Confirm the Arabic tables and two exact product links. Its expected revenue is EGP {e['arabic']['revenue']}. Do not load a translated second copy of core data into the main workspace.
-'''
-    (root/'RECORDING_GUIDE.md').write_text(guide,encoding='utf-8')
-    readme='''# SheetPilot AI synthetic demo pack
-
-Start with RECORDING_GUIDE.md. Upload only the three core/*.xlsx files into a clean workspace. Every challenge/optional folder is a separate workspace unless the version guide explicitly uses New snapshot. Mapping and relationship references do not grant application approval.
-
-Requires Python 3.10+ and openpyxl 3.1+. Reproduce:
-
-```powershell
-python generate_demo_pack.py --as-of 2026-11-03 --seed 42 --output-dir ./generated
+```sh
+python generate_demo_pack.py --as-of {e['as_of']} --seed {e['seed']} --output-dir ./generated
 python validate_demo_pack.py --pack-dir ./generated --reproduce
 ```
 
-From the SheetPilot repository with its app dependencies installed:
+From the repository root with app dependencies installed (Windows):
 
 ```powershell
 .venv/Scripts/python demo_pack/validate_demo_pack.py --pack-dir demo_pack --app --reproduce
 ```
 
-Validation writes VALIDATION_RESULTS.md and validation_results.json, then packages SheetPilot_Demo_Pack.zip. The ZIP contains the workbooks, Python sources, manifests and guides. All XLSX archives and package entries use stable timestamps for byte reproducibility. No application fixtures are changed. Provider configuration/live Meta validation is outside the generator and validator.
+On macOS/Linux, use `.venv/bin/python`. Validation writes `VALIDATION_RESULTS.md` and `validation_results.json`. Application checks use isolated temporary stores and deterministic services; these scripts do not configure or call Meta.
 
-All Excel business values are literals. Decimal arithmetic uses ROUND_HALF_UP to cents. Quotes are per base unit and may retain six decimal places. Source coordinates are recorded in the mapping manifest and scenario cards. Synthetic contacts use example.invalid. No real personal data is included.
-'''
+All business values are literals. Decimal calculations round money to cents; per-base-unit quotes may retain six decimal places. XLSX timestamps are stable for byte reproducibility. All businesses and contacts are fictional; contact domains use `example.invalid`.
+"""
     (root/'README.md').write_text(readme,encoding='utf-8')
 
 

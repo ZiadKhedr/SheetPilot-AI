@@ -6,7 +6,7 @@ Turn business Excel files into reviewed analytics and human-approved purchase or
 
 Built for the Meta AI Hackathon with React, TypeScript, FastAPI and SQLite.
 
-[Project description](docs/JUDGE_DESCRIPTION.md) · [Demo script](docs/DEMO_SCRIPT.md) · [Architecture](ARCHITECTURE.md) · [Verification results](docs/TEST_RESULTS.md) · [Known limitations](docs/KNOWN_LIMITATIONS.md)
+[Project description](docs/JUDGE_DESCRIPTION.md) · [Architecture](ARCHITECTURE.md) · [Verification results](docs/TEST_RESULTS.md) · [Known limitations](docs/KNOWN_LIMITATIONS.md)
 
 ## What it does
 
@@ -106,7 +106,7 @@ Open [SheetPilot AI](http://127.0.0.1:8000). FastAPI serves the built frontend a
 
 For a scoped sales example with the Electronics dataset, ask: “What is the reviewed sales revenue for product ID A001 alone, across all dates?” Its fixture expectation is USD 270.00; the sales tool exposes the contributing source rows.
 
-**Label suggestions · no AI** and **Guided check** are deterministic alternatives available without a Meta key. They are labeled separately from Meta-generated results. The [demo script](docs/DEMO_SCRIPT.md) walks through a four-minute presentation.
+**Label suggestions · no AI** and **Guided check** are deterministic alternatives available without a Meta key. They are labeled separately from Meta-generated results.
 
 ## Included demo datasets
 
@@ -117,7 +117,7 @@ For a scoped sales example with the Electronics dataset, ask: “What is the rev
 
 Both datasets include duplicate rows, missing identifiers, numeric text, unrelated tables, hidden sheets and formulas. These figures are independent fixture expectations; the application calculates its results from reviewed source data. See the [dataset guide](docs/DEMO_DATA.md).
 
-For a larger EGP recording, the separate [Nile Circuit demo pack](demo_pack/README.md) contains 6,000 sales lines, 1,200 orders, 40 SKUs and eight suppliers, plus focused challenge workbooks. [Download the complete ZIP](demo_pack/SheetPilot_Demo_Pack.zip), then follow its [recording guide](demo_pack/RECORDING_GUIDE.md) in a fresh workspace. Its generator, exact expectations and isolated validation are included.
+For a larger EGP dataset, the [Nile Circuit demo pack](demo_pack/README.md) contains 6,000 sales lines, 1,200 orders, 40 SKUs and eight suppliers, plus focused challenge workbooks. Upload its three `core/` workbooks into a fresh workspace. Its generator, exact expectations and isolated validation are included.
 
 ## Development and tests
 
@@ -195,9 +195,10 @@ Compose configuration has been validated. Container build and startup have not b
 | `src/sheetpilot/` | FastAPI, Meta integration, SQLite, analytics, tools and approvals |
 | `frontend/` | React/TypeScript interface, component tests and Playwright scenarios |
 | `demo_data/` | Two fictional businesses and their expected results |
+| `demo_pack/` | Larger EGP sample workbooks, expected results and reproducible validation |
 | `tests/`, `tests_app/` | Analyzer and application regression tests |
 | `scripts/` | Startup, demo generation and verification utilities |
-| `docs/` | Technical guides, demo instructions, test evidence and limitations |
+| `docs/` | Technical guides, dataset instructions, test evidence and limitations |
 
 The standalone analyzer remains available as `excel-analyze workbook.xlsx -o report.json`. See the [CLI guide](docs/PHASE1_CLI.md).
 

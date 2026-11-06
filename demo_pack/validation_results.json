@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "assertions": 176510,
+  "assertions": 176508,
   "stats": {
     "workbooks": 9,
     "largest_sheet_grid": 72048
@@ -18,7 +18,7 @@
       "status": "passed"
     },
     {
-      "name": "Same date/seed regenerate byte-identical workbooks, manifests, expectations and guides",
+      "name": "Same date/seed regenerate byte-identical workbooks, manifests, expectations and dataset README",
       "status": "passed"
     },
     {

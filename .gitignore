@@ -21,6 +21,11 @@ outputs/hackathon-test-results/
 
 # Local development history and generated review artifacts
 /outputs/
+/output/
+/tmp/
+/tmp_compare/
+/demo_pack/SheetPilot_Demo_Pack/
+/demo_pack/SheetPilot_Demo_Pack.zip
 /AGENTS.md
 /PROJECT_BRIEF.md
 /ROADMAP.md

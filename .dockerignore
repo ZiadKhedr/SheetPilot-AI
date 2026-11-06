@@ -5,6 +5,11 @@
 work
 .data
 outputs
+output
+tmp
+tmp_compare
+demo_pack/SheetPilot_Demo_Pack
+demo_pack/SheetPilot_Demo_Pack.zip
 frontend/node_modules
 frontend/dist
 frontend/playwright-report

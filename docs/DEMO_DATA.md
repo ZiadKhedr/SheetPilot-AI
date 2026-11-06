@@ -1,6 +1,6 @@
 # SheetPilot AI — synthetic company fixtures
 
-For the larger EGP recording scenario, use the separate [Nile Circuit demo pack](../demo_pack/README.md). It contains three core upload files (6,000 sales lines, 1,200 orders, 40 SKUs and eight suppliers), six challenge/showcase workbooks, a deterministic Python generator, independent and isolated-application validation, exact expected results, and a [6½-minute recording guide](../demo_pack/RECORDING_GUIDE.md). Start with a fresh workspace and upload only its core files. The [ZIP](../demo_pack/SheetPilot_Demo_Pack.zip) contains the complete pack. The regression fixtures below remain separate.
+For a larger EGP dataset, use the [Nile Circuit demo pack](../demo_pack/README.md). It contains three core upload files (6,000 sales lines, 1,200 orders, 40 SKUs and eight suppliers), six challenge/showcase workbooks, a deterministic Python generator, independent and isolated-application validation, and exact expected results. Start with a fresh workspace and upload only its core files. The regression fixtures below remain separate.
 
 All businesses, transactions, addresses, and supplier contacts in these files are fictional. Email domains use `example.invalid` and cannot be delivered. No fixture contains an API key or real company data.
 

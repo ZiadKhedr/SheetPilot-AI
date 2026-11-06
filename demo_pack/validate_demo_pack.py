@@ -15,7 +15,7 @@ from pathlib import Path
 import sys
 import tempfile
 from uuid import uuid4
-from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
+from zipfile import ZipFile
 
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter, range_boundaries
@@ -448,16 +448,6 @@ def application_checks(root,m,e,checks,temp_root):
     checks.section('Isolated SheetPilot broader entity preservation and distinct Arabic-company deterministic analytics')
 
 
-def package(root):
-    target=root/'SheetPilot_Demo_Pack.zip'
-    files=[p for p in root.rglob('*') if p.is_file() and p!=target and '__pycache__' not in p.parts and p.suffix in {'.xlsx','.py','.md','.json'}]
-    with ZipFile(target,'w',ZIP_DEFLATED,compresslevel=9) as z:
-        for p in sorted(files):
-            info=ZipInfo(p.relative_to(root).as_posix(),(2026,1,1,0,0,0));info.compress_type=ZIP_DEFLATED;info.external_attr=0o600<<16
-            z.writestr(info,p.read_bytes())
-    return target
-
-
 def reproduction_checks(root,m,checks):
     from generate_demo_pack import generate
     scratch=root/'.validation-tmp'
@@ -465,10 +455,10 @@ def reproduction_checks(root,m,checks):
     with tempfile.TemporaryDirectory(prefix='reproduce-',dir=scratch) as folder:
         other=Path(folder)
         generate(other,date.fromisoformat(m['as_of']),m['seed'])
-        files=sorted({s['workbook'] for s in m['tables']})+['mapping_manifest.json','expected_results.json','SCENARIO_CARDS.md','RECORDING_GUIDE.md','README.md','challenges/C_commercial/incoming_order_entry_guide.json']
+        files=sorted({s['workbook'] for s in m['tables']})+['mapping_manifest.json','expected_results.json','README.md','challenges/C_commercial/incoming_order_entry_guide.json']
         for relative in files:
             checks.equal(sha256((root/relative).read_bytes()).hexdigest(),sha256((other/relative).read_bytes()).hexdigest(),'byte reproducibility '+relative)
-    checks.section('Same date/seed regenerate byte-identical workbooks, manifests, expectations and guides')
+    checks.section('Same date/seed regenerate byte-identical workbooks, manifests, expectations and dataset README')
 
 
 def main():
@@ -494,10 +484,9 @@ def main():
     (root/'validation_results.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     report=['# Validation results','',f"Result: PASS. {checks.count:,} assertions against saved workbooks and their derived expectations.",'',f"Files: {stats['workbooks']} normal XLSX workbooks. Largest full populated bounding grid: {stats['largest_sheet_grid']:,} cells. All workbook sizes are below 10 MiB. No formulas, macro projects or external links.",'','## Checks actually executed','']
     report += ['- '+s['name']+': passed.' for s in checks.sections]
-    report += ['', '## Application and provider boundaries','', 'Application integration: '+result['application_integration']+'.', '', 'Application checks use temporary isolated stores, explicit fixture reviews and real deterministic service functions/guided jobs. No existing application workspace database is opened or populated. All temporary action outputs, reports and review records are discarded, not packaged as a completed demo run.', '', 'Live Meta validation: not run. No provider is instantiated or called and no .env is read by these scripts. For Meta recording, use the real configured provider and show its actual outputs. This report establishes deterministic data/workflow correctness, not successful live Meta semantic proposals or browser footage.', '', 'Reproduce with `python validate_demo_pack.py --pack-dir <pack> --app` from the repository environment. Generator-only validation can run with openpyxl alone. No frontend or native Excel UI automation is claimed here.']
+    report += ['', '## Application and provider boundaries','', 'Application integration: '+result['application_integration']+'.', '', 'Application checks use temporary isolated stores, explicit fixture reviews and real deterministic service functions/guided jobs. No existing application workspace database is opened or populated. Temporary action outputs, reports and review records are discarded after validation.', '', 'Live Meta validation: not run. No provider is instantiated or called and no .env is read by these scripts. This report establishes deterministic data/workflow correctness; it does not verify live Meta semantic proposals or browser workflows.', '', 'Reproduce with `python validate_demo_pack.py --pack-dir <pack> --app` from the repository environment. Generator-only validation can run with openpyxl alone. No frontend or native Excel UI automation is claimed here.']
     (root/'VALIDATION_RESULTS.md').write_text('\n'.join(report)+'\n',encoding='utf-8')
-    target=package(root)
-    print(f'PASS {checks.count:,} assertions. ZIP: {target}',flush=True)
+    print(f'PASS {checks.count:,} assertions.',flush=True)
 
 
 if __name__=='__main__':main()
